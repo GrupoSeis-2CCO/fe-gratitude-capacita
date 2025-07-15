@@ -1,15 +1,16 @@
 import '../styles/Button.css'
 
 function Button(props){
+    const variant = props.variant || 'Default';
     
-    const buttonStyle = {
+    const borderRadius = {
         '--button-border-radius': props.rounded ? '10rem' : '1.5rem'
     }
 
     return (
         <button 
-            className={`Button ${props.variant}`} 
-            style={buttonStyle} 
+            className={`Button ${variant}`} 
+            style={borderRadius} 
             onClick={props.onClick}
         >
             {props.label}

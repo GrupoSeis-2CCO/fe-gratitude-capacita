@@ -2,7 +2,7 @@ import '../styles/Header.css'
 import Link from '../components/Link.jsx';
 import Button from '../components/Button.jsx';
 
-function Header(props){
+function Header(){
 
     return (
         <header className="Header">

@@ -1,0 +1,51 @@
+.Class {
+   background-color: #FFFFFF;
+   color: #000000;
+   display: flex;
+   flex-direction: row;
+   padding: 8rem 4rem;
+   justify-content: space-between; 
+   font-size: 6rem;
+   border-radius: 3rem;
+   width: 249rem;
+}
+
+img {
+    max-width: 74rem;
+    max-height: 43rem;
+    object-fit: cover;
+    border-radius: 3rem;
+}
+
+.Title {
+    font-size: 10rem;
+    font-weight: normal;
+    color: #000000;
+    display: flex;
+    flex-direction: start;
+}
+
+.Section {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    justify-items: center;
+    text-align: start;
+}
+
+.Section.Description {
+    max-width: 62rem;   
+}
+
+.Section.Infos {
+    max-width: 88rem;
+}
+
+.Section h3{
+    margin: 0;
+    margin-bottom: 6rem;
+}
+
+.Section p {
+    margin: 0;
+}

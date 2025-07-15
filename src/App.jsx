@@ -1,13 +1,14 @@
 import './styles/App.css'
-import Link from './components/Link'
-import Button from './components/Button'
+import Button from './components/Button.jsx'
+import Link from './components/Link.jsx'
+import Class from './components/Class.jsx'
 
 function App() {
 
   return (
-    <>
+  <>
     
-    </>
+  </>
   )
 }
 
