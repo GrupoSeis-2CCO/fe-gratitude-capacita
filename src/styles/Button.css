@@ -1,0 +1,23 @@
+.Button {
+  border-radius: var(--button-border-radius);
+  border: 1px solid transparent;
+  padding: 2rem 6rem;
+  font-size: 6rem;
+  font-weight: 500;
+  font-family: 'Inter';
+  cursor: pointer;
+  color: #FFFFFF;
+}
+.Button.Default {
+  background-color: #CC7120;
+}
+.Button.Confirm {
+  background-color: #269542;
+}
+.Button.Cancel {
+  background-color: #D63F35;
+}
+.Button.Exit {
+  background-color: #D63F35;
+  color: #1D262D;
+}
