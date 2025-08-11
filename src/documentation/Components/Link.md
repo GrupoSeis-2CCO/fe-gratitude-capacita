@@ -22,7 +22,7 @@ Um componente de link React reutilizável e personalizável para o projeto Grati
 <td width="50%">
 
 ```jsx
-<Link text="Gerenciar Cursos" redirectUrl="/cursos" />
+<Link text="Gerenciar Cursos" redirect="/cursos" />
 ```
 
 </td>

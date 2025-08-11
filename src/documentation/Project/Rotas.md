@@ -16,18 +16,29 @@ Veja como deve ser o arquivo [`src/router.jsx`](/src/router.jsx):
 import { createBrowserRouter } from "react-router-dom";
 import { Login } from "./pages/Login";
 import { Home } from "./pages/Home";
+import Layout from "./Layout";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Login />,
+    element: (
+      <Layout>
+        <Login />
+      </Layout>
+    ),
   },
   {
     path: "/home",
-    element: <Home />,
+    element: (
+      <Layout>
+        <Home />
+      </Layout>
+    ),
   },
 ]);
 ```
+
+**❗ IMPORTANTE:** Sempre colocar o elemento englobado por `<Layout></Layout>`, caso contrário, não terá Header!!!
 
 ## 🏗️ Como adicionar uma nova rota
 
@@ -49,12 +60,16 @@ export const router = createBrowserRouter([
      // ...outras rotas
      {
        path: "/sobre",
-       element: <Sobre />,
+       element: (
+         <Layout>
+           <Sobre />
+         </Layout>
+       ),
      },
    ]);
    ```
 
-3. **Acesse `/sobre` no navegador para ver sua nova página!**
+3. Acesse `/sobre` no navegador para ver sua nova página!
 
 ## 🚀 Como o roteador é usado no app
 
@@ -79,7 +94,7 @@ export default App;
 
 ---
 
-**Dica:** Para links de navegação, use o componente [`<Link>`](/src/documentation/Components/Link.md) do `react-router-dom`:
+**💡 Dica:** Para links de navegação, use o componente [`<Link>`](/src/documentation/Components/Link.md) do `react-router-dom`:
 
 ```jsx
 import { Link } from "react-router-dom";

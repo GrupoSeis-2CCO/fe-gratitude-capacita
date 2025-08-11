@@ -1,11 +1,12 @@
 import '../styles/Link.css'
+import { Link as RouterLink } from 'react-router-dom';
 
 function Link(props){
 
     return (
-        <a className= 'Link' href={`${props.redirectUrl}`}>
+        <RouterLink className='Link' to={`${props.redirect}`}>
             {props.text}
-        </a>
+        </RouterLink>
     )
 }
 

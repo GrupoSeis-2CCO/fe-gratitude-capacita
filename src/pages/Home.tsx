@@ -1,9 +1,12 @@
-
+import Link from '../components/Link';
 
 export function Home() {
     return (
         <div>
-            <h1>Home</h1>
+           <Link 
+            text="Login"
+            redirect="/"
+           />
         </div>
     );
 }
