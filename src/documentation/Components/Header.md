@@ -18,7 +18,7 @@ _OBS: Internamente, os componentes utilizados pelo `Header` necessitam de props_
 ## 🎨 Exemplo Visual
 
 <div align="center">
-  <img src="images/header.png" alt="Componente Header" />
+  <img src="../images/header.png" alt="Componente Header" />
 </div>
 
 ```jsx

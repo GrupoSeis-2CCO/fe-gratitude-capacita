@@ -30,7 +30,7 @@ Um componente de botão React reutilizável e personalizável para o projeto Gra
 <td width="50%">
 
 <div align="center">
-  <img src="images/default-button.png" alt="botão default" />
+  <img src="../images/default-button.png" alt="botão default" />
 </div>
 
 </td>
@@ -54,7 +54,7 @@ Um componente de botão React reutilizável e personalizável para o projeto Gra
 <td width="50%">
 
 <div align="center">
-  <img src="images/confirm-button.png" alt="botão de confirmação" />
+  <img src="../images/confirm-button.png" alt="botão de confirmação" />
 </div>
 
 </td>
@@ -78,7 +78,7 @@ Um componente de botão React reutilizável e personalizável para o projeto Gra
 
 <td width="50%">
 <div align="center">
-  <img src="images/cancel-button.png" alt="botão de cancelamento" />
+  <img src="../images/cancel-button.png" alt="botão de cancelamento" />
 </div>
 </td>
 
@@ -101,7 +101,7 @@ Um componente de botão React reutilizável e personalizável para o projeto Gra
 <td width="50%">
 
 <div align="center">
-  <img src="images/exit-button.png" alt="botão de sair" />
+  <img src="../images/exit-button.png" alt="botão de sair" />
 </div>
 
 </td>

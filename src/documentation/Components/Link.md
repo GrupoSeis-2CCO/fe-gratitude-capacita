@@ -13,7 +13,7 @@ Um componente de link React reutilizável e personalizável para o projeto Grati
 | Prop          | Tipo     | Padrão | Obrigatório | Descrição                             |
 | ------------- | -------- | ------ | ----------- | ------------------------------------- |
 | `text`        | `string` | `""`   | ✅          | Texto exibido no link                 |
-| `redirectUrl` | `string` | `""`   | ✅          | URL para onde o link vai redirecionar |
+| `redirect` | `string` | `""`   | ✅          | Rota para onde o link vai redirecionar |
 
 ## 🎨 Exemplo Visual
 
@@ -29,11 +29,11 @@ Um componente de link React reutilizável e personalizável para o projeto Grati
 <td width="50%">
 
 <div align="center">
-  <img src="images/link.png" alt="link sem hoover" />
+  <img src="../images/link.png" alt="link sem hoover" />
 </div>
 
 <div align="center">
-  <img src="images/link-hoover.png" alt="link com hoover" />
+  <img src="../images/link-hoover.png" alt="link com hoover" />
 </div>
 
 </td>

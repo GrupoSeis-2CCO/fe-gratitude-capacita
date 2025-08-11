@@ -30,7 +30,7 @@ Um componente de card de curso React para exibir informações detalhadas sobre 
 
 ## 🎨 Exemplo Visual
 <div align="center">
-  <img src="images/class.png" alt="Componente curso" />
+  <img src="../images/class.png" alt="Componente curso" />
 </div>
 
 ```jsx
