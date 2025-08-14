@@ -1,22 +1,31 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Login } from "./pages/Login";
-import { Home } from "./pages/Home";
+import { LoginPage } from "./pages/LoginPage";
+import { AccessPage } from "./pages/AccessPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import Layout from "./Layout";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/cursos",
     element: (
       <Layout>
-        <Login />
+        <LoginPage />
       </Layout>
     ),
   },
   {
-    path: "/home",
+    path: "/acessos",
     element: (
       <Layout>
-        <Home />
+        <AccessPage />
+      </Layout>
+    ),
+  },
+    {
+    path: "/cadastro",
+    element: (
+      <Layout>
+        <RegisterPage />
       </Layout>
     ),
   },

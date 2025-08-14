@@ -8,17 +8,17 @@ function Header(){
         <header className="Header">
             <Link
                 text="Gerenciar Cursos"
-                // TODO: Adicionar redirecionamento
+                redirect="/cursos"
             />
 
             <Link
                 text="Histórico de Acessos"
-                // TODO: Adicionar redirecionamento
+                redirect="/acessos"
             />
 
             <Link
                 text="Cadastrar Usuário"
-                // TODO: Adicionar redirecionamento
+                redirect="/cadastro"
             />
 
             <Button
