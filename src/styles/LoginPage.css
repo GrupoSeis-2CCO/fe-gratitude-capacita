@@ -1,0 +1,152 @@
+/* LoginPage.css */
+.login-page {
+  padding: 120px 40px 40px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  font-size: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 230rem;
+  margin: 0 auto;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 8rem;
+}
+
+.login-header h1 {
+  font-size: 12rem;
+  color: #1a1a1a;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.login-header p {
+  font-size: 6rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.login-form-container {
+  display: flex;
+  background: white;
+  border-radius: 3rem;
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  min-height: 100rem;
+  max-width: 350rem;
+  margin: 0 auto;
+}
+
+/* Lado esquerdo - Branding */
+.login-image-section {
+  flex: 0.8;
+  background: #4A90E2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem;
+}
+
+.login-branding {
+  text-align: center;
+  color: white;
+}
+
+.login-logo {
+  margin-bottom: 4rem;
+  filter: drop-shadow(0 1rem 2rem rgba(0, 0, 0, 0.2));
+}
+
+.login-branding h2 {
+  font-size: 8rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.login-branding p {
+  font-size: 5rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+/* Lado direito - Formulário */
+.login-form-section {
+  flex: 1.2;
+  padding: 8rem 10rem;
+  display: flex;
+  align-items: center;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 8rem;
+  color: #333;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 5rem 6rem;
+  border: 0.5rem solid #ddd;
+  border-radius: 2rem;
+  font-size: 8rem;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  color: #333;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 1rem rgba(255, 107, 53, 0.1);
+}
+
+.form-group input::placeholder {
+  color: #999;
+  font-size: 7rem;
+}
+
+.form-actions {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Botão Login com estilo moderno */
+.login-button {
+  min-width: 80rem !important;
+  height: 16rem !important;
+  background: linear-gradient(135deg, #FF6B35 0%, #FF8A65 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  padding: 4rem 6rem !important;
+  border-radius: 2rem !important;
+  font-size: 8rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.login-button:hover {
+  background: linear-gradient(135deg, #FF8A65 0%, #FF6B35 100%) !important;
+}

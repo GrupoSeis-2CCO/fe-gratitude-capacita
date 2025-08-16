@@ -1,12 +1,13 @@
 import { createBrowserRouter } from "react-router-dom";
-import { LoginPage } from "./pages/LoginPage";
-import { AccessPage } from "./pages/AccessPage";
-import { RegisterPage } from "./pages/RegisterPage";
+import LoginPage from "./pages/LoginPage";
+import { AccessPage } from "./pages/AcessPage.tsx";
+import { RegisterPage } from "./pages/RegisterPage.tsx";
+import { UserPage } from "./pages/UserPage.jsx";
 import Layout from "./Layout";
 
 export const router = createBrowserRouter([
   {
-    path: "/cursos",
+    path: "/login",
     element: (
       <Layout>
         <LoginPage />
@@ -26,6 +27,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <RegisterPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/participante/:id",
+    element: (
+      <Layout>
+        <UserPage />
       </Layout>
     ),
   },
