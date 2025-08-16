@@ -1,0 +1,271 @@
+/* Estilos para a página UserPage - Participante y */
+
+.participant-page {
+    padding: 120px 40px 40px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    font-size: 4px;
+}
+
+/* Título principal */
+.participant-title {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8rem;
+}
+
+.participant-title h1 {
+    margin: 0;
+    font-size: 12rem;
+    color: #000;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Card principal com informações */
+.info-card-main {
+    background-color: white;
+    padding: 6rem 8rem;
+    border-radius: 3rem;
+    box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
+    margin-bottom: 12rem;
+    max-width: 230rem;
+    margin: 0 auto 12rem auto;
+}
+
+.info-item {
+    display: block;
+    font-size: 6rem;
+    line-height: 2.5;
+    color: #333;
+}
+
+.info-item div {
+    margin-bottom: 3rem;
+}
+
+.info-item div:last-child {
+    margin-bottom: 0;
+}
+
+/* Layout em duas colunas */
+.two-column-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 8rem;
+    max-width: 280rem;
+    margin: 0 auto;
+}
+
+/* Seção de ações - esquerda */
+.actions-section {
+    background-color: white;
+    padding: 8rem;
+    border-radius: 3rem;
+    box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
+}
+
+.actions-title {
+    margin-bottom: 8rem;
+    color: #000;
+    font-size: 7rem;
+    font-weight: bold;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    width: 100%;
+    padding: 4rem 6rem;
+    margin: 3rem 0;
+    background-color: #f8f9fa;
+    border: 0.5rem solid #e9ecef;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 6rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+}
+
+.action-btn:hover {
+    background-color: #e9ecef;
+    transform: translateY(-0.2rem);
+}
+
+.action-btn-icon {
+    font-size: 8rem;
+}
+
+.action-btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: 0.5rem solid #dc3545;
+}
+
+.action-btn-delete:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+
+/* Seção do gráfico - direita */
+.chart-section {
+    background-color: white;
+    padding: 8rem;
+    border-radius: 3rem;
+    box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
+}
+
+.chart-title {
+    margin-bottom: 6rem;
+    color: #000;
+    font-size: 7rem;
+    font-weight: bold;
+}
+
+.chart-y-label {
+    position: relative;
+    margin-bottom: 4rem;
+}
+
+.chart-y-label-text {
+    position: absolute;
+    top: 2rem;
+    left: 0px;
+    font-size: 4rem;
+    color: #666;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.chart-container {
+    position: relative;
+    height: 80rem;
+    margin-bottom: 4rem;
+    border: 0.2rem solid #e9ecef;
+    border-radius: 2rem;
+    background-color: #fafafa;
+}
+
+.chart-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Grid lines do gráfico */
+.chart-grid-line {
+    stroke: #f0f0f0;
+    stroke-width: 0.3rem;
+}
+
+.chart-grid-line-dashed {
+    stroke: #f0f0f0;
+    stroke-width: 0.3rem;
+    stroke-dasharray: 1rem,1rem;
+}
+
+.chart-y-text {
+    font-size: 3rem;
+    fill: #666;
+    text-anchor: end;
+}
+
+.chart-media-text {
+    font-size: 3rem;
+    fill: #666;
+}
+
+/* Linha principal do gráfico */
+.chart-line {
+    fill: none;
+    stroke: #FF6B35;
+    stroke-width: 1rem;
+}
+
+.chart-point {
+    fill: #FF6B35;
+    r: 1.5rem;
+}
+
+/* Labels do eixo X */
+.chart-x-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 4rem;
+    color: #666;
+    margin-bottom: 4rem;
+    padding-left: 10rem;
+    line-height: 1.2;
+}
+
+/* Legenda */
+.chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    font-size: 5rem;
+    color: #333;
+}
+
+.chart-legend-color {
+    width: 6rem;
+    height: 1rem;
+    background-color: #FF6B35;
+    border-radius: 0.5rem;
+}
+
+/* Responsivo para telas menores */
+@media (max-width: 768px) {
+    .two-column-layout {
+        grid-template-columns: 1fr;
+        gap: 6rem;
+    }
+    
+    .participant-page {
+        padding: 100px 20px 20px;
+    }
+    
+    .participant-title h1 {
+        font-size: 8rem;
+    }
+    
+    .info-card-main {
+        padding: 4rem 6rem;
+        max-width: 100%;
+    }
+    
+    .actions-section,
+    .chart-section {
+        padding: 6rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .participant-title h1 {
+        font-size: 6rem;
+    }
+    
+    .info-item {
+        font-size: 4rem;
+    }
+    
+    .actions-title,
+    .chart-title {
+        font-size: 5rem;
+    }
+    
+    .action-btn {
+        font-size: 4rem;
+        padding: 3rem 4rem;
+    }
+    
+    .chart-container {
+        height: 60rem;
+    }
+}

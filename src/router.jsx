@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
-import { LoginPage } from "./pages/LoginPage";
-import { AccessPage } from "./pages/AccessPage";
-import { RegisterPage } from "./pages/RegisterPage";
+import { LoginPage } from "./pages/LoginPage.jsx";
+import { AccessPage } from "./pages/AccessPage.jsx";
+import { RegisterPage } from "./pages/RegisterPage.jsx";
+import { UserPage } from "./pages/UserPage.jsx";
 import Layout from "./Layout";
 
 export const router = createBrowserRouter([
@@ -21,11 +22,19 @@ export const router = createBrowserRouter([
       </Layout>
     ),
   },
-    {
+  {
     path: "/cadastro",
     element: (
       <Layout>
         <RegisterPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/participante/:id",
+    element: (
+      <Layout>
+        <UserPage />
       </Layout>
     ),
   },
