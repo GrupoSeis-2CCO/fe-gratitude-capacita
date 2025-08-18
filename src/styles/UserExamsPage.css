@@ -1,0 +1,396 @@
+.user-exams-page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #FFFFFF;
+  overflow-x: hidden;
+}
+
+.page-title {
+  position: absolute;
+  width: 1034px;
+  height: 58px;
+  left: 201px;
+  top: 173px;
+}
+
+.title-background {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  top: 0%;
+  bottom: 0%;
+  background: #FEFEFE;
+  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+.title-text {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  top: 5.17%;
+  bottom: 10.34%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 40px;
+  line-height: 48px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #000000;
+}
+
+/* Side Lines */
+.side-line-group-left {
+  position: absolute;
+  width: 29px;
+  height: 670px;
+  left: 120px;
+  top: 292px;
+  transform: rotate(180deg);
+}
+
+.side-line-group-right {
+  position: absolute;
+  width: 29px;
+  height: 670px;
+  left: 1293px;
+  top: 292px;
+}
+
+.side-line {
+  position: absolute;
+  left: 9.17%;
+  right: 48.19%;
+  top: 29.38%;
+  bottom: 70.62%;
+  transform: rotate(90deg);
+  border: 1px solid #1D262D;
+}
+
+.side-line-right {
+  position: absolute;
+  left: 90.97%;
+  right: -33.61%;
+  top: 29.38%;
+  bottom: 70.62%;
+  transform: rotate(-90deg);
+  border: 1px solid #1D262D;
+}
+
+.ellipse-top-left {
+  position: absolute;
+  left: 8.33%;
+  right: 89.65%;
+  top: 26.81%;
+  bottom: 70.52%;
+  background: #0067B1;
+  border-radius: 50%;
+  transform: rotate(180deg);
+}
+
+.ellipse-bottom-left {
+  position: absolute;
+  left: 8.33%;
+  right: 89.65%;
+  top: 85.67%;
+  bottom: 11.66%;
+  background: #E87D1E;
+  border-radius: 50%;
+  transform: rotate(180deg);
+}
+
+.ellipse-top-right {
+  position: absolute;
+  left: 89.79%;
+  right: 8.19%;
+  top: 26.81%;
+  bottom: 70.52%;
+  background: #E87D1E;
+  border-radius: 50%;
+}
+
+.ellipse-bottom-right {
+  position: absolute;
+  left: 89.79%;
+  right: 8.19%;
+  top: 85.67%;
+  bottom: 11.66%;
+  background: #0067B1;
+  border-radius: 50%;
+}
+
+/* Question Section */
+.question-title {
+  position: absolute;
+  width: 967px;
+  height: 34px;
+  left: 240px;
+  top: 433px;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 31px;
+  text-align: center;
+  color: #000000;
+}
+
+/* Question Component */
+.question-component {
+  position: absolute;
+  width: 967px;
+  height: 123px;
+  left: 240px;
+  top: 474px;
+  background: #FEFEFE;
+  border-radius: 10px;
+}
+
+.question-background {
+  box-sizing: border-box;
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  top: 0%;
+  bottom: 0%;
+  background: #FEFEFE;
+  border: 1px solid #D7D7D7;
+  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+.add-question-button {
+  position: absolute;
+  width: 253.64px;
+  height: 65px;
+  left: 357px;
+  top: 29px;
+}
+
+.add-question-bg {
+  position: absolute;
+  left: 36.93%;
+  right: 36.84%;
+  top: 23.58%;
+  bottom: 23.58%;
+  background: #E87D1E;
+  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-question-text {
+  position: absolute;
+  left: 36.93%;
+  right: 36.84%;
+  top: 23.58%;
+  bottom: 23.58%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 29px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #FFFFFF;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Main Component */
+.main-component {
+  position: absolute;
+  width: 1060px;
+  height: 578px;
+  left: 190px;
+  top: 332px;
+}
+
+.main-background {
+  position: absolute;
+  left: 0%;
+  right: 0%;
+  top: 0%;
+  bottom: 0%;
+  background: #1D262D;
+  border-radius: 5px;
+}
+
+/* Content Area */
+.content-area {
+  position: absolute;
+  left: 15.49%;
+  right: 15.49%;
+  top: 38.93%;
+  bottom: 17.72%;
+  background: #FEFEFE;
+  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+/* Action Buttons */
+.action-buttons {
+  position: absolute;
+  top: 4.5%;
+  bottom: 88.06%;
+  display: flex;
+  gap: 20px;
+}
+
+.minimum-score-button {
+  position: absolute;
+  left: 3.11%;
+  right: 67.64%;
+  top: 4.5%;
+  bottom: 88.06%;
+}
+
+.minimum-score-bg {
+  box-sizing: border-box;
+  position: absolute;
+  left: 3.11%;
+  right: 67.64%;
+  top: 4.5%;
+  bottom: 88.06%;
+  background: #CC7120;
+  border: 0.2px solid #000000;
+  box-shadow: 0px 0px 4px 2px rgba(232, 125, 30, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.minimum-score-text {
+  position: absolute;
+  left: 3.11%;
+  right: 67.64%;
+  top: 4.5%;
+  bottom: 88.06%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #FFFFFF;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+.complete-button {
+  position: absolute;
+  left: 64.34%;
+  right: 20.28%;
+  top: 4.5%;
+  bottom: 88.06%;
+}
+
+.complete-bg {
+  box-sizing: border-box;
+  position: absolute;
+  left: 64.34%;
+  right: 20.28%;
+  top: 4.5%;
+  bottom: 88.06%;
+  background: rgba(40, 167, 69, 0.86);
+  border: 0.2px solid #000000;
+  box-shadow: 0px 0px 4px 2px rgba(40, 167, 69, 0.25);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.complete-text {
+  position: absolute;
+  left: 64.34%;
+  right: 20.28%;
+  top: 4.5%;
+  bottom: 88.06%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.delete-button {
+  position: absolute;
+  left: 81.51%;
+  right: 3.11%;
+  top: 4.5%;
+  bottom: 88.06%;
+}
+
+.delete-bg {
+  box-sizing: border-box;
+  position: absolute;
+  left: 81.51%;
+  right: 3.11%;
+  top: 4.5%;
+  bottom: 88.06%;
+  background: rgba(244, 67, 54, 0.86);
+  border: 0.2px solid #000000;
+  box-shadow: 0px 0px 4px 2px rgba(244, 67, 54, 0.25);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-text {
+  position: absolute;
+  left: 81.51%;
+  right: 3.11%;
+  top: 4.5%;
+  bottom: 88.06%;
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 29px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+/* Footer */
+.footer {
+  position: absolute;
+  width: 1440px;
+  height: 69px;
+  left: 0px;
+  top: 1020px;
+  background: #1D262D;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1440px) {
+  .user-exams-page {
+    width: 100%;
+  }
+  
+  .page-title {
+    width: 90%;
+    left: 5%;
+  }
+  
+  .main-component {
+    width: 90%;
+    left: 5%;
+  }
+  
+  .question-component {
+    width: 90%;
+    left: 5%;
+  }
+  
+  .question-title {
+    width: 90%;
+    left: 5%;
+  }
+}

@@ -5,8 +5,7 @@ import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
-import { UserPage } from "./pages/UserPage.jsx";
-import Layout from "./Layout";
+import UserExamsPage from "./pages/UserExamsPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +53,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <UserClassesPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/participantes/:idUsuario/avaliacoes",
+    element: (
+      <Layout>
+        <UserExamsPage />
       </Layout>
     ),
   },
