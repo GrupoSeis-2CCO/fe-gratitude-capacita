@@ -1,0 +1,67 @@
+/* Container da página de usuários */
+
+.root {
+  width: 100%;
+}
+
+.class-users-container {
+  width: 100%;
+  margin: 4% auto;
+}
+
+.class-users-title {
+  text-align: left;
+  margin-bottom: 2%;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+  background: #1D262D;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 1%  0.5%;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: Arial, sans-serif;
+  border: 4px solid #1D262D;
+  border-radius: 10px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.custom-table th,
+.custom-table td {
+  border: 1px solid #1D262D;
+  padding: 14px 18px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 3.5em;
+}
+
+.custom-table th {
+  background-color: #ff8800;
+  color: #111;
+  font-weight: bold;
+  font-size: 4em;
+  border-bottom: 3px solid #1D262D;
+}
+
+.custom-table tbody tr {
+  background-color: #ffd2b3;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #ffb877;
+}
+
+.column {
+  background-color: #111;
+}
