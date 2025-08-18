@@ -5,8 +5,8 @@ import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
-import { UserPage } from "./pages/UserPage.jsx";
-import Layout from "./Layout";
+import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
+import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 
 export const router = createBrowserRouter([
   {
