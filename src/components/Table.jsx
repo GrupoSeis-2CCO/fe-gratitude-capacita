@@ -1,5 +1,4 @@
-import React from "react";
-import "../styles/Table.css"; // Arquivo de estilos separado
+import "../styles/Table.css";
 
 export default function Table({ columns, data }) {
   return (
