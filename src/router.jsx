@@ -5,6 +5,9 @@ import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
+import { UserPage } from "./pages/UserPage.jsx";
+import Layout from "./Layout";
+
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -35,6 +38,22 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <UserPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/cursos/teste/participantes",
+    element: (
+      <Layout>
+        <ClassUsersPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/participantes/teste/cursos",
+    element: (
+      <Layout>
+        <UserClassesPage />
       </Layout>
     ),
   },
