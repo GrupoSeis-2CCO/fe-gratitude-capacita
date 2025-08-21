@@ -114,6 +114,60 @@ const fetchData = async () => {
 - **Variáveis**: camelCase (ex: `userData`)
 - **Constantes**: UPPER_SNAKE_CASE (ex: `API_BASE_URL`)
 
+### 🔄 Criação de Componentes Reutilizáveis
+
+**REGRA IMPORTANTE**: Se um elemento/funcionalidade será usado em 3 ou mais lugares, SEMPRE criar um componente reutilizável!
+
+#### Quando Criar Componentes:
+- **Botões customizados** → Usar/expandir `Button.jsx`
+- **Cards/containers repetitivos** → Criar componente específico
+- **Formulários similares** → Criar componentes de input
+- **Modais/popups** → Componente `Modal.jsx`
+- **Loading states** → Componente `Loading.jsx`
+- **Mensagens de erro/sucesso** → Componente `Alert.jsx`
+
+#### Estrutura para Novos Componentes:
+```jsx
+// src/components/NomeDoComponente.jsx
+import React from 'react';
+
+function NomeDoComponente({ 
+  // Props com valores padrão
+  variant = 'default',
+  size = 'medium',
+  children,
+  ...props 
+}) {
+  // Lógica do componente
+  const getVariantClasses = () => {
+    switch(variant) {
+      case 'primary': return 'bg-primary-500 text-white';
+      case 'secondary': return 'bg-gray-200 text-gray-800';
+      default: return 'bg-white border border-gray-300';
+    }
+  };
+
+  return (
+    <div 
+      className={`${getVariantClasses()} ${size === 'large' ? 'p-6' : 'p-4'} rounded-lg`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export default NomeDoComponente;
+```
+
+#### Checklist para Componentes Reutilizáveis:
+- [ ] Props bem definidas com valores padrão
+- [ ] Variantes para diferentes contextos
+- [ ] Classes Tailwind organizadas em funções
+- [ ] Suporte a `children` quando apropriado
+- [ ] Spread de props restantes (`...props`)
+- [ ] Documentação das props principais
+
 ### Estrutura de Componentes
 ```jsx
 import React from 'react';
@@ -239,6 +293,47 @@ docs: atualiza documentação da API
 - **Erro**: Red (500-600)
 - **Neutro**: Gray (500-600)
 
+### 🎨 Tokenização de Cores Customizadas
+Para cores específicas do projeto, edite o arquivo `tailwind.config.cjs`:
+
+```javascript
+module.exports = {
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx,html,md}"],
+  theme: {
+    extend: {
+      colors: {
+        // Cores customizadas do projeto
+        primary: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          500: '#f97316', // orange-500
+          600: '#ea580c', // orange-600
+          900: '#9a3412',
+        },
+        success: {
+          500: '#22c55e', // green-500
+          600: '#16a34a', // green-600
+        },
+        danger: {
+          500: '#ef4444', // red-500
+          600: '#dc2626', // red-600
+        }
+      }
+    },
+  },
+  plugins: [],
+};
+```
+
+**Uso das cores tokenizadas:**
+```jsx
+// Em vez de: bg-orange-500
+// Use: bg-primary-500
+
+// Em vez de: bg-green-500
+// Use: bg-success-500
+```
+
 ### Espaçamentos Padrão
 - **Botões**: `px-6 py-3`
 - **Cards**: `p-4` ou `p-6`
@@ -314,13 +409,16 @@ npm run lint -- --fix
 - Não fazer commits direto na `main`
 - Não deixar console.log em produção
 - Não quebrar a estrutura de pastas estabelecida
+- **NÃO duplicar código** - Se vai usar em 3+ lugares, crie um componente!
 
 ### ✅ SEMPRE FAZER
 - Usar componentes existentes quando possível
+- **Criar componentes reutilizáveis** para elementos repetitivos
 - Seguir a convenção de nomenclatura
 - Testar em diferentes tamanhos de tela
 - Documentar código complexo
 - Fazer commits pequenos e frequentes
+- **Pensar em reutilização** antes de codificar
 
 ---
 
