@@ -9,26 +9,26 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen pt-[7.5rem] px-[2.5rem] bg-gradient-to-tr from-[#e3f2fd] to-[#bbdefb] flex justify-center items-start font-sans">
-      <div className="w-full max-w-[230rem] mx-auto">
-        <div className="text-center mb-[8rem]">
-          <h1 className="text-[12rem] text-[#1a1a1a] font-bold mb-[2rem]">
+    <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-3xl text-gray-800 font-bold mb-4">
             Bem-vindo de volta!
           </h1>
-          <p className="text-[6rem] text-[#666] leading-[1.5]">
+          <p className="text-2xl text-gray-600 leading-relaxed">
             Faça login com seu e-mail e senha cadastrados.
           </p>
         </div>
 
-        <div className="flex bg-white rounded-[3rem] shadow-[0_1rem_2rem_rgba(0,0,0,0.1)] overflow-hidden min-h-[100rem] max-w-[350rem] mx-auto">
+        <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
           {/* Lado esquerdo - Branding */}
-          <div className="flex-[0.8] bg-[#4A90E2] flex items-center justify-center p-[6rem]">
+          <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
             <div className="text-center text-white">
               <svg
                 width="120"
                 height="120"
                 viewBox="0 0 120 120"
-                className="mb-[4rem] filter drop-shadow-[0_1rem_2rem_rgba(0,0,0,0.2)]"
+                className="mb-8 mx-auto drop-shadow-lg"
                 aria-hidden="true"
               >
                 <circle cx="60" cy="60" r="55" fill="#FF6B35" opacity="0.2" />
@@ -39,19 +39,19 @@ export function LoginPage() {
                   fill="white"
                 />
               </svg>
-              <h2 className="text-[8rem] font-bold mb-[2rem]">
+              <h2 className="text-3xl font-bold mb-4">
                 Gratitude Serviços
               </h2>
-              <p className="text-[5rem] text-white/90 leading-[1.4]">
+              <p className="text-xl text-white/90 leading-relaxed">
                 Gestão de Projetos Sociais
               </p>
             </div>
           </div>
 
           {/* Lado direito - Formulário */}
-          <div className="flex-[1.2] p-[8rem] px-[10rem] flex items-center">
+          <div className="flex-[1.2] p-12 flex items-center">
             <form
-              className="w-full flex flex-col gap-[6rem]"
+              className="w-full flex flex-col gap-6"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleLogin();
@@ -60,7 +60,7 @@ export function LoginPage() {
               <div className="flex flex-col">
                 <label
                   htmlFor="email"
-                  className="text-[8rem] text-[#333] mb-[2rem] font-semibold"
+                  className="text-lg text-gray-700 mb-2 font-semibold"
                 >
                   Email
                 </label>
@@ -71,14 +71,14 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@email.com"
                   required
-                  className="w-full py-[5rem] px-[6rem] border-[0.5rem] border-solid border-[#ddd] rounded-[2rem] text-[8rem] bg-[#f8f9fa] placeholder:text-[7rem] text-[#333] focus:outline-none focus:border-[#FF6B35] focus:ring-[1rem] focus:ring-[rgba(255,107,53,0.1)] transition"
+                  className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                 />
               </div>
 
               <div className="flex flex-col">
                 <label
                   htmlFor="password"
-                  className="text-[8rem] text-[#333] mb-[2rem] font-semibold"
+                  className="text-lg text-gray-700 mb-2 font-semibold"
                 >
                   Senha
                 </label>
@@ -89,14 +89,14 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
-                  className="w-full py-[5rem] px-[6rem] border-[0.5rem] border-solid border-[#ddd] rounded-[2rem] text-[8rem] bg-[#f8f9fa] placeholder:text-[7rem] text-[#333] focus:outline-none focus:border-[#FF6B35] focus:ring-[1rem] focus:ring-[rgba(255,107,53,0.1)] transition"
+                  className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                 />
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex justify-center mt-6">
                 <button
                   type="submit"
-                  className="min-w-[80rem] h-[16rem] bg-gradient-to-tr from-[#FF6B35] to-[#FF8A65] text-white border-none px-[4rem] rounded-[2rem] text-[8rem] cursor-pointer transition hover:from-[#FF8A65] hover:to-[#FF6B35]"
+                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200"
                 >
                   LOGIN
                 </button>

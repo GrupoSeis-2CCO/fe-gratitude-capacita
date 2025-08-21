@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import '../styles/RegisterPage.css';
 import Button from '../components/Button';
-import Header from '../components/Header';
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -25,30 +23,35 @@ export function RegisterPage() {
   };
 
   return (
-    <>
-      <Header />
-      
-      <div className="register-page">
-        <div className="register-content">
-          <div className="register-header">
-            <h1>Registrar novo colaborador</h1>
-            <p>Insira todas as informações do usuário</p>
+      <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl text-gray-800 font-bold mb-4">
+              Registrar novo colaborador
+            </h1>
+            <p className="text-2xl text-gray-600 leading-relaxed">
+              Insira todas as informações do usuário
+            </p>
           </div>
 
-          <div className="register-form-container">
+          <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
             {/* Lado esquerdo - Branding */}
-            <div className="register-image-section">
-              <div className="register-branding">
-                <svg width="120" height="120" viewBox="0 0 120 120" className="register-logo">
+            <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
+              <div className="text-center text-white">
+                <svg width="120" height="120" viewBox="0 0 120 120" className="mb-8 mx-auto drop-shadow-lg">
                   <circle cx="60" cy="60" r="55" fill="#FF6B35" opacity="0.2"/>
                   <circle cx="60" cy="60" r="35" fill="#FF6B35"/>
                   <circle cx="60" cy="45" r="12" fill="white"/>
                   <path d="M40 75 Q40 65 60 65 Q80 65 80 75 L80 85 Q80 95 60 95 Q40 95 40 85 Z" fill="white"/>
                 </svg>
-                <h2>Gratitude Serviços</h2>
-                <p>Gestão de Projetos Sociais</p>
-                <div className="register-icon-accent">
-                  <svg width="80" height="80" viewBox="0 0 80 80" className="user-plus-icon">
+                <h2 className="text-3xl font-bold mb-4">
+                  Gratitude Serviços
+                </h2>
+                <p className="text-xl text-white/90 leading-relaxed mb-8">
+                  Gestão de Projetos Sociais
+                </p>
+                <div className="flex justify-center">
+                  <svg width="80" height="80" viewBox="0 0 80 80" className="opacity-75">
                     <circle cx="40" cy="30" r="12" stroke="white" strokeWidth="2" fill="none"/>
                     <path d="M20 65 Q20 50 40 50 Q60 50 60 65" stroke="white" strokeWidth="2" fill="none"/>
                     <line x1="65" y1="25" x2="65" y2="35" stroke="white" strokeWidth="2"/>
@@ -59,10 +62,12 @@ export function RegisterPage() {
             </div>
 
             {/* Lado direito - Formulário */}
-            <div className="register-form-section">
-              <form onSubmit={handleSubmit} className="register-form">
-                <div className="form-group">
-                  <label htmlFor="fullName">Nome completo</label>
+            <div className="flex-[1.2] p-12 flex items-center">
+              <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
+                <div className="flex flex-col">
+                  <label htmlFor="fullName" className="text-lg text-gray-700 mb-2 font-semibold">
+                    Nome completo
+                  </label>
                   <input
                     type="text"
                     id="fullName"
@@ -71,11 +76,14 @@ export function RegisterPage() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="cpf">CPF</label>
+                <div className="flex flex-col">
+                  <label htmlFor="cpf" className="text-lg text-gray-700 mb-2 font-semibold">
+                    CPF
+                  </label>
                   <input
                     type="text"
                     id="cpf"
@@ -84,11 +92,14 @@ export function RegisterPage() {
                     value={formData.cpf}
                     onChange={handleInputChange}
                     required
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="email">Email</label>
+                <div className="flex flex-col">
+                  <label htmlFor="email" className="text-lg text-gray-700 mb-2 font-semibold">
+                    Email
+                  </label>
                   <input
                     type="email"
                     id="email"
@@ -97,17 +108,21 @@ export function RegisterPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="role">Cargo</label>
+                <div className="flex flex-col">
+                  <label htmlFor="role" className="text-lg text-gray-700 mb-2 font-semibold">
+                    Cargo
+                  </label>
                   <select
                     id="role"
                     name="role"
                     value={formData.role}
                     onChange={handleInputChange}
                     required
+                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                   >
                     <option disabled value="">Selecionar cargo</option>
                     <option value="colaborador">Colaborador</option>
@@ -115,7 +130,7 @@ export function RegisterPage() {
                   </select>
                 </div>
 
-                <div  className="form-actions">
+                <div className="flex justify-center mt-6">
                   <Button  
                     label="CADASTRAR"
                     variant="Default"
@@ -127,6 +142,5 @@ export function RegisterPage() {
           </div>
         </div>
       </div>
-    </>
   );
 }

@@ -16,9 +16,9 @@ export function ClassUsersPage() {
   ];
 
   return (
-    <div className="fundo">
-      <div className="class-users-container">
-        <h1 className="class-users-title">Participantes do Curso</h1>
+    <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Participantes do Curso</h1>
         <Table columns={columns} data={data} />
       </div>
     </div>
