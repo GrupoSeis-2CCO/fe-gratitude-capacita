@@ -1,3 +1,4 @@
+import UserActions from "../components/UserActions";
 
 export function UserPage() {
   // Dados de exemplo para o gráfico
@@ -40,26 +41,7 @@ export function UserPage() {
       {/* Layout em duas colunas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {/* Coluna Esquerda - Ações */}
-        <div className="lg:col-span-1">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Sobre o Participante</h2>
-          
-          <div className="space-y-4">
-            <button className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 transition-colors">
-              <span className="text-2xl">📄</span>
-              <span className="text-gray-700 font-medium">Provas Realizadas</span>
-            </button>
-
-            <button className="w-full bg-white hover:bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3 transition-colors">
-              <span className="text-2xl">📚</span>
-              <span className="text-gray-700 font-medium">Cursos do Participante</span>
-            </button>
-
-            <button className="w-full bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg p-4 flex items-center gap-3 transition-colors">
-              <span className="text-2xl">🗑️</span>
-              <span className="text-red-700 font-medium">Apagar Usuário</span>
-            </button>
-          </div>
-        </div>
+        <UserActions />
 
         {/* Coluna Direita - Gráfico */}
         <div className="lg:col-span-2">
@@ -69,13 +51,12 @@ export function UserPage() {
             {/* Label do eixo Y */}
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2 -rotate-90">
               <span className="text-sm font-medium text-gray-600">
-                Materiais Completos
               </span>
             </div>
 
             {/* Container do Gráfico */}
             <div className="relative">
-              <svg className="w-full h-96" viewBox="0 0 2000 700" preserveAspectRatio="xMidYMid meet">
+              <svg className="w-full h-58" viewBox="0 0 2000 700" preserveAspectRatio="xMidYMid meet">
                 {/* Grid lines horizontais */}
                 {[0, 2, 4, 6, 8, 10, 12, 14, 16].map((value) => (
                   <g key={value}>
@@ -91,7 +72,7 @@ export function UserPage() {
                     <text
                       x="85"
                       y={660 - (value * 40)}
-                      className="fill-gray-500 text-xs"
+                      className="fill-gray-500 text-base"
                       textAnchor="end"
                     >
                       {value}

@@ -8,6 +8,7 @@ import { RegisterPage } from "./pages/RegisterPage.jsx";
 import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
+import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -47,6 +48,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <TestPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/cursos/:idCurso",
+    element: (
+      <Layout>
+        <ClassDetailsPage />
       </Layout>
     ),
   },
