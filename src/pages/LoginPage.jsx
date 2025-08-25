@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/LoginPage.css';
 import { userService } from '../services/userService';
+import OrangeAlert from "../components/OrangeAlert";
 
 
 
@@ -11,6 +12,21 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [showAlert, setShowAlert] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("showLoginAlert") === "true") {
+      setShowAlert(true);
+      localStorage.removeItem("showLoginAlert");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("showLoginAlert") === "true") {
+      setShowAlert(true);
+      localStorage.removeItem("showLoginAlert");
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,6 +50,7 @@ export function LoginPage() {
     }
   };
 
+  
   
   return (
 
@@ -62,12 +79,16 @@ export function LoginPage() {
 
           {/* Lado direito - Formulário */}
           <div className="login-form-section">
+            {showAlert && (
+              <OrangeAlert>
+                Você <b>NÃO</b> possui acesso, Realize o Login primeiro
+              </OrangeAlert>
+            )}
             {error && (
               <div className="error-message">
                 {error}
               </div>
             )}
-            
             <form className="login-form" onSubmit={handleLogin}>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
