@@ -1,22 +1,30 @@
-
-export default function Table({ columns, data }) {
+export default function Table({ columns, data, headerClassName, rowClassName }) {
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="w-full overflow-x-auto my-4 bg-[#1D262D] rounded-md shadow-md p-2">
+      <table className="w-full border-[4px] border-[#1D262D] rounded-lg overflow-hidden border-separate border-spacing-0 bg-transparent">
+        <thead>
           <tr>
             {columns.map((col, index) => (
-              <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                key={index}
+                className={`${headerClassName || "bg-[#ff8800] text-[#111] font-bold text-[1.25rem] border-b-[3px] border-[#1D262D] border-[1px] border-[#1D262D] px-6 py-4 text-center"}`}
+              >
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody>
           {data.map((row, rIndex) => (
-            <tr key={rIndex} className="hover:bg-gray-50 transition-colors">
+            <tr
+              key={rIndex}
+              className={`${rowClassName || "bg-[#FFE8DA] hover:bg-[#ffb877] transition-colors"}`}
+            >
               {columns.map((col, cIndex) => (
-                <td key={cIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td
+                  key={cIndex}
+                  className="border border-[#1D262D] px-5 py-3 text-center align-middle text-[1rem]"
+                >
                   {row[col.accessor]}
                 </td>
               ))}
