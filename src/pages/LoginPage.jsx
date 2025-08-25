@@ -1,15 +1,43 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/LoginPage.css';
+import { userService } from '../services/userService';
+
+
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    alert(`Login tentado com: ${email}`);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // Fazer login usando o userService
+      await userService.login({ 
+        email: email.toLowerCase().trim(), 
+        senha: password 
+      });
+      
+      // Redirecionar para a página principal após login bem-sucedido
+      navigate('/');
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setError('Email ou senha incorretos. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  
   return (
+
+    
     <div className="login-page">
       <div className="login-content">
         <div className="login-header">
@@ -34,7 +62,13 @@ export function LoginPage() {
 
           {/* Lado direito - Formulário */}
           <div className="login-form-section">
-            <form className="login-form" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+            
+            <form className="login-form" onSubmit={handleLogin}>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <input
@@ -44,6 +78,7 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@email.com"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -56,6 +91,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -63,8 +99,9 @@ export function LoginPage() {
                 <button
                   type="submit"
                   className="login-button"
+                  disabled={isLoading}
                 >
-                  LOGIN
+                  {isLoading ? 'ENTRANDO...' : 'LOGIN'}
                 </button>
               </div>
             </form>
@@ -73,4 +110,4 @@ export function LoginPage() {
       </div>
     </div>
   );
-};
+}

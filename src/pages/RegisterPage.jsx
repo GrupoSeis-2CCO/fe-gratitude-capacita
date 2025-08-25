@@ -2,26 +2,191 @@ import { useState } from 'react';
 import '../styles/RegisterPage.css';
 import Button from '../components/Button';
 import Header from '../components/Header';
+// import { userService } from '../services/api';
+import { userService } from "../services/userService";
+
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    nome: '',
     cpf: '',
     email: '',
-    role: ''
+    cargo: ''
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const validateField = async (name, value) => {
+    const errors = { ...validationErrors };
+
+    switch (name) {
+      case 'nome':
+        if (value.length < 2) {
+          errors.nome = 'Nome deve ter pelo menos 2 caracteres';
+        } else {
+          delete errors.nome;
+        }
+        break;
+
+      case 'cpf':
+        const cleanCPF = value.replace(/\D/g, '');
+        if (cleanCPF.length !== 11) {
+          errors.cpf = 'CPF deve ter 11 dígitos';
+        } else if (!isValidCPF(cleanCPF)) {
+          errors.cpf = 'CPF inválido';
+        } else {
+          delete errors.cpf;
+          try {
+            const exists = await userService.checkCPF(cleanCPF);
+            if (exists.exists) {
+              errors.cpf = 'Este CPF já está cadastrado';
+            }
+          } catch (error) {
+            console.log('Erro ao verificar CPF:', error);
+          }
+        }
+        break;
+
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          errors.email = 'Email inválido';
+        } else {
+          delete errors.email;
+          // Verificar se email já existe (opcional)
+          try {
+            const exists = await userService.checkEmail(value);
+            if (exists.exists) {
+              errors.email = 'Este email já está cadastrado';
+            }
+          } catch (error) {
+            console.log('Erro ao verificar email:', error);
+          }
+        }
+        break;
+
+      case 'cargo':
+        if (!value) {
+          errors.cargo = 'Selecione um cargo';
+        } else {
+          delete errors.cargo;
+        }
+        break;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleInputChange = (e) => {
+  const isValidCPF = (cpf) => {
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    
+    let sum = 0;
+    let remainder;
+    
+    for (let i = 1; i <= 9; i++) {
+      sum += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+    }
+    
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cpf.substring(9, 10))) return false;
+    
+    sum = 0;
+    for (let i = 1; i <= 10; i++) {
+      sum += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+    }
+    
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    return remainder === parseInt(cpf.substring(10, 11));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const isnomeValid = await validateField('nome', formData.nome);
+    const isCPFValid = await validateField('cpf', formData.cpf);
+    const isEmailValid = await validateField('email', formData.email);
+    const isCargoValid = await validateField('cargo', formData.cargo);
+
+    if (!isnomeValid || !isCPFValid || !isEmailValid || !isCargoValid) {
+      setMessage({
+        type: 'error',
+        text: 'Por favor, corrija os erros no formulário'
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const userData = {
+        nome: formData.nome.trim(),
+        cpf: formData.cpf.replace(/\D/g, ''),
+        email: formData.email.toLowerCase().trim(),
+        cargo: formData.cargo
+      };
+
+      const result = await userService.create(userData);
+      
+      setMessage({
+        type: 'success',
+        text: `Colaborador ${result.nome} cadastrado com sucesso!`
+      });
+
+      // Limpar formulário
+      setFormData({
+        nome: '',
+        cpf: '',
+        email: '',
+        cargo: ''
+      });
+      setValidationErrors({});
+
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.message || 'Erro ao cadastrar colaborador'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = async (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Formatação automática do CPF
+    if (name === 'cpf') {
+      const formattedCPF = value
+        .replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedCPF
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+
+    if (value.trim()) {
+      setTimeout(() => validateField(name, value), 500);
+    }
+
+    if (message.text) {
+      setMessage({ type: '', text: '' });
+    }
   };
 
   return (
@@ -36,7 +201,6 @@ export function RegisterPage() {
           </div>
 
           <div className="register-form-container">
-            {/* Lado esquerdo - Branding */}
             <div className="register-image-section">
               <div className="register-branding">
                 <svg width="120" height="120" viewBox="0 0 120 120" className="register-logo">
@@ -58,20 +222,30 @@ export function RegisterPage() {
               </div>
             </div>
 
-            {/* Lado direito - Formulário */}
             <div className="register-form-section">
+              {message.text && (
+                <div className={`message ${message.type}`}>
+                  {message.text}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="register-form">
                 <div className="form-group">
-                  <label htmlFor="fullName">Nome completo</label>
+                  <label htmlFor="nome">Nome completo</label>
                   <input
                     type="text"
-                    id="fullName"
-                    name="fullName"
+                    id="nome"
+                    name="nome"
                     placeholder="Insira o nome do usuário"
-                    value={formData.fullName}
+                    value={formData.nome}
                     onChange={handleInputChange}
+                    disabled={isLoading}
+                    className={validationErrors.nome ? 'error' : ''}
                     required
                   />
+                  {validationErrors.nome && (
+                    <span className="error-message">{validationErrors.nome}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -80,11 +254,17 @@ export function RegisterPage() {
                     type="text"
                     id="cpf"
                     name="cpf"
-                    placeholder="Ex: 12345678900"
+                    placeholder="000.000.000-00"
                     value={formData.cpf}
                     onChange={handleInputChange}
+                    maxLength="14"
+                    disabled={isLoading}
+                    className={validationErrors.cpf ? 'error' : ''}
                     required
                   />
+                  {validationErrors.cpf && (
+                    <span className="error-message">{validationErrors.cpf}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -96,30 +276,41 @@ export function RegisterPage() {
                     placeholder="usuario@email.com"
                     value={formData.email}
                     onChange={handleInputChange}
+                    disabled={isLoading}
+                    className={validationErrors.email ? 'error' : ''}
                     required
                   />
+                  {validationErrors.email && (
+                    <span className="error-message">{validationErrors.email}</span>
+                  )}
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="role">Cargo</label>
+                  <label htmlFor="cargo">Cargo</label>
                   <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
+                    id="cargo"
+                    name="cargo"
+                    value={formData.cargo}
                     onChange={handleInputChange}
+                    disabled={isLoading}
+                    className={validationErrors.cargo ? 'error' : ''}
                     required
-                  >
-                    <option disabled value="">Selecionar cargo</option>
-                    <option value="colaborador">Colaborador</option>
-                    <option value="funcionario">Funcionário</option>
-                  </select>
+                    >
+                      <option disabled value="">Selecionar cargo</option>
+                      <option value="1">Funcionário</option>
+                      <option value="2">Colaborador</option>
+                    </select>
+                  {validationErrors.cargo && (
+                    <span className="error-message">{validationErrors.cargo }</span>
+                  )}
                 </div>
 
-                <div  className="form-actions">
+                <div className="form-actions">
                   <Button  
-                    label="CADASTRAR"
+                    label={isLoading ? "CADASTRANDO..." : "CADASTRAR"}
                     variant="Default"
                     onClick={handleSubmit}
+                    disabled={isLoading || Object.keys(validationErrors).length > 0}
                   />
                 </div>
               </form>
