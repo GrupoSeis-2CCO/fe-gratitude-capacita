@@ -1,4 +1,4 @@
-import '../styles/UserPage.css';
+import UserActions from "../components/UserActions";
 
 export function UserPage() {
   // Dados de exemplo para o gráfico
@@ -22,126 +22,113 @@ export function UserPage() {
   const average = chartData.reduce((sum, d) => sum + d.value, 0) / chartData.length;
 
   return (
-    <div className="participant-page">
+    <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
       {/* Título Principal */}
-      <div className="participant-title">
-        <h1>Colaborador y</h1>
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-gray-800">Colaborador y</h1>
       </div>
 
       {/* Card com informações principais */}
-      <div className="info-card-main">
-        <div className="info-item">
-          <div><strong>Email:</strong> alunox@email.com</div>
-          <div><strong>Primeiro acesso:</strong> 05 de abril de 2025, 14h32</div>
-          <div><strong>Último acesso:</strong> 23 de abril de 2025, 16h17</div>
-          <div><strong>Último curso acessado:</strong> Curso x - 07 de abril de 2025, 13h01</div>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">
+        <div className="space-y-3">
+          <div className="text-gray-700"><strong className="text-gray-900">Email:</strong> alunox@email.com</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Primeiro acesso:</strong> 05 de abril de 2025, 14h32</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Último acesso:</strong> 23 de abril de 2025, 16h17</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Último curso acessado:</strong> Curso x - 07 de abril de 2025, 13h01</div>
         </div>
       </div>
 
       {/* Layout em duas colunas */}
-      <div className="two-column-layout">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
         {/* Coluna Esquerda - Ações */}
-        <div className="actions-section">
-          <h2 className="actions-title">Sobre o Participante</h2>
-          
-          <button className="action-btn">
-            <span className="action-btn-icon">📄</span>
-            Provas Realizadas
-          </button>
-
-          <button className="action-btn">
-            <span className="action-btn-icon">📚</span>
-            Cursos do Participante
-          </button>
-
-          <button className="action-btn action-btn-delete">
-            <span className="action-btn-icon">🗑️</span>
-            Apagar Usuário
-          </button>
-        </div>
+        <UserActions />
 
         {/* Coluna Direita - Gráfico */}
-        <div className="chart-section">
-          <h2 className="chart-title">Engajamento Diário do Participante</h2>
+        <div className="lg:col-span-2">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Engajamento Diário do Participante</h2>
           
-          {/* Label do eixo Y */}
-          <div className="chart-y-label">
-            <span className="chart-y-label-text">
-              Materiais<br/>
-              Completos
-            </span>
-          </div>
-
-          {/* Container do Gráfico */}
-          <div className="chart-container">
-            <svg className="chart-svg" viewBox="0 0 2000 700" preserveAspectRatio="xMidYMid meet">
-              {/* Grid lines horizontais */}
-              {[0, 2, 4, 6, 8, 10, 12, 14, 16].map((value) => (
-                <g key={value}>
-                  <line
-                    x1="100"
-                    y1={650 - (value * 40)}
-                    x2="1900"
-                    y2={650 - (value * 40)}
-                    className={value === Math.round(average) ? "chart-grid-line-dashed" : "chart-grid-line"}
-                  />
-                  <text
-                    x="85"
-                    y={660 - (value * 40)}
-                    className="chart-y-text"
-                  >
-                    {value}
-                  </text>
-                  {value === Math.round(average) && (
-                    <text
-                      x="1000"
-                      y={630 - (value * 40)}
-                      className="chart-media-text"
-                    >
-                      Média Geral
-                    </text>
-                  )}
-                </g>
-              ))}
-
-              {/* Linha do gráfico */}
-              <polyline
-                fill="none"
-                stroke="#FF6B35"
-                strokeWidth="8"
-                points={chartData
-                  .map((d, i) => `${150 + (i * 135)},${650 - (d.value * 40)}`)
-                  .join(' ')}
-                className="chart-line"
-              />
-
-              {/* Pontos do gráfico */}
-              {chartData.map((d, i) => (
-                <circle
-                  key={i}
-                  cx={150 + (i * 135)}
-                  cy={650 - (d.value * 40)}
-                  r="12"
-                  fill="#FF6B35"
-                  className="chart-point"
-                />
-              ))}
-            </svg>
-          </div>
-
-          {/* Labels do eixo X */}
-          <div className="chart-x-labels">
-            {chartData.map((d, i) => (
-              <span key={i} style={{ fontSize: i % 2 === 0 ? '4rem' : '3.5rem' }}>
-                {d.date.split('/').slice(0, 2).join('/')}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            {/* Label do eixo Y */}
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 -rotate-90">
+              <span className="text-sm font-medium text-gray-600">
               </span>
-            ))}
-          </div>
+            </div>
 
-          {/* Legenda */}
-          <div className="chart-legend">
-            <div className="chart-legend-color"></div>
-            <span>Primeiro Acesso</span>
+            {/* Container do Gráfico */}
+            <div className="relative">
+              <svg className="w-full h-58" viewBox="0 0 2000 700" preserveAspectRatio="xMidYMid meet">
+                {/* Grid lines horizontais */}
+                {[0, 2, 4, 6, 8, 10, 12, 14, 16].map((value) => (
+                  <g key={value}>
+                    <line
+                      x1="100"
+                      y1={650 - (value * 40)}
+                      x2="1900"
+                      y2={650 - (value * 40)}
+                      stroke={value === Math.round(average) ? "#FF6B35" : "#e5e7eb"}
+                      strokeWidth={value === Math.round(average) ? "2" : "1"}
+                      strokeDasharray={value === Math.round(average) ? "5,5" : "none"}
+                    />
+                    <text
+                      x="85"
+                      y={660 - (value * 40)}
+                      className="fill-gray-500 text-base"
+                      textAnchor="end"
+                    >
+                      {value}
+                    </text>
+                    {value === Math.round(average) && (
+                      <text
+                        x="1000"
+                        y={630 - (value * 40)}
+                        className="fill-orange-500 text-sm font-medium"
+                        textAnchor="middle"
+                      >
+                        Média Geral
+                      </text>
+                    )}
+                  </g>
+                ))}
+
+                {/* Linha do gráfico */}
+                <polyline
+                  fill="none"
+                  stroke="#FF6B35"
+                  strokeWidth="8"
+                  points={chartData
+                    .map((d, i) => `${150 + (i * 135)},${650 - (d.value * 40)}`)
+                    .join(' ')}
+                  className="drop-shadow-sm"
+                />
+
+                {/* Pontos do gráfico */}
+                {chartData.map((d, i) => (
+                  <circle
+                    key={i}
+                    cx={150 + (i * 135)}
+                    cy={650 - (d.value * 40)}
+                    r="12"
+                    fill="#FF6B35"
+                    className="drop-shadow-sm hover:r-16 transition-all cursor-pointer"
+                  />
+                ))}
+              </svg>
+            </div>
+
+            {/* Labels do eixo X */}
+            <div className="flex justify-between mt-4 px-4">
+              {chartData.map((d, i) => (
+                <span key={i} className="text-xs text-gray-500 transform -rotate-45 origin-left">
+                  {d.date.split('/').slice(0, 2).join('/')}
+                </span>
+              ))}
+            </div>
+
+            {/* Legenda */}
+            <div className="flex items-center justify-center mt-6 gap-2">
+              <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+              <span className="text-sm text-gray-600">Primeiro Acesso</span>
+            </div>
           </div>
         </div>
       </div>

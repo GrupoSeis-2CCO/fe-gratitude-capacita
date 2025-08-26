@@ -6,7 +6,7 @@ export function UserClassesPage() {
     { header: "Curso", accessor: "nomeCurso" },
     { header: "Progresso do Curso", accessor: "progressoCurso" },
     { header: "Iniciado", accessor: "iniciado" },
-    { header: "Finalizado", accessor: "finalizado" }
+    { header: "Finalizado", accessor: "finalizado" },
   ];
 
   const data = [
@@ -16,10 +16,15 @@ export function UserClassesPage() {
   ];
 
   return (
-    <div className="fundo">
-      <div className="class-users-container">
-        <h1 className="class-users-title">Participantes do Curso</h1>
-        <Table columns={columns} data={data} />
+    <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Cursos do Participante</h1>
+        <Table
+          columns={columns}
+          data={data}
+          headerClassName="bg-[#0067B1] text-white"
+          rowClassName="odd:bg-[#DAEEFF] even:bg-[#B5DEFF] hover:bg-[#99ccff] transition-colors"
+        />
       </div>
     </div>
   );
