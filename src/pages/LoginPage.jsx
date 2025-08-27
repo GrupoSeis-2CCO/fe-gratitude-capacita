@@ -1,75 +1,14 @@
-<<<<<<< HEAD
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../styles/LoginPage.css';
-import { userService } from '../services/userService';
-import OrangeAlert from "../components/OrangeAlert";
-
-
-
-export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const [showAlert, setShowAlert] = useState(false);
-=======
 import { useState } from "react";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
 
-  useEffect(() => {
-    if (localStorage.getItem("showLoginAlert") === "true") {
-      setShowAlert(true);
-      localStorage.removeItem("showLoginAlert");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (localStorage.getItem("showLoginAlert") === "true") {
-      setShowAlert(true);
-      localStorage.removeItem("showLoginAlert");
-    }
-  }, []);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // Fazer login usando o userService
-      await userService.login({ 
-        email: email.toLowerCase().trim(), 
-        senha: password 
-      });
-      
-      // Redirecionar para a página principal após login bem-sucedido
-      navigate('/');
-    } catch (error) {
-      console.error('Erro no login:', error);
-      setError('Email ou senha incorretos. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleLogin = () => {
+    alert(`Login tentado com: ${email}`);
   };
 
-  
-  
   return (
-<<<<<<< HEAD
-
-    
-    <div className="login-page">
-      <div className="login-content">
-        <div className="login-header">
-          <h1>Bem-vindo de volta!</h1>
-          <p>Faça login com seu e-mail e senha cadastrados.</p>
-=======
     <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
       <div className="w-full max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -79,7 +18,6 @@ export function LoginPage() {
           <p className="text-2xl text-gray-600 leading-relaxed">
             Faça login com seu e-mail e senha cadastrados.
           </p>
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
         </div>
 
         <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
@@ -111,22 +49,6 @@ export function LoginPage() {
           </div>
 
           {/* Lado direito - Formulário */}
-<<<<<<< HEAD
-          <div className="login-form-section">
-            {showAlert && (
-              <OrangeAlert>
-                Você <b>NÃO</b> possui acesso, Realize o Login primeiro
-              </OrangeAlert>
-            )}
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
-            <form className="login-form" onSubmit={handleLogin}>
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-=======
           <div className="flex-[1.2] p-12 flex items-center">
             <form
               className="w-full flex flex-col gap-6"
@@ -142,7 +64,6 @@ export function LoginPage() {
                 >
                   Email
                 </label>
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
                 <input
                   type="email"
                   id="email"
@@ -150,11 +71,7 @@ export function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@email.com"
                   required
-<<<<<<< HEAD
-                  disabled={isLoading}
-=======
                   className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
                 />
               </div>
 
@@ -172,25 +89,16 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
-<<<<<<< HEAD
-                  disabled={isLoading}
-=======
                   className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
                 />
               </div>
 
               <div className="flex justify-center mt-6">
                 <button
                   type="submit"
-<<<<<<< HEAD
-                  className="login-button"
-                  disabled={isLoading}
-=======
                   className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200"
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
                 >
-                  {isLoading ? 'ENTRANDO...' : 'LOGIN'}
+                  LOGIN
                 </button>
               </div>
             </form>
@@ -199,8 +107,4 @@ export function LoginPage() {
       </div>
     </div>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55

@@ -1,54 +1,8 @@
-<<<<<<< HEAD
-import '../styles/Header.css';
-=======
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
 import Link from '../components/Link.jsx';
 import Button from '../components/Button.jsx';
-import { userService } from '../services/userService';
 
-function Header() {
-  const isAuthenticated = !!localStorage.getItem('token');
+function Header(){
 
-<<<<<<< HEAD
-  const handleLogout = () => {
-    userService.logout();
-  };
-
-  return (
-    <header className="Header">
-      {isAuthenticated ? (
-        <>
-          <Link
-            text="Gerenciar Cursos"
-            redirect="/cursos"
-          />
-
-          <Link
-            text="Histórico de Acessos"
-            redirect="/acessos"
-          />
-
-          <Link
-            text="Cadastrar Usuário"
-            redirect="/cadastro"
-          />
-
-          <Button 
-            label="Sair" 
-            variant="Exit" 
-            rounded 
-            onClick={handleLogout} 
-          />
-        </>
-      ) : (
-        <Link 
-          text="Entrar" 
-          redirect="/login" 
-        />
-      )}
-    </header>
-  );
-=======
     return (
         <header className="absolute top-0 left-0 w-full h-25 bg-gray-800 flex items-center justify-between px-8 ">
             {/* Logo à esquerda */}
@@ -91,7 +45,6 @@ function Header() {
             </div>
         </header>
     )
->>>>>>> 7d3d36bff4a23c2e91f75e2c44bfb5ed7b838f55
 }
 
 export default Header;
