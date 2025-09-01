@@ -9,6 +9,7 @@ import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
+import UserExamsPage from "./pages/UserExamsPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -72,6 +73,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <UserClassesPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/participantes/:id/avaliacoes",
+    element: (
+      <Layout>
+        <UserExamsPage />
       </Layout>
     ),
   },
