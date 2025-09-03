@@ -10,6 +10,7 @@ import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
+import CreateExamPage from "./pages/CreateExamPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +58,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <ClassDetailsPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/cursos/:idCurso/material/adicionar-avaliacao",
+    element: (
+      <Layout footerType="mini">
+        <CreateExamPage />
       </Layout>
     ),
   },
