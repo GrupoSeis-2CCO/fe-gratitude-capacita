@@ -1,6 +1,6 @@
 function Footer() {
   return (
-    <footer className="w-full h-27 bg-gray-800 flex justify-between items-start px-8">
+    <footer className="w-full h-28 bg-gray-800 flex justify-between items-start px-8">
 
       {/* Logo */}
       <div className="pt-5 flex-1 flex justify-start">

@@ -1,7 +1,7 @@
 import React from "react";
 import Table from "../components/Table";
 import TituloPrincipal from "../components/TituloPrincipal";
-import GradientSideRail from "../components/GradientSideRail";
+import GradientSideRail from "../components/GradientSideRail.jsx";
 
 export default function UserExamsPage() {
 	// Columns and mock data to mimic the layout shown
@@ -20,16 +20,16 @@ export default function UserExamsPage() {
 	];
 
 	return (
-		<div className="relative min-h-screen bg-[#0F1418] pt-[12.5rem] pb-[6.25rem] px-8">
+		<div className="relative min-h-screen flex bg-white px-8 pt-30 pb-20">
 			{/* Decorative rails left and right */}
-			<GradientSideRail className="left-4" topColor="#0067B1" bottomColor="#ff8800" />
-			<GradientSideRail className="right-4" topColor="#0067B1" bottomColor="#ff8800" />
+			<GradientSideRail className="left-10" topColor="#0067B1" bottomColor="#ff8800" />
+			<GradientSideRail className="right-10" topColor="#ff8800" bottomColor="#0067B1" />
 
 			<div className="max-w-6xl mx-auto">
 				<TituloPrincipal>Provas do Colaborador y</TituloPrincipal>
 
 				{/* Framed table area resembling the mock */}
-				<div className="mt-6 rounded-lg border-[0.1875rem] border-[#1D262D] bg-[#0F1418] p-4 shadow-[0_0_0_0.1875rem_#1D262D]">
+				<div className="mt-10 w-[65rem] h-[45rem] justify-center rounded-lg border-[0.1875rem] border-[#1D262D] bg-[#0F1418] p-4 shadow-[0_0_0_0.1875rem_#1D262D]">
 					<Table
 						columns={columns}
 						data={data}

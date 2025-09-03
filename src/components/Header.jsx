@@ -4,7 +4,7 @@ import Button from '../components/Button.jsx';
 function Header(){
 
     return (
-        <header className="absolute top-0 left-0 w-full h-25 bg-gray-800 flex items-center justify-between px-8 ">
+        <header className="absolute gap-4 w-full h-24 bg-gray-800 flex items-center justify-between px-8 z-10">
             {/* Logo à esquerda */}
             <div className="flex items-center">
                 <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center">

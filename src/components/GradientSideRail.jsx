@@ -3,9 +3,9 @@ import React from "react";
 
 export default function GradientSideRail({ className = "" }) {
   return (
-    <div className={`pointer-events-none absolute inset-y-0 flex items-stretch ${className}`}>
+    <div className={`pointer-events-none absolute top-36 bottom-16 flex items-stretch ${className}`}>
       {/* Line */}
-      <div className="relative mx-auto h-full w-[0.1875rem] rounded-full bg-gradient-to-b from-[#0067B1] to-[#ff8800]">
+      <div className="relative mx-auto w-[0.1875rem] rounded-full bg-gradient-to-b from-[#0067B1] to-[#ff8800]">
         {/* Top Circle */}
         <span className="absolute -top-[0.75rem] left-1/2 h-[0.75rem] w-[0.75rem] -translate-x-1/2 rounded-full bg-[#0067B1] shadow-[0_0_0.375rem_#0067B166]" />
         {/* Bottom Circle */}
