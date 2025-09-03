@@ -56,7 +56,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso",
     element: (
-      <Layout>
+      <Layout footerType="mini">
         <ClassDetailsPage />
       </Layout>
     ),
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/teste/participantes",
     element: (
-      <Layout>
+      <Layout footerType="mini">
         <ClassUsersPage />
       </Layout>
     ),
