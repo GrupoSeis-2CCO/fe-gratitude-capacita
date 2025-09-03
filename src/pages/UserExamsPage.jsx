@@ -22,8 +22,8 @@ export default function UserExamsPage() {
 	return (
 		<div className="relative min-h-screen flex bg-white px-8 pt-30 pb-20">
 			{/* Decorative rails left and right */}
-			<GradientSideRail className="left-10" topColor="#0067B1" bottomColor="#ff8800" />
-			<GradientSideRail className="right-10" topColor="#ff8800" bottomColor="#0067B1" />
+			<GradientSideRail className="left-10" />
+			<GradientSideRail className="right-10" variant="inverted" />
 
 			<div className="max-w-6xl mx-auto">
 				<TituloPrincipal>Provas do Colaborador y</TituloPrincipal>

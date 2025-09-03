@@ -4,9 +4,7 @@ function Footer() {
 
       {/* Logo */}
       <div className="pt-5 flex-1 flex justify-start">
-        <div className="w-16 h-16 bg-gray-600 rounded-lg flex items-center justify-center text-gray-400 text-xs font-medium">
-          LOGO
-        </div>
+        <img src="/GratitudeLogo.svg" alt="Gratitude Logo" className="w-20 h-20" />
       </div>
 
       {/* Botões */}

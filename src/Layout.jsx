@@ -1,12 +1,13 @@
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
+import MiniFooter from "./components/MiniFooter.jsx";
 
-function Layout({ children }) {
+function Layout({ children, footerType = "full" }) {
   return (
     <>
       <Header />
         {children}
-      <Footer />
+      {footerType === "mini" ? <MiniFooter /> : <Footer />}
     </>
   );
 }

@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
   {
     path: "/participantes/:id/avaliacoes",
     element: (
-      <Layout>
+      <Layout footerType="mini">
         <UserExamsPage />
       </Layout>
     ),
