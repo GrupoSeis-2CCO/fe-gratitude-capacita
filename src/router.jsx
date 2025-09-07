@@ -11,6 +11,7 @@ import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
 import CreateExamPage from "./pages/CreateExamPage.jsx";
+import ExamPage from "./pages/ExamPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -66,6 +67,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout footerType="mini">
         <CreateExamPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/cursos/:idCurso/material/avaliacao",
+    element: (
+      <Layout footerType="mini">
+        <ExamPage />
       </Layout>
     ),
   },
