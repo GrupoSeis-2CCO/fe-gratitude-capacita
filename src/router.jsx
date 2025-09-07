@@ -13,6 +13,7 @@ import UserExamsPage from "./pages/UserExamsPage.jsx";
 import CreateExamPage from "./pages/CreateExamPage.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
+import ClassListPage from "./pages/ClassListPage.jsx";
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +53,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <TestPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/cursos",
+    element: (
+      <Layout footerType="full">
+        <ClassListPage />
       </Layout>
     ),
   },
