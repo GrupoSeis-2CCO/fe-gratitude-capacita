@@ -1,0 +1,3 @@
+console.log('Status de autenticação:', 
+  localStorage.getItem('token') ? 'LOGADO' : 'DESLOGADO'
+);

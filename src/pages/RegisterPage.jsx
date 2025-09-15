@@ -1,5 +1,9 @@
+
 import { useState } from 'react';
 import Button from '../components/Button';
+import { userService } from '../services/UserService';
+import { useNavigate } from 'react-router-dom';
+
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -8,10 +12,29 @@ export function RegisterPage() {
     email: '',
     role: ''
   });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (loading) return;
+    setLoading(true);
+    // Mapear role para idCargo: 1 = funcionário, 2 = colaborador
+    let idCargo = null;
+    if (formData.role === 'funcionario') idCargo = 1;
+    if (formData.role === 'colaborador') idCargo = 2;
+    try {
+      await userService.create({
+        nome: formData.fullName,
+        cpf: formData.cpf,
+        email: formData.email,
+        cargo: idCargo
+      });
+      alert('Cadastro realizado com sucesso!');
+    } catch (error) {
+      alert('Erro ao cadastrar. Verifique os dados e tente novamente.');
+    }
+    setLoading(false);
   };
 
   const handleInputChange = (e) => {
@@ -132,9 +155,10 @@ export function RegisterPage() {
 
                 <div className="flex justify-center mt-6">
                   <Button  
-                    label="CADASTRAR"
+                    label={loading ? "Cadastrando..." : "CADASTRAR"}
                     variant="Default"
                     onClick={handleSubmit}
+                    disabled={loading}
                   />
                 </div>
               </form>

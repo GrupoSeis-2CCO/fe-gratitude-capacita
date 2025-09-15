@@ -1,5 +1,7 @@
+
 import Link from '../components/Link.jsx';
 import Button from '../components/Button.jsx';
+import { userService } from '../services/UserService';
 
 function Header(){
 
@@ -34,6 +36,7 @@ function Header(){
                     label="Sair"
                     variant="Exit"
                     rounded
+                    onClick={() => userService.logout()}
                 />
             </div>
         </header>

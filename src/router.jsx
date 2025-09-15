@@ -1,4 +1,5 @@
-import { createBrowserRouter } from "react-router-dom";
+
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { UserPage } from "./pages/UserPage.jsx";
 import Layout from "./Layout";
@@ -16,8 +17,13 @@ import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/login" replace />,
+  },
   {
     path: "/login",
     element: (
@@ -29,113 +35,141 @@ export const router = createBrowserRouter([
   {
     path: "/acessos",
     element: (
-      <Layout>
-        <AccessPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout>
+          <AccessPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cadastro",
     element: (
-      <Layout>
-        <RegisterPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout>
+          <RegisterPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/participante/:id",
     element: (
-      <Layout>
-        <UserPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout>
+          <UserPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/teste",
     element: (
-      <Layout>
-        <TestPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout>
+          <TestPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos",
     element: (
-      <Layout footerType="full">
-        <ClassListPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="full">
+          <ClassListPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/:idCurso",
     element: (
-      <Layout footerType="mini">
-        <ClassDetailsPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <ClassDetailsPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/:idCurso/material",
     element: (
-      <Layout footerType="mini">
-        <MaterialsListPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <MaterialsListPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/:idCurso/material/:idMaterial",
     element: (
-      <Layout footerType="mini">
-        <MaterialPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <MaterialPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/:idCurso/material/adicionar-avaliacao",
     element: (
-      <Layout footerType="mini">
-        <CreateExamPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <CreateExamPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/:idCurso/material/avaliacao",
     element: (
-      <Layout footerType="mini">
-        <ExamPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <ExamPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/cursos/teste/participantes",
     element: (
-      <Layout footerType="mini">
-        <ClassUsersPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <ClassUsersPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/participantes/teste/cursos",
     element: (
-      <Layout>
-        <UserClassesPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout>
+          <UserClassesPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/participantes/:id/avaliacoes",
     element: (
-      <Layout footerType="mini">
-        <UserExamsPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <UserExamsPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
   {
     path: "/participantes/:idUsuario/avaliacoes/:idTentativa",
     element: (
-      <Layout footerType="mini">
-        <AnswerSheetPage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini">
+          <AnswerSheetPage />
+        </Layout>
+      </ProtectedRoute>
     ),
   },
 ]);

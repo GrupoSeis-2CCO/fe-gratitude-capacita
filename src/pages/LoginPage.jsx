@@ -1,11 +1,28 @@
+
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { userService } from "../services/UserService";
 
 export function LoginPage() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    alert(`Login tentado com: ${email}`);
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const data = await userService.login({ email, senha: password });
+      // Exibe no console o status do login e o tipo de usuário
+      console.log("Login realizado com sucesso:", data);
+      const userType = parseInt(localStorage.getItem("userType"));
+  // Redireciona para /cursos para qualquer cargo
+  navigate("/cursos");
+    } catch (error) {
+      alert("Email ou senha inválidos. Tente novamente.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,9 +69,9 @@ export function LoginPage() {
           <div className="flex-[1.2] p-12 flex items-center">
             <form
               className="w-full flex flex-col gap-6"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                handleLogin();
+                if (!loading) await handleLogin();
               }}
             >
               <div className="flex flex-col">
@@ -96,9 +113,10 @@ export function LoginPage() {
               <div className="flex justify-center mt-6">
                 <button
                   type="submit"
-                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200"
+                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-60"
+                  disabled={loading}
                 >
-                  LOGIN
+                  {loading ? "Entrando..." : "LOGIN"}
                 </button>
               </div>
             </form>
