@@ -46,10 +46,10 @@ export function RegisterPage() {
   };
 
   return (
-      <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
+      <div className="min-h-screen pt-28 px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
         <div className="w-full max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl text-gray-800 font-bold mb-4">
+          <div className="text-center mb-6">
+            <h1 className="text-5xl text-gray-800 font-bold mb-2">
               Registrar novo colaborador
             </h1>
             <p className="text-2xl text-gray-600 leading-relaxed">
@@ -57,7 +57,7 @@ export function RegisterPage() {
             </p>
           </div>
 
-          <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
+          <div className="flex h-150 w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden  max-w-6xl mx-auto">
             {/* Lado esquerdo - Branding */}
             <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
               <div className="text-center text-white">
