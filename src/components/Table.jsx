@@ -1,4 +1,4 @@
-export default function Table({ columns, data, headerClassName, rowClassName }) {
+export default function Table({ columns, data, headerClassName, rowClassName, onClickRow }) {
   return (
     <div className="w-full overflow-x-auto my-4 bg-[#1D262D] rounded-md shadow-md p-2">
       <table className="w-full border-[4px] border-[#1D262D] rounded-lg overflow-hidden border-separate border-spacing-0 bg-transparent">
@@ -7,7 +7,7 @@ export default function Table({ columns, data, headerClassName, rowClassName }) 
             {columns.map((col, index) => (
               <th
                 key={index}
-                className={`${headerClassName || "bg-[#ff8800] text-[#111] font-bold text-[1.25rem] border-b-[3px] border-[#1D262D] border-[1px] border-[#1D262D] px-6 py-4 text-center"}`}
+                className={`${headerClassName || "bg-[#ff8800] text-[#111] font-bold text-[1.25rem] border-b-[3px] border-[#1D262D] px-6 py-4 text-center"}`}
               >
                 {col.header}
               </th>
@@ -17,8 +17,12 @@ export default function Table({ columns, data, headerClassName, rowClassName }) 
         <tbody>
           {data.map((row, rIndex) => (
             <tr
-              key={rIndex}
-              className={`${rowClassName || "bg-[#FFE8DA] hover:bg-[#ffb877] transition-colors"}`}
+              key={row.id ?? rIndex}
+              className={`${rowClassName || "bg-[#FFE8DA] hover:bg-[#ffb877] transition-colors"} ${onClickRow ? 'cursor-pointer' : ''}`}
+              onClick={() => onClickRow && onClickRow(row)}
+              role={onClickRow ? "button" : undefined}
+              tabIndex={onClickRow ? 0 : undefined}
+              onKeyDown={onClickRow ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClickRow(row); } : undefined}
             >
               {columns.map((col, cIndex) => (
                 <td

@@ -12,6 +12,8 @@ function Button(props){
                 return 'bg-green-500 hover:bg-green-600 text-white';
             case 'Cancel':
                 return 'bg-gray-500 hover:bg-gray-600 text-white';
+            case 'Ghost':
+                return 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300';
             default:
                 return 'bg-blue-500 hover:bg-blue-600 text-white';
         }

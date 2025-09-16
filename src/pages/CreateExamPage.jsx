@@ -15,7 +15,7 @@ export default function CreateExamPage() {
 					<TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
 				</div>
 
-				<div className="mt-8 w-full">
+				<div className="mt-8 w-full flex justify-center">
 					<ExamBuilder />
 				</div>
 			</div>

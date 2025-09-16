@@ -19,6 +19,9 @@ import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
+// 1 = funcionário
+// 2 = colabora a dor
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -27,7 +30,7 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: (
-      <Layout>
+      <Layout footerType="mini">
         <LoginPage />
       </Layout>
     ),
@@ -36,7 +39,7 @@ export const router = createBrowserRouter([
     path: "/acessos",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout>
+        <Layout footerType="mini">
           <AccessPage />
         </Layout>
       </ProtectedRoute>
@@ -45,18 +48,18 @@ export const router = createBrowserRouter([
   {
     path: "/cadastro",
     element: (
-      <ProtectedRoute allowedUserTypes={[1]}>
-        <Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="mini">
           <RegisterPage />
         </Layout>
       </ProtectedRoute>
     ),
   },
   {
-    path: "/participante/:id",
+    path: "cursos/:idCurso/participante/:id",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout>
+        <Layout footerType="mini">
           <UserPage />
         </Layout>
       </ProtectedRoute>
@@ -65,8 +68,8 @@ export const router = createBrowserRouter([
   {
     path: "/teste",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
-        <Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="mini">
           <TestPage />
         </Layout>
       </ProtectedRoute>
@@ -76,7 +79,7 @@ export const router = createBrowserRouter([
     path: "/cursos",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="full">
+        <Layout footerType="mini">
           <ClassListPage />
         </Layout>
       </ProtectedRoute>
@@ -85,7 +88,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1, 2]}>
         <Layout footerType="mini">
           <ClassDetailsPage />
         </Layout>
@@ -95,7 +98,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso/material",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <MaterialsListPage />
         </Layout>
@@ -105,7 +108,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso/material/:idMaterial",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <MaterialPage />
         </Layout>
@@ -115,7 +118,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso/material/adicionar-avaliacao",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <CreateExamPage />
         </Layout>
@@ -125,7 +128,7 @@ export const router = createBrowserRouter([
   {
     path: "/cursos/:idCurso/material/avaliacao",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <ExamPage />
         </Layout>
@@ -133,9 +136,9 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/cursos/teste/participantes",
+    path: "/cursos/:id/participantes",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <ClassUsersPage />
         </Layout>
@@ -143,10 +146,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/participantes/teste/cursos",
+    path: "/participantes/:id/cursos",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
-        <Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="mini">
           <UserClassesPage />
         </Layout>
       </ProtectedRoute>
@@ -155,7 +158,7 @@ export const router = createBrowserRouter([
   {
     path: "/participantes/:id/avaliacoes",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <UserExamsPage />
         </Layout>
@@ -165,7 +168,7 @@ export const router = createBrowserRouter([
   {
     path: "/participantes/:idUsuario/avaliacoes/:idTentativa",
     element: (
-      <ProtectedRoute allowedUserTypes={[2]}>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <AnswerSheetPage />
         </Layout>
