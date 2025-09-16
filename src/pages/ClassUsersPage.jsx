@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Table from "../components/Table";
+import GradientSideRail from "../components/GradientSideRail.jsx";
 
 export function ClassUsersPage() {
   const navigate = useNavigate();
@@ -21,8 +22,11 @@ export function ClassUsersPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 pt-28 p-8">
+      <GradientSideRail className="left-10" />
+      <GradientSideRail variant="inverted" className="right-10" />
+
+      <div className="max-w-5xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Participantes do Curso</h1>
         <Table onClickRow={(row) => navigate(`/cursos/${idCurso}/participante/${row.id}`)} columns={columns} data={data} />
       </div>

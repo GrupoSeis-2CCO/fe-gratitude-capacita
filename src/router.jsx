@@ -17,6 +17,7 @@ import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
+import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // 1 = funcionário
@@ -66,6 +67,16 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/participante/:id",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="mini">
+          <UserPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/teste",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
@@ -91,6 +102,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute allowedUserTypes={[1, 2]}>
         <Layout footerType="mini">
           <ClassDetailsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cursos/:idCurso/feedbacks",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1, 2]}>
+        <Layout footerType="mini">
+          <FeedbackPage />
         </Layout>
       </ProtectedRoute>
     ),

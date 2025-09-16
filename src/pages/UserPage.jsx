@@ -22,7 +22,7 @@ export function UserPage() {
   const average = chartData.reduce((sum, d) => sum + d.value, 0) / chartData.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
+    <div className="min-h-screen bg-gray-50 pt-28 p-8">
       {/* Título Principal */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800">Colaborador y</h1>

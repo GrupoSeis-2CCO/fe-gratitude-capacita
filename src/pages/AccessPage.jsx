@@ -1,9 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 
 export function AccessPage() {
+  const navigate = useNavigate();
+  
   const columns = [
     { header: "Nome do Colaborador", accessor: "nome" },
     { header: "Materiais Concluídos", accessor: "materiais" },
@@ -75,8 +78,8 @@ export function AccessPage() {
                 onClickRow={(row) => {
                   // Only navigate if the row has valid data
                   if (row.id && row.nome !== "-") {
-                    console.log("Navigate to user details:", row);
-                    // navigate(`/participantes/${row.id}/cursos`);
+                    // Navigate to user profile - using course x as default since this is access page
+                    navigate(`/participante/${row.id}`);
                   }
                 }}
               />
