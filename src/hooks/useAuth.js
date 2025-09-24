@@ -28,10 +28,12 @@ export const useAuth = () => {
   const getCurrentUser = () => {
     const token = localStorage.getItem("token");
     const userType = getCurrentUserType();
+    const idUsuario = parseInt(localStorage.getItem("idUsuario"), 10) || null;
 
     return {
       token,
       userType,
+      idUsuario,
       isAuthenticated: !!token,
       isColaborador: userType === 1,
       isFuncionario: userType === 2,

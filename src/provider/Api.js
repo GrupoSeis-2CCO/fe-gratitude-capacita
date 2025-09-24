@@ -1,11 +1,17 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // CRIAR .env NA RAIZ DO PROJETO 
-  headers: {
-    "X-API-KEY": "", // TODO: Colocar o Token Bearer aqui a partir do localStorage ou cookie
-  },
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
+// Interceptor para anexar Authorization: Bearer <token>
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default api;

@@ -10,11 +10,24 @@ export const userService = {
     try {
       const response = await api.post("/usuarios/login", loginData);
       localStorage.setItem("token", response.data.token);
-      console.log('Login backend response:', response.data);
+      console.log("Login backend response:", response.data);
       // Tenta salvar o tipo de usuário usando os campos possíveis
-      let tipo = response.data.userType ?? response.data.tipo ?? response.data.cargo ?? response.data.idCargo;
+      let tipo =
+        response.data.userType ??
+        response.data.tipo ??
+        response.data.cargo ??
+        response.data.idCargo;
       tipo = parseInt(tipo, 10);
       localStorage.setItem("userType", tipo);
+      // Persistir id do usuário, se vier no payload
+      const idUsuario =
+        response.data.idUsuario ??
+        response.data.id ??
+        response.data.userId ??
+        response.data.usuarioId;
+      if (idUsuario != null) {
+        localStorage.setItem("idUsuario", String(idUsuario));
+      }
       return response.data;
     } catch (error) {
       console.error("Erro no login:", error);
