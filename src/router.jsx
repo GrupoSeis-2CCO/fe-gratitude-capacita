@@ -7,6 +7,7 @@ import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
 import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
+import { ProfilePage } from "./pages/ProfilePage.jsx";
 import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
@@ -17,6 +18,14 @@ import ClassListPage from "./pages/ClassListPage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: (
+      <Layout>
+        <LoginPage />
+      </Layout>
+    ),
+  },
   {
     path: "/login",
     element: (
@@ -38,6 +47,14 @@ export const router = createBrowserRouter([
     element: (
       <Layout>
         <RegisterPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/perfil",
+    element: (
+      <Layout footerType="mini">
+        <ProfilePage />
       </Layout>
     ),
   },

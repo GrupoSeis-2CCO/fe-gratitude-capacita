@@ -56,7 +56,8 @@ export const router = createBrowserRouter([
    ```jsx
    import { Sobre } from "./pages/Sobre";
    // ...
-   export const router = createBrowserRouter([
+   export c
+   onst router = createBrowserRouter([
      // ...outras rotas
      {
        path: "/sobre",
