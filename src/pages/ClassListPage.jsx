@@ -1,10 +1,12 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 
 export default function ClassListPage() {
+	const navigate = useNavigate();
 	const mockCourses = [
 		{
 			id: 1,
@@ -56,7 +58,7 @@ export default function ClassListPage() {
 
 				<div className="mt-8 w-full">
 					{mockCourses.map(course => (
-						<CourseCard key={course.id} course={course} />
+						<CourseCard key={course.id} course={course} onClick={() => navigate(`/cursos/${course.id}`)} />
 					))}
 				</div>
 			</div>

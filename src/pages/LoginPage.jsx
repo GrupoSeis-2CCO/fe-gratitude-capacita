@@ -1,17 +1,34 @@
+
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { userService } from "../services/UserService";
 
 export function LoginPage() {
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = () => {
-    alert(`Login tentado com: ${email}`);
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const data = await userService.login({ email, senha: password });
+      // Exibe no console o status do login e o tipo de usuário
+      console.log("Login realizado com sucesso:", data);
+      const userType = parseInt(localStorage.getItem("userType"));
+  // Redireciona para /cursos para qualquer cargo
+  navigate("/cursos");
+    } catch (error) {
+      alert("Email ou senha inválidos. Tente novamente.");
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
+    <div className="min-h-screen pt-28 px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
       <div className="w-full max-w-7xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h1 className="text-3xl text-gray-800 font-bold mb-4">
             Bem-vindo de volta!
           </h1>
@@ -20,7 +37,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
+        <div className="flex h-150 w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden  max-w-6xl mx-auto">
           {/* Lado esquerdo - Branding */}
           <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
             <div className="text-center text-white">
@@ -52,9 +69,9 @@ export function LoginPage() {
           <div className="flex-[1.2] p-12 flex items-center">
             <form
               className="w-full flex flex-col gap-6"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                handleLogin();
+                if (!loading) await handleLogin();
               }}
             >
               <div className="flex flex-col">
@@ -96,10 +113,42 @@ export function LoginPage() {
               <div className="flex justify-center mt-6">
                 <button
                   type="submit"
-                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200"
+                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-60"
+                  disabled={loading}
                 >
-                  LOGIN
+                  {loading ? "Entrando..." : "LOGIN"}
                 </button>
+              </div>
+
+              {/* Mock Login Buttons - REMOVER EM PRODUÇÃO */}
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <p className="text-sm text-gray-500 mb-4 text-center">🚧 Mock Login para Testes (REMOVER EM PRODUÇÃO)</p>
+                <div className="flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("token", "mock-token-funcionario");
+                      localStorage.setItem("userType", "1");
+                      console.log("Mock login como Funcionário (tipo 1)");
+                      navigate("/cursos");
+                    }}
+                    className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition"
+                  >
+                    🧑‍💼 Mock Login - Funcionário (Tipo 1)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem("token", "mock-token-colaborador");
+                      localStorage.setItem("userType", "2");
+                      console.log("Mock login como Colaborador (tipo 2)");
+                      navigate("/cursos");
+                    }}
+                    className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
+                  >
+                    👥 Mock Login - Colaborador (Tipo 2)
+                  </button>
+                </div>
               </div>
             </form>
           </div>

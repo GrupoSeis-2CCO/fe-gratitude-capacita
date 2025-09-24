@@ -82,7 +82,7 @@ function ExamBuilder() {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
   return (
-    <div className="w-[70rem] mx-auto bg-[#1D262D] rounded-lg p-6">
+    <div className=" w-[60rem] mx-auto bg-[#1D262D] rounded-lg p-6">
       {/* Header Buttons */}
       <div className="flex justify-between items-center mb-6">
         <Button 

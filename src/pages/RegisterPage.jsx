@@ -1,5 +1,9 @@
+
 import { useState } from 'react';
 import Button from '../components/Button';
+import { userService } from '../services/UserService';
+import { useNavigate } from 'react-router-dom';
+
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -8,10 +12,29 @@ export function RegisterPage() {
     email: '',
     role: ''
   });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (loading) return;
+    setLoading(true);
+    // Mapear role para idCargo: 1 = funcionário, 2 = colaborador
+    let idCargo = null;
+    if (formData.role === 'funcionario') idCargo = 1;
+    if (formData.role === 'colaborador') idCargo = 2;
+    try {
+      await userService.create({
+        nome: formData.fullName,
+        cpf: formData.cpf,
+        email: formData.email,
+        cargo: idCargo
+      });
+      alert('Cadastro realizado com sucesso!');
+    } catch (error) {
+      alert('Erro ao cadastrar. Verifique os dados e tente novamente.');
+    }
+    setLoading(false);
   };
 
   const handleInputChange = (e) => {
@@ -23,10 +46,10 @@ export function RegisterPage() {
   };
 
   return (
-      <div className="min-h-screen pt-[200px] px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
+      <div className="min-h-screen pt-28 px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
         <div className="w-full max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl text-gray-800 font-bold mb-4">
+          <div className="text-center mb-6">
+            <h1 className="text-5xl text-gray-800 font-bold mb-2">
               Registrar novo colaborador
             </h1>
             <p className="text-2xl text-gray-600 leading-relaxed">
@@ -34,7 +57,7 @@ export function RegisterPage() {
             </p>
           </div>
 
-          <div className="flex bg-white rounded-3xl shadow-xl overflow-hidden min-h-[600px] max-w-6xl mx-auto">
+          <div className="flex h-150 w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden  max-w-6xl mx-auto">
             {/* Lado esquerdo - Branding */}
             <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
               <div className="text-center text-white">
@@ -132,9 +155,10 @@ export function RegisterPage() {
 
                 <div className="flex justify-center mt-6">
                   <Button  
-                    label="CADASTRAR"
+                    label={loading ? "Cadastrando..." : "CADASTRAR"}
                     variant="Default"
                     onClick={handleSubmit}
+                    disabled={loading}
                   />
                 </div>
               </form>

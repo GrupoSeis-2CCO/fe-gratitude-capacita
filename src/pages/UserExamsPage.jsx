@@ -1,9 +1,14 @@
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Table from "../components/Table";
 import TituloPrincipal from "../components/TituloPrincipal";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 
 export default function UserExamsPage() {
+	const navigate = useNavigate();
+	const params = useParams();
+	const idUsuario = params.id ?? params.idUsuario ?? params.idAluno;
+
 	// Columns and mock data to mimic the layout shown
 	const columns = [
 		{ header: "Curso", accessor: "curso" },
@@ -12,11 +17,11 @@ export default function UserExamsPage() {
 	];
 
 	const data = [
-		{ curso: "Curso X", data: "21 de abril de 2025, 15h53", nota: "9/10" },
-		{ curso: "Curso X", data: "21 de abril de 2025, 15h33", nota: "7/10" },
-		{ curso: "Curso X", data: "21 de abril de 2025, 15h13", nota: "5/10" },
+		{ id: 1, curso: "Curso X", data: "21 de abril de 2025, 15h53", nota: "9/10" },
+		{ id: 2, curso: "Curso X", data: "21 de abril de 2025, 15h33", nota: "7/10" },
+		{ id: 3, curso: "Curso X", data: "21 de abril de 2025, 15h13", nota: "5/10" },
 		// Empty rows to match the visual spacing on the mock
-		...Array.from({ length: 9 }).map(() => ({ curso: "-", data: "-", nota: "-" })),
+		...Array.from({ length: 9 }).map((_, index) => ({ id: null, curso: "-", data: "-", nota: "-" })),
 	];
 
 	return (
@@ -35,6 +40,12 @@ export default function UserExamsPage() {
 						data={data}
 						headerClassName="bg-[#0067B1] text-white text-[1.125rem]"
 						rowClassName="odd:bg-[#DAEEFF] even:bg-[#B5DEFF] hover:bg-[#bcdfff] transition-colors"
+						onClickRow={(row) => {
+							// Only navigate if the row has valid data (not empty placeholder rows)
+							if (row.id && row.curso !== "-") {
+								navigate(`/participantes/${idUsuario}/avaliacoes/${row.id}`);
+							}
+						}}
 					/>
 				</div>
 			</div>

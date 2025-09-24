@@ -1,31 +1,20 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import Header from '../components/Header';
+import GradientSideRail from '../components/GradientSideRail';
 
 function ClassDetailsPage() {
     const { idCurso } = useParams();
+    const navigate = useNavigate();
     
     return (
         <>
-            {/* Timeline indicators - Left side */}
-             <div className="absolute left-50 top-2/3 transform -translate-y-1/2 z-10">
-                <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <div className="w-0.5 h-140 bg-gradient-to-b from-orange-500 to-blue-500"></div>
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                </div>
-            </div>
-
-            {/* Timeline indicators - Right side */}
-            <div className="absolute right-50 top-2/3 transform -translate-y-1/2 z-10">
-                <div className="flex flex-col items-center">
-                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <div className="w-0.5 h-140 bg-gradient-to-b from-orange-500 to-blue-500"></div>
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                </div>
-            </div>
+            
 
             <div className="min-h-screen bg-gray-50 relative">
+
+                <GradientSideRail className="left-10" />
+            <GradientSideRail className="right-10" variant="inverted" />
                 <Header />
                 
                 {/* Main Content */}
@@ -89,17 +78,17 @@ function ClassDetailsPage() {
                                 <Button 
                                     variant="Default" 
                                     label="Ver Alunos e Desempenho"
-                                    onClick={() => {}} 
+                                    onClick={() => navigate(`/cursos/${idCurso}/participantes`)} 
                                 />
                                 <Button 
                                     variant="Default" 
                                     label="Analisar Feedbacks"
-                                    onClick={() => {}} 
+                                    onClick={() => navigate(`/cursos/${idCurso}/feedbacks`)} 
                                 />
                                 <Button 
                                     variant="Default" 
                                     label="Visualizar Materiais do Curso"
-                                    onClick={() => {}} 
+                                    onClick={() => navigate(`/cursos/${idCurso}/material`)} 
                                 />
                             </div>
                         </div>

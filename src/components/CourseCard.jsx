@@ -1,7 +1,7 @@
 import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 
-export default function CourseCard({ course }) {
+export default function CourseCard({ course, onClick }) {
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-2">
@@ -10,7 +10,10 @@ export default function CourseCard({ course }) {
           <MoreHorizontal size={24} />
         </button>
       </div>
-      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6">
+      <div
+        onClick={() => onClick && onClick(course)}
+        className={`bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 ${onClick ? 'cursor-pointer hover:shadow-lg transition' : ''}`}
+      >
         <img 
           src={course.imageUrl} 
           alt={`Imagem do ${course.title}`} 
