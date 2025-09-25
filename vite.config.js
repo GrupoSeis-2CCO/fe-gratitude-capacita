@@ -7,4 +7,12 @@ export default defineConfig({
   plugins: [react(),
     tailwindcss()
   ],
+  optimizeDeps: {
+    include: ['react-pdf']
+  },
+  build: {
+    commonjsOptions: {
+      include: [/react-pdf/, /node_modules/]
+    }
+  }
 })

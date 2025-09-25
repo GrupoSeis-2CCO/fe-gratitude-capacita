@@ -19,6 +19,7 @@ import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 import MaterialsRoutePage from "./pages/MaterialsRoutePage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
+import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
 import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
@@ -128,9 +129,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material/:idMaterial",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <MaterialPage />
-        </Layout>
+        <MaterialRoutePage />
       </ProtectedRoute>
     ),
   },
