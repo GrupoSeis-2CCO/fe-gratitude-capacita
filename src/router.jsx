@@ -15,7 +15,9 @@ import CreateExamPage from "./pages/CreateExamPage.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
+import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
+import MaterialsRoutePage from "./pages/MaterialsRoutePage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
 import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -90,9 +92,7 @@ export const router = createBrowserRouter([
     path: "/cursos",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <ClassListPage />
-        </Layout>
+        <CoursesRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -120,9 +120,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <MaterialsListPage />
-        </Layout>
+        <MaterialsRoutePage />
       </ProtectedRoute>
     ),
   },
