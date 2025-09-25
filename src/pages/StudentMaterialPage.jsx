@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from "../hooks/useAuth.js";
 import YouTube from 'react-youtube';
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
@@ -7,8 +8,15 @@ import Button from "../components/Button.jsx";
 import { FileText } from 'lucide-react';
 
 export default function StudentMaterialPage() {
+	const { getCurrentUserType, isLoggedIn } = useAuth();
+	const userType = getCurrentUserType();
 	const { idCurso, idMaterial } = useParams();
 	const navigate = useNavigate();
+	
+	// Proteção: apenas colaboradores (tipo 2) podem acessar esta página
+	if (!isLoggedIn() || userType !== 2) {
+		return <Navigate to="/login" replace />;
+	}
 	
 	// Função para extrair o videoId da URL do YouTube
 	const getYouTubeVideoId = (url) => {

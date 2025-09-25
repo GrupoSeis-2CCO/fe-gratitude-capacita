@@ -110,6 +110,7 @@ export const useAuth = () => {
 
   return {
     isAuthenticated,
+    isLoggedIn: isAuthenticated, // Alias para compatibilidade
     getCurrentUser,
     getCurrentUserType,
     redirectToLogin,

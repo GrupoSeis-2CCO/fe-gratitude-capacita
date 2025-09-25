@@ -1,13 +1,21 @@
 import React from "react";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import { FileText, Youtube, Play } from 'lucide-react';
 import Button from "../components/Button.jsx";
 
 export default function StudentMaterialsListPage() {
+	const { getCurrentUserType, isLoggedIn } = useAuth();
+	const userType = getCurrentUserType();
 	const { idCurso } = useParams();
 	const navigate = useNavigate();
+	
+	// Proteção: apenas colaboradores (tipo 2) podem acessar esta página
+	if (!isLoggedIn() || userType !== 2) {
+		return <Navigate to="/login" replace />;
+	}
 	
 	// Mock data baseado no Figma
 	const mockMaterials = [

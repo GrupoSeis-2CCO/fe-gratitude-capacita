@@ -1,11 +1,19 @@
 import React from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import CourseCard from "../components/CourseCard.jsx";
 
 export default function StudentClassListPage() {
+	const { getCurrentUserType, isLoggedIn } = useAuth();
+	const userType = getCurrentUserType();
 	const navigate = useNavigate();
+
+	// Proteção: apenas colaboradores (tipo 2) podem acessar esta página
+	if (!isLoggedIn() || userType !== 2) {
+		return <Navigate to="/login" replace />;
+	}
 	
 	// Mock data baseado no Figma - participantes de cursos
 	const mockCourses = [
