@@ -6,6 +6,7 @@ import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
+import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
@@ -67,6 +68,14 @@ export const router = createBrowserRouter([
           <UserPage />
         </Layout>
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/perfil",
+    element: (
+      <Layout footerType="mini">
+        <ProfilePage />
+      </Layout>
     ),
   },
   {
