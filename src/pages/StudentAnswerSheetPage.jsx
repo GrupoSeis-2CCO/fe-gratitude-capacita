@@ -8,7 +8,7 @@ import Button from "../components/Button.jsx";
 export default function StudentAnswerSheetPage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
-	const { idUsuario, idTentativa } = useParams();
+	const { idCurso, tentativa } = useParams();
 	const navigate = useNavigate();
 
 	// Proteção: apenas colaboradores (tipo 2) podem acessar esta página

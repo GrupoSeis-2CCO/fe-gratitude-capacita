@@ -13,10 +13,14 @@ import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
+import UserExamsRoutePage from "./pages/UserExamsRoutePage.jsx";
 import CreateExamPage from "./pages/CreateExamPage.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import ExamRoutePage from "./pages/ExamRoutePage.jsx";
 import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
+import AnswerSheetRoutePage from "./pages/AnswerSheetRoutePage.jsx";
+import StudentUserExamsPage from "./pages/StudentUserExamsPage.jsx";
+import StudentAnswerSheetPage from "./pages/StudentAnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
 import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
 import MaterialsListPage from "./pages/MaterialsListPage.jsx";
@@ -186,9 +190,7 @@ export const router = createBrowserRouter([
     path: "/participantes/:id/avaliacoes",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <UserExamsPage />
-        </Layout>
+        <UserExamsRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -196,8 +198,26 @@ export const router = createBrowserRouter([
     path: "/participantes/:idUsuario/avaliacoes/:idTentativa",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <AnswerSheetPage />
+        <AnswerSheetRoutePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/avaliacoes",
+    element: (
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini" headerType="student">
+          <StudentUserExamsPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/avaliacoes/:idCurso/:tentativa",
+    element: (
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini" headerType="student">
+          <StudentAnswerSheetPage />
         </Layout>
       </ProtectedRoute>
     ),
