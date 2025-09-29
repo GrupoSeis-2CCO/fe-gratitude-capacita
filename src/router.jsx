@@ -7,6 +7,7 @@ import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
 import { ProfilePage } from "./pages/ProfilePage.jsx";
+import ProfileRoutePage from "./pages/ProfileRoutePage.jsx";
 import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
@@ -14,6 +15,7 @@ import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
 import CreateExamPage from "./pages/CreateExamPage.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
+import ExamRoutePage from "./pages/ExamRoutePage.jsx";
 import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
 import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
@@ -73,9 +75,9 @@ export const router = createBrowserRouter([
   {
     path: "/perfil",
     element: (
-      <Layout footerType="mini">
-        <ProfilePage />
-      </Layout>
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <ProfileRoutePage />
+      </ProtectedRoute>
     ),
   },
   {
@@ -156,9 +158,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material/avaliacao",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <Layout footerType="mini">
-          <ExamPage />
-        </Layout>
+        <ExamRoutePage />
       </ProtectedRoute>
     ),
   },
