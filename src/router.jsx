@@ -13,12 +13,10 @@ import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
 import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
 import UserExamsPage from "./pages/UserExamsPage.jsx";
-import UserExamsRoutePage from "./pages/UserExamsRoutePage.jsx";
 import CreateExamPage from "./pages/CreateExamPage.jsx";
 import ExamPage from "./pages/ExamPage.jsx";
 import ExamRoutePage from "./pages/ExamRoutePage.jsx";
 import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
-import AnswerSheetRoutePage from "./pages/AnswerSheetRoutePage.jsx";
 import StudentUserExamsPage from "./pages/StudentUserExamsPage.jsx";
 import StudentAnswerSheetPage from "./pages/StudentAnswerSheetPage.jsx";
 import ClassListPage from "./pages/ClassListPage.jsx";
@@ -189,16 +187,20 @@ export const router = createBrowserRouter([
   {
     path: "/participantes/:id/avaliacoes",
     element: (
-      <ProtectedRoute allowedUserTypes={[1,2]}>
-        <UserExamsRoutePage />
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout footerType="mini" headerType="default">
+          <UserExamsPage />
+        </Layout>
       </ProtectedRoute>
     ),
   },
   {
     path: "/participantes/:idUsuario/avaliacoes/:idTentativa",
     element: (
-      <ProtectedRoute allowedUserTypes={[1,2]}>
-        <AnswerSheetRoutePage />
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout footerType="mini" headerType="default">
+          <AnswerSheetPage />
+        </Layout>
       </ProtectedRoute>
     ),
   },
