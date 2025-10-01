@@ -1,11 +1,19 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 
 export function AccessPage() {
+  const { getCurrentUserType, isLoggedIn } = useAuth();
+  const userType = getCurrentUserType();
   const navigate = useNavigate();
+  
+  // Proteção: apenas funcionários (tipo 1) podem acessar esta página
+  if (!isLoggedIn() || userType !== 1) {
+    return <Navigate to="/login" replace />;
+  }
   
   const columns = [
     { header: "Nome do Colaborador", accessor: "nome" },

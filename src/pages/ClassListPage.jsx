@@ -1,12 +1,20 @@
 import React from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 
 export default function ClassListPage() {
+	const { getCurrentUserType, isLoggedIn } = useAuth();
+	const userType = getCurrentUserType();
 	const navigate = useNavigate();
+
+	// Proteção: apenas funcionários (tipo 1) podem acessar esta página
+	if (!isLoggedIn() || userType !== 1) {
+		return <Navigate to="/login" replace />;
+	}
 	const mockCourses = [
 		{
 			id: 1,

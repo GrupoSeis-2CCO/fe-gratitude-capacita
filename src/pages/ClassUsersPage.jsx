@@ -1,10 +1,18 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 
 export function ClassUsersPage() {
+  const { getCurrentUserType, isLoggedIn } = useAuth();
+  const userType = getCurrentUserType();
   const navigate = useNavigate();
+
+  // Proteção: apenas funcionários (tipo 1) podem acessar esta página
+  if (!isLoggedIn() || userType !== 1) {
+    return <Navigate to="/login" replace />;
+  }
 
   const idCurso = 1;
 

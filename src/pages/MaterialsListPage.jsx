@@ -1,4 +1,6 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
@@ -6,6 +8,13 @@ import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
 
 export default function MaterialsListPage() {
+	const { getCurrentUserType, isLoggedIn } = useAuth();
+	const userType = getCurrentUserType();
+
+	// Proteção: apenas funcionários (tipo 1) podem acessar esta página
+	if (!isLoggedIn() || userType !== 1) {
+		return <Navigate to="/login" replace />;
+	}
 	const mockMaterials = [
 		{
 			id: 1,
