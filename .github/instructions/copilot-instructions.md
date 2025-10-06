@@ -72,7 +72,7 @@ src/
 - Arquivo `.env` na raiz deve definir:
 
 ```
-VITE_API_URL=http://localhost:3000/api
+VITE_BASE_URL=http://IP_DO_BACKEND:3000/seu-endpoint/aqui
 ```
 
 - Use `src/provider/Api.js` (instância Axios) para todas as chamadas ao backend.

@@ -21,7 +21,7 @@ function ExamViewer({ questions = [], userAnswers = {}, correctAnswers = {} }) {
   };
 
   return (
-    <div className="w-[70rem] mx-auto bg-[#1D262D] rounded-lg p-6">
+    <div className="w-full max-w-4xl mx-auto bg-[#1D262D] rounded-lg p-6">
       {/* Empty State */}
       {questions.length === 0 && (
         <div className="bg-white rounded-lg p-8 text-center">
