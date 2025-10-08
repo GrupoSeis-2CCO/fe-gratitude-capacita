@@ -1,9 +1,11 @@
 import axios from "axios";
 
 export const api = axios.create({
-baseURL: import.meta.env.BASE_URL,
+baseURL: import.meta.env.VIT_API_URL || "http://localhost:8081",
 });
 
+// Config Local
+/*
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
@@ -11,9 +13,10 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+*/
 
-// Configuração se estiver utilizando o backend rodando na aws
-/* 
+// Config AWS
+
 api.interceptors.request.use((config) => {
   // Não adicionar token APENAS para o endpoint de login
   const isLoginEndpoint = config.url?.includes('/usuarios/login');
@@ -27,6 +30,6 @@ api.interceptors.request.use((config) => {
   
   return config;
 });
-*/
+
 
 export default api;
