@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
@@ -6,6 +6,7 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
+import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 
 export default function MaterialsListPage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -15,38 +16,35 @@ export default function MaterialsListPage() {
 	if (!isLoggedIn() || userType !== 1) {
 		return <Navigate to="/login" replace />;
 	}
-	const mockMaterials = [
-		{
-			id: 1,
-			title: "Introdução à Regularização Fundiária",
-			type: "video",
-			description: "Este material aborda os conceitos básicos da regularização fundiária, explicando sua importância social, legal e urbana com linguagem clara e acessível ao leitor."
-		},
-		{
-			id: 2,
-			title: "Marco Legal da Regularização Fundiária",
-			type: "pdf",
-			description: "Documento completo sobre o marco legal brasileiro para regularização fundiária, incluindo a Lei 13.465/2017 e suas implicações práticas para municípios e beneficiários."
-		},
-		{
-			id: 3,
-			title: "Procedimentos Administrativos",
-			type: "video",
-			description: "Vídeo explicativo sobre os procedimentos administrativos necessários para implementar projetos de regularização fundiária em áreas urbanas e rurais."
-		},
-		{
-			id: 4,
-			title: "Instrumentos Urbanísticos",
-			type: "pdf",
-			description: "Guia prático dos principais instrumentos urbanísticos utilizados em processos de regularização fundiária, com exemplos e casos práticos."
-		},
-		{
-			id: 5,
-			title: "Participação Social e Comunidade",
-			type: "video",
-			description: "Como envolver a comunidade nos processos de regularização fundiária, garantindo participação social efetiva e transparente."
+
+	const [materials, setMaterials] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [editingMaterial, setEditingMaterial] = useState(null);
+
+	async function loadMaterials() {
+		setLoading(true);
+		try {
+			const cursoId = 1; // ajuste conforme necessário ou pegue da rota/contexto
+			const mats = await getMateriaisPorCurso(cursoId);
+			// mapear para o formato do MaterialCard (id, title, type, description, url, hidden)
+			const mapped = (mats || []).map((m, idx) => ({
+				id: m.id ?? m.idApostila ?? m.idVideo ?? idx,
+				title: m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? `Material ${m.id ?? idx}`,
+				type: m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao'),
+				description: m.descricao ?? m.descricaoApostila ?? m.descricaoVideo ?? '',
+				url: m.url ?? m.urlArquivo ?? m.urlVideo ?? null,
+				hidden: (typeof m.isApostilaOculto !== 'undefined') ? (m.isApostilaOculto === 1) : (typeof m.isVideoOculto !== 'undefined' ? (m.isVideoOculto === 1) : false)
+			}));
+			setMaterials(mapped);
+		} catch (e) {
+			console.error('Erro carregando materiais:', e);
+			setMaterials([]);
+		} finally {
+			setLoading(false);
 		}
-	];
+	}
+
+	useEffect(() => { loadMaterials(); }, []);
 
 	return (
 		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
@@ -59,15 +57,21 @@ export default function MaterialsListPage() {
 					<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
 				</div>
 
-				<AddMaterialSection />
+				<AddMaterialSection initialMaterial={editingMaterial} onAdded={() => { setEditingMaterial(null); loadMaterials(); }} onCancelEdit={() => setEditingMaterial(null)} />
 
 				<div className="mt-8 w-full">
-					{mockMaterials.map((material, index) => (
-						<MaterialCard key={material.id} material={material} index={index} />
-					))}
+					{loading ? (
+						<div>Carregando...</div>
+					) : (
+										materials.map((material, index) => (
+													<MaterialCard key={`${material.type}-${material.id}`} material={material} index={index}
+														onEdit={(m) => setEditingMaterial(m)}
+														onActionComplete={() => loadMaterials()} />
+												))
+					)}
 				</div>
 
-        <AddEvaluationSection />
+        		<AddEvaluationSection />
 			</div>
 
 		</div>
