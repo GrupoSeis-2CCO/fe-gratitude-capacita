@@ -39,9 +39,9 @@ export async function updateApostilaUrl(idApostila, url) {
   return resp.data;
 }
 
-export async function updateApostila(idApostila, { nomeApostila, descricaoApostila, tamanhoBytes }) {
+export async function updateApostila(idApostila, { nomeApostila, descricaoApostila, tamanhoBytes, ordem }) {
   if (!idApostila) throw new Error('idApostila is required');
-  const body = { nomeApostila, descricaoApostila, tamanhoBytes };
+  const body = { nomeApostila, descricaoApostila, tamanhoBytes, ordem };
   const resp = await api.put(`/apostilas/atualizar-dados/${idApostila}`, body);
   return resp.data;
 }
