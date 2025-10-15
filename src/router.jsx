@@ -165,7 +165,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/cursos/:id/participantes",
+  path: "/cursos/:idCurso/participantes",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
