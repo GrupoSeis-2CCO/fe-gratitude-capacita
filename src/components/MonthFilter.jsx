@@ -16,7 +16,7 @@ export default function MonthFilter({ value, onChange, className = '' }) {
         className="border rounded px-2 py-1"
         aria-label="Filtrar por mês"
       >
-        <option value="">Todos os meses</option>
+        <option value="" disabled>Selecione</option>
         {MONTHS_PT.map((m, idx) => {
           const val = String(idx + 1).padStart(2, '0');
           // capitaliza primeira letra (já capitalizado aqui)

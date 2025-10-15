@@ -13,6 +13,7 @@ export async function getEngajamentoPorCurso(idCurso, from, to, days) {
     if (days) params.days = days;
 
     const resp = await api.get(`/relatorios/curso/${idCurso}/engajamento`, { params });
+  console.debug('getEngajamentoPorCurso: request params=', params, 'response status=', resp.status, 'data=', resp.data && resp.data.slice ? resp.data.slice(0,10) : resp.data);
 
     if (resp.status === 204 || !resp.data) return [];
 
