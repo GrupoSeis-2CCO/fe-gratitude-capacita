@@ -1,10 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { FileText, Youtube } from 'lucide-react';
 import MaterialService from '../services/MaterialService.js';
 import ConfirmModal from './ConfirmModal.jsx';
 
 export default function MaterialCard({ material, index, onEdit = null, onActionComplete = null }) {
+  const navigate = useNavigate();
+  const params = useParams();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
@@ -107,8 +110,32 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     if (onEdit) onEdit(material);
   }
 
+  function handleNavigate() {
+    // prefer route param if present, otherwise try to extract from pathname or fallback to 1
+    const idCurso = params?.idCurso || (window.location.pathname.match(/\/cursos\/(\d+)/) || [])[1] || 1;
+    if (!material || !material.id) return;
+    // debug trace to help determine why navigation might not be happening
+    // eslint-disable-next-line no-console
+    console.debug('[MaterialCard] navigate ->', { idCurso, materialId: material.id });
+    navigate(`/cursos/${idCurso}/material/${material.id}`);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleNavigate();
+    }
+  }
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6">
+    <div
+      data-material-id={material?.id}
+      className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6 cursor-pointer hover:shadow-lg transition"
+      onClick={handleNavigate}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
         {material.type === 'pdf' ? (
           <FileText size={48} className="text-gray-500" />
