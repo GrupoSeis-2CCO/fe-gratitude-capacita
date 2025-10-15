@@ -1,137 +1,178 @@
+import React, { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
 import UserActions from "../components/UserActions";
+import { getEngajamentoPorCurso } from "../services/UserPageService.js";
+import { api } from "../services/api.js";
+import MonthFilter from "../components/MonthFilter.jsx";
+import YearFilter from "../components/YearFilter.jsx";
+import ApexLineChart from "../components/ApexLineChart.jsx";
 
-export function UserPage() {
-  // Dados de exemplo para o gráfico
-  const chartData = [
-    { date: '06/04/2025', value: 4 },
-    { date: '07/04/2025', value: 6 },
-    { date: '08/04/2025', value: 3 },
-    { date: '09/04/2025', value: 7 },
-    { date: '10/04/2025', value: 5 },
-    { date: '11/04/2025', value: 4 },
-    { date: '12/04/2025', value: 9 },
-    { date: '13/04/2025', value: 14 },
-    { date: '14/04/2025', value: 8 },
-    { date: '15/04/2025', value: 6 },
-    { date: '16/04/2025', value: 5 },
-    { date: '17/04/2025', value: 8 },
-    { date: '18/04/2025', value: 7 },
-  ];
+export function UserPage({ courseId = 1, days = 14 }) {
+  const { cursoId, participanteId } = useParams();
+  const effectiveCourseId = Number(cursoId || courseId || 1);
 
-  const maxValue = Math.max(...chartData.map(d => d.value));
-  const average = chartData.reduce((sum, d) => sum + d.value, 0) / chartData.length;
+  const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState([]);
+  const [userCard, setUserCard] = useState({ email: "—", dataEntrada: null, ultimoAcesso: null, ultimoCurso: "—" });
+  const [selectedMonth, setSelectedMonth] = useState(null); // format: '01'..'12' or null
+  const [selectedYear, setSelectedYear] = useState(2025); // default to 2025
+  // chart state
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setLoading(true);
+      try {
+        // engajamento do curso (compute from/to from selectedMonth and/or selectedYear)
+        let from = null;
+        let to = null;
+        if (selectedMonth && selectedYear) {
+          // specific month/year -> month selected (selectedMonth like '03') and selectedYear number
+          const year = Number(selectedYear);
+          const month = Number(selectedMonth);
+          const first = new Date(Date.UTC(year, month - 1, 1));
+          const last = new Date(Date.UTC(year, month, 0));
+          from = `${first.getUTCFullYear()}-${String(first.getUTCMonth() + 1).padStart(2, '0')}-${String(first.getUTCDate()).padStart(2, '0')}`;
+          to = `${last.getUTCFullYear()}-${String(last.getUTCMonth() + 1).padStart(2, '0')}-${String(last.getUTCDate()).padStart(2, '0')}`;
+        } else if (selectedYear && !selectedMonth) {
+          // whole year
+          const year = Number(selectedYear);
+          from = `${year}-01-01`;
+          to = `${year}-12-31`;
+        }
+
+        const resp = await getEngajamentoPorCurso(effectiveCourseId, from, to, days);
+        if (!mounted) return;
+        const formatted = (resp || []).map(r => ({ date: formatDateForLabel(r.date), value: r.value }));
+        setChartData(formatted);
+
+        // carrega dados do usuario (se houver participanteId)
+        const pid = Number(participanteId);
+        if (pid && !Number.isNaN(pid)) {
+          try {
+            const uResp = await api.get(`/usuarios/${pid}`);
+            const usuario = uResp.data;
+
+            // busca matriculas do usuario para descobrir ultimo curso acessado
+            const mResp = await api.get(`/matriculas/usuario/${pid}`);
+            const matriculas = mResp.data || [];
+
+            // tenta achar a matrícula com ultimoAcesso mais recente
+            let ultimoCurso = "—";
+            if (Array.isArray(matriculas) && matriculas.length > 0) {
+              // matriculas podem ter campo ultimo_senso ou fk_inicio; vamos usar ultimo_senso
+              matriculas.sort((a,b) => {
+                const da = a.ultimoSenso ? new Date(a.ultimoSenso).getTime() : 0;
+                const db = b.ultimoSenso ? new Date(b.ultimoSenso).getTime() : 0;
+                return db - da;
+              });
+              const m = matriculas[0];
+              if (m && m.curso && (m.curso.tituloCurso || m.curso.idCurso)) {
+                ultimoCurso = m.curso.tituloCurso ? m.curso.tituloCurso : `Curso ${m.curso.idCurso}`;
+              } else if (m && m.fkCurso) {
+                ultimoCurso = `Curso ${m.fkCurso}`;
+              }
+            }
+
+            setUserCard({
+              email: usuario.email || "—",
+              dataEntrada: usuario.dataEntrada || null,
+              ultimoAcesso: usuario.ultimoAcesso || null,
+              ultimoCurso: ultimoCurso
+            });
+          } catch (e) {
+            // ignora erro e mostra card com defaults
+            console.warn("Erro ao buscar dados do usuário/matrículas:", e);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        setChartData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+    return () => { mounted = false };
+  }, [effectiveCourseId, days, selectedMonth, participanteId]);
+
+  const maxValue = chartData.length ? Math.max(...chartData.map(d => d.value)) : 0;
+  const average = chartData.length ? chartData.reduce((s, d) => s + d.value, 0) / chartData.length : 0;
+
+  // chart rendering handled by ApexLineChart
 
   return (
     <div className="min-h-screen bg-gray-50 pt-28 p-8">
-      {/* Título Principal */}
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800">Colaborador y</h1>
       </div>
 
-      {/* Card com informações principais */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">
         <div className="space-y-3">
-          <div className="text-gray-700"><strong className="text-gray-900">Email:</strong> alunox@email.com</div>
-          <div className="text-gray-700"><strong className="text-gray-900">Primeiro acesso:</strong> 05 de abril de 2025, 14h32</div>
-          <div className="text-gray-700"><strong className="text-gray-900">Último acesso:</strong> 23 de abril de 2025, 16h17</div>
-          <div className="text-gray-700"><strong className="text-gray-900">Último curso acessado:</strong> Curso x - 07 de abril de 2025, 13h01</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Email:</strong> {userCard.email}</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Primeiro acesso:</strong> {userCard.dataEntrada ? formatIsoDateTime(userCard.dataEntrada) : '—'}</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Último acesso:</strong> {userCard.ultimoAcesso ? formatIsoDateTime(userCard.ultimoAcesso) : '—'}</div>
+          <div className="text-gray-700"><strong className="text-gray-900">Último curso acessado:</strong> {userCard.ultimoCurso}</div>
         </div>
       </div>
 
-      {/* Layout em duas colunas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        {/* Coluna Esquerda - Ações */}
         <UserActions />
 
-        {/* Coluna Direita - Gráfico */}
         <div className="lg:col-span-2">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Engajamento Diário do Participante</h2>
-          
+          <div style={{ marginBottom: 12 }} className="flex items-center gap-4">
+            {/* Month + Year filters */}
+            <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
+            <YearFilter value={selectedYear} onChange={setSelectedYear} />
+          </div>
           <div className="bg-white rounded-lg shadow-md p-6">
-            {/* Label do eixo Y */}
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 -rotate-90">
-              <span className="text-sm font-medium text-gray-600">
-              </span>
-            </div>
+            {loading ? (
+              <div>Carregando...</div>
+            ) : !selectedMonth ? (
+              <div className="text-center text-gray-600 py-12">
+                <strong className="text-gray-800">Selecione um mês para demonstrar desempenho</strong>
+                <div className="text-sm mt-2 text-gray-600">Escolha um mês no filtro acima para visualizar o gráfico de materiais concluídos.</div>
+              </div>
+            ) : chartData.length === 0 ? (
+              <div>Nenhum dado disponível</div>
+            ) : (
+              <>
+                <div>
+                  <ApexLineChart data={chartData} height={420} />
+                </div>
 
-            {/* Container do Gráfico */}
-            <div className="relative">
-              <svg className="w-full h-58" viewBox="0 0 2000 700" preserveAspectRatio="xMidYMid meet">
-                {/* Grid lines horizontais */}
-                {[0, 2, 4, 6, 8, 10, 12, 14, 16].map((value) => (
-                  <g key={value}>
-                    <line
-                      x1="100"
-                      y1={650 - (value * 40)}
-                      x2="1900"
-                      y2={650 - (value * 40)}
-                      stroke={value === Math.round(average) ? "#FF6B35" : "#e5e7eb"}
-                      strokeWidth={value === Math.round(average) ? "2" : "1"}
-                      strokeDasharray={value === Math.round(average) ? "5,5" : "none"}
-                    />
-                    <text
-                      x="85"
-                      y={660 - (value * 40)}
-                      className="fill-gray-500 text-base"
-                      textAnchor="end"
-                    >
-                      {value}
-                    </text>
-                    {value === Math.round(average) && (
-                      <text
-                        x="1000"
-                        y={630 - (value * 40)}
-                        className="fill-orange-500 text-sm font-medium"
-                        textAnchor="middle"
-                      >
-                        Média Geral
-                      </text>
-                    )}
-                  </g>
-                ))}
-
-                {/* Linha do gráfico */}
-                <polyline
-                  fill="none"
-                  stroke="#FF6B35"
-                  strokeWidth="8"
-                  points={chartData
-                    .map((d, i) => `${150 + (i * 135)},${650 - (d.value * 40)}`)
-                    .join(' ')}
-                  className="drop-shadow-sm"
-                />
-
-                {/* Pontos do gráfico */}
-                {chartData.map((d, i) => (
-                  <circle
-                    key={i}
-                    cx={150 + (i * 135)}
-                    cy={650 - (d.value * 40)}
-                    r="12"
-                    fill="#FF6B35"
-                    className="drop-shadow-sm hover:r-16 transition-all cursor-pointer"
-                  />
-                ))}
-              </svg>
-            </div>
-
-            {/* Labels do eixo X */}
-            <div className="flex justify-between mt-4 px-4">
-              {chartData.map((d, i) => (
-                <span key={i} className="text-xs text-gray-500 transform -rotate-45 origin-left">
-                  {d.date.split('/').slice(0, 2).join('/')}
-                </span>
-              ))}
-            </div>
-
-            {/* Legenda */}
-            <div className="flex items-center justify-center mt-6 gap-2">
-              <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-              <span className="text-sm text-gray-600">Primeiro Acesso</span>
-            </div>
+                {/* x-axis labels are handled by ApexCharts; removed custom labels */}
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+
+function formatDateForLabel(isoDate) {
+  try {
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return isoDate;
+    return d.toLocaleDateString('pt-BR');
+  } catch (e) {
+    return isoDate;
+  }
+}
+
+function formatIsoDateTime(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleString('pt-BR');
+  } catch (e) {
+    return iso;
+  }
+}
+
+export default UserPage;
