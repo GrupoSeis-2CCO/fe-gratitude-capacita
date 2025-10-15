@@ -7,6 +7,7 @@ import ConfirmModal from './ConfirmModal.jsx';
 export default function MaterialCard({ material, index, onEdit = null, onActionComplete = null }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const ref = useRef();
 
   useEffect(() => {
@@ -18,6 +19,49 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
   }, []);
+
+  // when material is a video, try to resolve a thumbnail image
+  useEffect(() => {
+    setThumbnailUrl(null);
+    if (!material || material.type !== 'video' || !material.url) return;
+
+    const url = material.url;
+
+    // helper to extract YouTube ID
+    function extractYouTubeId(u) {
+      try {
+        // handle youtu.be/<id>
+        const byId = u.match(/(?:youtu\.be\/)([\w-]{11})/);
+        if (byId && byId[1]) return byId[1];
+        // handle watch?v= and embed
+        const vId = u.match(/[?&]v=([\w-]{11})/) || u.match(/embed\/([\w-]{11})/);
+        if (vId && vId[1]) return vId[1];
+      } catch (e) {
+        return null;
+      }
+      return null;
+    }
+
+    const ytId = extractYouTubeId(url);
+    if (ytId) {
+      // fast static thumbnail URL
+      setThumbnailUrl(`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`);
+      return;
+    }
+
+    // try Vimeo oEmbed for thumbnail
+    if (url.includes('vimeo.com')) {
+      const oembed = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
+      fetch(oembed)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.thumbnail_url) setThumbnailUrl(data.thumbnail_url);
+        })
+        .catch(() => {
+          // ignore errors and keep thumbnail null
+        });
+    }
+  }, [material]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -65,11 +109,15 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6">
-      <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
         {material.type === 'pdf' ? (
           <FileText size={48} className="text-gray-500" />
         ) : (
-          <Youtube size={48} className="text-red-600" />
+          thumbnailUrl ? (
+            <img src={thumbnailUrl} alt={material.title} className="w-full h-full object-cover" />
+          ) : (
+            <Youtube size={48} className="text-red-600" />
+          )
         )}
       </div>
       <div className="flex-1">

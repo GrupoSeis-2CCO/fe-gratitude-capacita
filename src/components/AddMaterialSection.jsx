@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
 import { uploadFileToS3, createVideoCommand, createApostilaCommand, updateApostilaUrl, updateApostila, updateVideo } from '../services/UploadService.js';
 import { useParams } from 'react-router-dom';
@@ -12,12 +12,47 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
   const [descricao, setDescricao] = useState('');
   const [file, setFile] = useState(null);
   const [urlVideo, setUrlVideo] = useState('');
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const params = useParams();
   const idCursoFromParams = params.idCurso ?? params.id ?? null;
   const cursoId = propCursoId || idCursoFromParams || 1;
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchPreview() {
+      setVideoPreview(null);
+      setPreviewError(null);
+      if (!urlVideo || urlVideo.trim().length === 0) return;
+      setLoadingPreview(true);
+      try {
+        // try YouTube oEmbed
+        const yt = `https://www.youtube.com/oembed?url=${encodeURIComponent(urlVideo)}&format=json`;
+        const vimeo = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(urlVideo)}`;
+        let resp = await fetch(yt);
+        if (!resp.ok) {
+          resp = await fetch(vimeo);
+        }
+        if (!resp.ok) {
+          if (mounted) setPreviewError('Preview não disponível para esta URL.');
+          return;
+        }
+        const data = await resp.json();
+        if (mounted) setVideoPreview(data);
+      } catch (err) {
+        if (mounted) setPreviewError('Falha ao carregar preview.');
+      } finally {
+        if (mounted) setLoadingPreview(false);
+      }
+    }
+
+    fetchPreview();
+    return () => { mounted = false; };
+  }, [urlVideo]);
 
   async function handleConcluir() {
     setError(null);
@@ -177,13 +212,44 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
               </div>
             ) : (
               <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Cole a URL do vídeo aqui..."
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-500"
-                  value={urlVideo}
-                  onChange={e => setUrlVideo(e.target.value)}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Cole a URL do vídeo aqui..."
+                    className="flex-1 p-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-500"
+                    value={urlVideo}
+                    onChange={e => setUrlVideo(e.target.value)}
+                  />
+                  {urlVideo && (
+                    <button
+                      type="button"
+                      className="px-3 py-2 bg-red-50 text-red-600 rounded text-sm border border-red-100"
+                      onClick={() => setUrlVideo('')}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
+
+                {urlVideo && (
+                  <div className="mt-3">
+                    {loadingPreview ? (
+                      <div className="text-sm text-gray-500">Carregando preview...</div>
+                    ) : previewError ? (
+                      <div className="text-sm text-yellow-700">{previewError}</div>
+                    ) : videoPreview ? (
+                      <div className="flex items-start gap-4">
+                        <img src={videoPreview.thumbnail_url || videoPreview.thumbnail} alt={videoPreview.title} className="w-48 h-28 object-cover rounded" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-800">{videoPreview.title}</p>
+                          {videoPreview.author_name && <p className="text-sm text-gray-500">{videoPreview.author_name}</p>}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">Preview não disponível para esta URL.</div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
