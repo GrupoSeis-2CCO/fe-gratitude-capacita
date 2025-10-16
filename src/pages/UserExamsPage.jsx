@@ -78,8 +78,12 @@ export default function UserExamsPage({ courseId = 1 }) {
   }
 
   function getCursoTitulo(tentativa) {
-    // Prefer course title from avaliação.fkCurso (backend returns course info there),
-    // fall back to matricula.curso where available, otherwise show course id or generic label.
+    // Backend agora retorna nomeCurso diretamente no DTO
+    if (tentativa?.nomeCurso) {
+      return tentativa.nomeCurso;
+    }
+
+    // Fallbacks para compatibilidade
     const cursoFromAvaliacao = tentativa?.avaliacao?.fkCurso;
     if (cursoFromAvaliacao && (cursoFromAvaliacao.tituloCurso || cursoFromAvaliacao.idCurso)) {
       return cursoFromAvaliacao.tituloCurso || `Curso ${cursoFromAvaliacao.idCurso}`;
@@ -91,18 +95,16 @@ export default function UserExamsPage({ courseId = 1 }) {
     }
 
     // Fallbacks using embedded keys
-    const fkCursoFromId = tentativa?.idTentativaComposto?.idMatriculaComposto?.fkCurso || tentativa?.matricula?.idMatriculaComposto?.fkCurso || tentativa?.matricula?.fkCurso;
+    const fkCursoFromId = tentativa?.fkCurso || tentativa?.idTentativaComposto?.idMatriculaComposto?.fkCurso || tentativa?.matricula?.idMatriculaComposto?.fkCurso || tentativa?.matricula?.fkCurso;
     if (fkCursoFromId) return `Curso ${fkCursoFromId}`;
 
     return `Curso ${effectiveCourseId}`;
   }
 
-  // Nota: Tentativa object doesn't include a direct 'nota' field in the backend domain per mapper inspection.
-  // We'll attempt to read tentativa?.avaliacao?.pontuacao or fallback to exibiting acertosMinimos if present.
   function getNotaText(tentativa) {
     if (!tentativa) return '—';
 
-    // prefer explicit acertos/total returned by backend
+    // Backend agora retorna notaAcertos e notaTotal diretamente no DTO
     const acertos = tentativa.notaAcertos ?? tentativa?.nota_acertos ?? tentativa?.acertos ?? tentativa?.resultado?.acertos;
     let total = tentativa.notaTotal ?? tentativa?.nota_total ?? tentativa?.totalQuestoes ?? tentativa?.total ?? tentativa?.resultado?.total;
 
@@ -131,11 +133,20 @@ export default function UserExamsPage({ courseId = 1 }) {
   function getTentativaNumero(tentativa, currentIndex) {
     const cursoTitulo = getCursoTitulo(tentativa);
     
-    // Filtrar tentativas do mesmo curso até o índice atual
-    const tentativasMesmoCurso = tentativas.slice(0, currentIndex + 1).filter(t => getCursoTitulo(t) === cursoTitulo);
+    // Filtrar TODAS as tentativas do mesmo curso (não apenas até o índice atual)
+    const tentativasMesmoCurso = tentativas.filter(t => getCursoTitulo(t) === cursoTitulo);
+    const totalTentativasDoCurso = tentativasMesmoCurso.length;
     
-    // Retornar o número da tentativa (mais recente é 1, mais antiga é o maior número)
-    return tentativasMesmoCurso.length;
+    // Encontrar a posição atual nessa lista (0-based)
+    const posicaoAtual = tentativasMesmoCurso.findIndex(t => {
+      const idT = t?.idTentativaComposto?.idTentativa ?? t?.id ?? t?.idTentativa;
+      const idAtual = tentativa?.idTentativaComposto?.idTentativa ?? tentativa?.id ?? tentativa?.idTentativa;
+      return idT === idAtual;
+    });
+    
+    // Inverter: mais recente (índice 0) = maior número, mais antiga = 1
+    // Ex: se há 4 tentativas, índice 0 = tentativa 4, índice 3 = tentativa 1
+    return totalTentativasDoCurso - posicaoAtual;
   }
 
   return (

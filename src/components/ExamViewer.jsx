@@ -4,20 +4,52 @@ function ExamViewer({ questions = [], userAnswers = {}, correctAnswers = {} }) {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
   const getAlternativeClass = (questionId, alternativeId) => {
-    const userAnswer = userAnswers[questionId];
-    const correctAnswer = correctAnswers[questionId];
-    const isUserAnswer = userAnswer === alternativeId;
-    const isCorrect = correctAnswer === alternativeId;
+    const ua = String(userAnswers[questionId] || '');
+    const ca = String(correctAnswers[questionId] || '');
+    const altId = String(alternativeId);
+    
+    const isUserAnswer = ua === altId;
+    const isCorrect = ca === altId;
 
-    if (isUserAnswer && isCorrect) {
-      return 'bg-green-200 border-green-400'; // Verde para resposta certa do usuário
-    } else if (isUserAnswer && !isCorrect) {
-      return 'bg-red-200 border-red-400'; // Vermelho para resposta errada do usuário
-    } else if (!isUserAnswer && isCorrect) {
-      return 'bg-yellow-200 border-yellow-400'; // Amarelo para a resposta certa quando usuário errou
-    } else {
-      return 'bg-gray-200 border-gray-400'; // Normal
+    // SEMPRE destaque a alternativa correta em verde (mudança principal)
+    if (isCorrect) {
+      return 'bg-green-100 border-green-400';
     }
+
+    // Vermelho quando o usuário marcou esta alternativa E ela está errada
+    if (isUserAnswer && !isCorrect) {
+      return 'bg-red-100 border-red-400';
+    }
+
+    // Demais ficam neutras
+    return 'bg-gray-100 border-gray-300';
+  };
+
+  const getAlternativeLabel = (questionId, alternativeId) => {
+    const ua = String(userAnswers[questionId] || '');
+    const ca = String(correctAnswers[questionId] || '');
+    const altId = String(alternativeId);
+    
+    const isUserAnswer = ua === altId;
+    const isCorrect = ca === altId;
+
+    if (isCorrect) {
+      return (
+        <span className="text-xs font-semibold text-green-700 mt-1 block">
+          ✓ Resposta Correta
+        </span>
+      );
+    }
+
+    if (isUserAnswer && !isCorrect) {
+      return (
+        <span className="text-xs font-semibold text-red-700 mt-1 block">
+          ✗ Sua resposta (incorreta)
+        </span>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -36,37 +68,46 @@ function ExamViewer({ questions = [], userAnswers = {}, correctAnswers = {} }) {
             <div key={question.id} className="bg-white rounded-lg p-6">
               {/* Question Header */}
               <div className="mb-4">
-                <h3 className="text-xl font-bold text-black">Questão {questionIndex + 1}</h3>
+                <h3 className="text-xl font-bold text-gray-900">
+                  Questão {questionIndex + 1}
+                </h3>
               </div>
 
               {/* Question Text */}
-              <div className="mb-6">
-                <p className="text-base text-gray-800">{question.text}</p>
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-base text-gray-800 leading-relaxed">
+                  {question.enunciado || question.text}
+                </p>
               </div>
 
               {/* Alternatives */}
               <div className="space-y-3">
-                {question.alternatives.map((alternative, altIndex) => (
-                  <div key={alternative.id} className="flex items-center gap-4">
-                    {/* Radio Button (disabled) */}
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={alternative.id}
-                      checked={userAnswers[question.id] === alternative.id}
-                      disabled
-                      className="w-4 h-4"
-                    />
-                    
-                    {/* Letter */}
-                    <div className={`w-8 h-8 rounded border flex items-center justify-center ${getAlternativeClass(question.id, alternative.id)}`}>
-                      <span className="font-bold text-black">{letters[altIndex]}</span>
+                {(question.alternativas || question.alternatives || []).map((alternative, altIndex) => {
+                  const altClass = getAlternativeClass(question.id, alternative.id);
+                  const altLabel = getAlternativeLabel(question.id, alternative.id);
+                  
+                  return (
+                    <div
+                      key={alternative.id}
+                      className={`p-4 rounded-lg border-2 transition-colors ${altClass}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Letter Badge */}
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border-2 border-gray-300 flex items-center justify-center font-bold text-gray-700">
+                          {letters[altIndex]}
+                        </div>
+                        
+                        {/* Alternative Content */}
+                        <div className="flex-1">
+                          <p className="text-base text-gray-900">
+                            {alternative.texto || alternative.text}
+                          </p>
+                          {altLabel}
+                        </div>
+                      </div>
                     </div>
-                    
-                    {/* Alternative Text */}
-                    <span className="flex-1 text-base text-gray-800">{alternative.text}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
