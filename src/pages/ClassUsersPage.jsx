@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth.js";
 import { getParticipantesByCurso } from "../services/classUsersPageService.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
+import Button from "../components/Button.jsx";
 
 export function ClassUsersPage() {
   const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -103,42 +104,58 @@ export function ClassUsersPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 p-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28 pb-12">
       <GradientSideRail className="left-10" />
       <GradientSideRail variant="inverted" className="right-10" />
 
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
-          Participantes do Curso
-        </h1>
-
-        {/* Exibe erro se houver */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
-            <strong>Erro:</strong> {error}
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
+        <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+            <h1 className="text-3xl font-extrabold text-gray-900">Participantes do Curso</h1>
+            <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">{participantes.length} participantes</span>
           </div>
-        )}
+        </div>
 
-        {/* Exibe loading */}
-        {loading && !error && (
-          <div className="text-center text-gray-600 py-8">Carregando participantes...</div>
-        )}
+        {/* Card wrapper */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="p-6">
+            {/* Exibe erro se houver */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                <strong className="font-semibold">Erro:</strong>
+                <div className="mt-1 text-sm">{error}</div>
+              </div>
+            )}
 
-        {/* Exibe mensagem se não houver participantes */}
-        {!loading && !error && participantes.length === 0 && (
-          <div className="text-center text-gray-600 py-8">
-            Nenhum participante encontrado para este curso.
+            {/* Exibe loading */}
+            {loading && !error && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-pulse bg-indigo-100 rounded-full w-12 h-12 mb-4" />
+                <div className="text-gray-600">Carregando participantes...</div>
+              </div>
+            )}
+
+            {/* Exibe mensagem se não houver participantes */}
+            {!loading && !error && participantes.length === 0 && (
+              <div className="text-center text-gray-600 py-12">
+                <div className="text-lg font-medium mb-2">Nenhum participante encontrado</div>
+                <div className="text-sm text-gray-500">Quando colaboradores se inscreverem neste curso, eles aparecerão aqui.</div>
+              </div>
+            )}
+
+            {/* Exibe a tabela */}
+            {!loading && !error && participantes.length > 0 && (
+              <div>
+                <Table
+                  onClickRow={row => navigate(`/cursos/${idCurso}/participante/${row.id}`)}
+                  columns={columns}
+                  data={participantes}
+                />
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Exibe a tabela */}
-        {!loading && !error && participantes.length > 0 && (
-          <Table
-            onClickRow={row => navigate(`/cursos/${idCurso}/participante/${row.id}`)}
-            columns={columns}
-            data={participantes}
-          />
-        )}
+        </div>
       </div>
     </div>
   );

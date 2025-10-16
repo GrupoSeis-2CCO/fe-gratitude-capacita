@@ -69,3 +69,5 @@ export const userService = {
     return allowedUserTypes.includes(currentUserType);
   },
 };
+
+export default userService;
