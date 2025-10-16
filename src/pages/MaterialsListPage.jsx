@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
@@ -10,6 +10,7 @@ import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import { updateVideo, updateApostila } from "../services/UploadService.js";
 
 export default function MaterialsListPage() {
+	const { idCurso } = useParams();
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
 
@@ -28,11 +29,11 @@ export default function MaterialsListPage() {
 	const [dragOverIndex, setDragOverIndex] = useState(null);
 	const [savingOrder, setSavingOrder] = useState(false);
 
-	async function loadMaterials() {
-		setLoading(true);
-		try {
-			const cursoId = 1; // ajuste conforme necessário ou pegue da rota/contexto
-			const mats = await getMateriaisPorCurso(cursoId);
+		async function loadMaterials() {
+			setLoading(true);
+			try {
+				const cursoId = Number(idCurso) || 1;
+				const mats = await getMateriaisPorCurso(cursoId);
 			// mapear para o formato do MaterialCard (id, title, type, description, url, hidden)
 			const mapped = (mats || []).map((m, idx) => ({
 				id: m.id ?? m.idApostila ?? m.idVideo ?? idx,
@@ -154,26 +155,26 @@ export default function MaterialsListPage() {
 					) : (
 							listToRender.map((material, index) => {
 								const key = `${material.type}-${material.id}`;
-								if (!isReordering) {
-									return (
-										<MaterialCard key={key} material={material} index={index}
-											onEdit={(m) => setEditingMaterial(m)}
-											onActionComplete={() => loadMaterials()} />
-									);
-								}
+												if (!isReordering) {
+													return (
+														<MaterialCard key={key} material={material} index={index} idCurso={idCurso}
+															onEdit={(m) => setEditingMaterial(m)}
+															onActionComplete={() => loadMaterials()} />
+													);
+												}
 
 								// draggable wrapper
-								return (
-									<div key={key}
-										draggable
-										onDragStart={(e) => handleDragStart(e, index)}
-										onDragOver={(e) => handleDragOver(e, index)}
-										onDrop={(e) => handleDrop(e, index)}
-										onDragEnd={handleDragEnd}
-										className={`cursor-move ${dragOverIndex === index ? 'bg-yellow-50' : ''}`}>
-										<MaterialCard material={material} index={index} onEdit={(m) => setEditingMaterial(m)} onActionComplete={() => loadMaterials()} />
-									</div>
-								);
+												return (
+													<div key={key}
+														draggable
+														onDragStart={(e) => handleDragStart(e, index)}
+														onDragOver={(e) => handleDragOver(e, index)}
+														onDrop={(e) => handleDrop(e, index)}
+														onDragEnd={handleDragEnd}
+														className={`cursor-move ${dragOverIndex === index ? 'bg-yellow-50' : ''}`}>
+														<MaterialCard material={material} index={index} idCurso={idCurso} onEdit={(m) => setEditingMaterial(m)} onActionComplete={() => loadMaterials()} />
+													</div>
+												);
 							})
 					)}
 				</div>

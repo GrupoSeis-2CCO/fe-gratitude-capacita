@@ -32,8 +32,8 @@ export default function UserExamsPage({ courseId = 1 }) {
       try {
         let pid = Number(participanteId);
         if (!pid || Number.isNaN(pid)) {
-          // fallback: buscar participante padrão (id 20)
-          pid = 20;
+          // fallback: usar userId=1 para testes, igual ExamPage.jsx
+          pid = 1;
         }
         setParticipanteAtual(pid);
         const tentativasResp = await getTentativasPorUsuario(pid);
