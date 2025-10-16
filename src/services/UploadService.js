@@ -9,9 +9,14 @@ export async function uploadFileToS3(file, tipoBucket = 'bronze') {
     const resp = await api.post('/arquivos/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return resp.data; // espera algo como '/uploads/<filename>'
   } catch (err) {
+    // Mensagens mais amigáveis para 413 (payload too large)
+    const status = err?.response?.status;
+    if (status === 413) {
+      throw new Error('Arquivo muito grande. Tente uma imagem menor ou comprima antes de enviar.');
+    }
     // rethrow with server message if available
-    if (err?.response?.data) throw new Error(err.response.data);
-    throw err;
+    if (err?.response?.data) throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload do arquivo');
+    throw new Error(err?.message || 'Falha no upload do arquivo');
   }
 }
 
