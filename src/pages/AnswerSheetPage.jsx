@@ -16,8 +16,9 @@ export default function AnswerSheetPage({ userId, examId }) {
       setLoading(true);
       setError(null);
       try {
-        // Ajuste userId/examId conforme sua lógica de autenticação/rotas
-        const data = await AnswerSheetPageService.getAnswerSheetData(userId || 1, examId || 1);
+  // Ajuste userId/examId conforme sua lógica de autenticação/rotas
+  // Fallback para o cenário de teste: userId=20 (John Doe), examId=1
+  const data = await AnswerSheetPageService.getAnswerSheetData(userId || 20, examId || 1);
         setQuestions(data.questions || []);
         setUserAnswers(data.userAnswers || {});
         setCorrectAnswers(data.correctAnswers || {});
