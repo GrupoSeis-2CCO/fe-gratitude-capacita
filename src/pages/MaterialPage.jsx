@@ -296,8 +296,14 @@ export default function MaterialPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="text-center mb-8">
-          <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+          </div>
+          <div className="text-center">
+            <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
+          </div>
+          <div className="w-24" />
         </div>
 
         <div className="mb-6">

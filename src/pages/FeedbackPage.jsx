@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
+import Button from "../components/Button";
 import { getFeedbacksByCurso } from "../services/feedbackService.js";
 
 export default function FeedbackPage() {
@@ -55,6 +56,7 @@ export default function FeedbackPage() {
     ));
 
   const cursoTitulo = feedbacks.length > 0 ? feedbacks[0].cursoTitulo : null;
+  const navigate = useNavigate();
 
   return (
     <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
@@ -62,10 +64,16 @@ export default function FeedbackPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="text-center mb-8">
-          <TituloPrincipal>
-            Analisar Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : `#${idCurso}`}
-          </TituloPrincipal>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+          </div>
+          <div className="text-center">
+            <TituloPrincipal>
+              Analisar Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : `#${idCurso}`}
+            </TituloPrincipal>
+          </div>
+          <div className="w-24" />
         </div>
 
         <div className="mt-8 w-full">

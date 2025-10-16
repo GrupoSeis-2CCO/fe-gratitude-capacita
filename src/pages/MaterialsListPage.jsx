@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
+import Button from "../components/Button";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
@@ -11,6 +12,7 @@ import { updateVideo, updateApostila } from "../services/UploadService.js";
 
 export default function MaterialsListPage() {
 	const { idCurso } = useParams();
+	const navigate = useNavigate();
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
 
@@ -128,8 +130,14 @@ export default function MaterialsListPage() {
 			<GradientSideRail className="right-10" variant="inverted" />
 
 			<div className="w-full max-w-4xl mx-auto flex-grow">
-				<div className="text-center mb-10">
-					<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
+				<div className="mb-10 flex items-center justify-between">
+					<div>
+						<Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+					</div>
+					<div className="text-center">
+						<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
+					</div>
+					<div className="w-24" />
 				</div>
 
 				<AddMaterialSection initialMaterial={editingMaterial} onAdded={() => { setEditingMaterial(null); loadMaterials(); }} onCancelEdit={() => setEditingMaterial(null)} />
