@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { UserPage } from "./pages/UserPage.jsx";
@@ -27,6 +26,7 @@ import MaterialPage from "./pages/MaterialPage.jsx";
 import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
 import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import EditExamPage from "./pages/EditExamPage.jsx";
 
 // 1 = funcionário
 // 2 = colabora a dor
@@ -220,6 +220,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
           <StudentAnswerSheetPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/cursos/:idCurso/material/avaliacao/editar",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <Layout footerType="mini">
+          <EditExamPage />
         </Layout>
       </ProtectedRoute>
     ),

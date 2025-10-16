@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import Modal from './Modal';
 import { createExam } from '../services/CreateExamPageService.js';
 
-function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
+function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, onExamSaved = null, editMode = false }) {
   const [questions, setQuestions] = useState([]);
   const [minScore, setMinScore] = useState('');
+  // Preencher dados iniciais para edição
+  useEffect(() => {
+    if (editMode && initialData) {
+      setMinScore(initialData.notaMinima?.toString() || '');
+      setQuestions(
+        (initialData.questoes || []).map((q, idx) => ({
+          id: q.idQuestao || idx + 1,
+          text: q.enunciado || '',
+          alternatives: (q.alternativas || []).map((alt, aidx) => ({
+            id: alt.idAlternativa || aidx + 1,
+            text: alt.texto || '',
+            isCorrect: (q.fkAlternativaCorreta !== undefined && alt.idAlternativa === q.fkAlternativaCorreta) || alt.isCorrect || false
+          }))
+        }))
+      );
+    }
+  }, [editMode, initialData]);
   const [showMinScoreModal, setShowMinScoreModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [modal, setModal] = useState({ open: false, title: '', message: '', type: 'info', actions: null });
-  const [pendingClearAll, setPendingClearAll] = useState(false);
   const MAX_QUESTIONS = 20; // Limite máximo de questões
 
   const updateQuestionText = (questionId, text) => {
@@ -91,30 +105,17 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
   const handleSaveExam = async () => {
     setError(null);
     setLoading(true);
+    
     try {
       // Validações
       if (questions.length === 0) {
-        setModal({
-          open: true,
-          title: 'Atenção',
-          message: 'Adicione pelo menos uma questão antes de concluir',
-          type: 'warning',
-          actions: null
-        });
-        setLoading(false);
-        return;
+        throw new Error(editMode ? 'Adicione pelo menos uma questão antes de atualizar' : 'Adicione pelo menos uma questão antes de concluir');
       }
+      
       if (!minScore || minScore === '' || Number(minScore) < 0 || Number(minScore) > 10) {
-        setModal({
-          open: true,
-          title: 'Atenção',
-          message: 'Defina uma nota mínima válida (0-10) antes de concluir',
-          type: 'warning',
-          actions: null
-        });
-        setLoading(false);
-        return;
+        throw new Error(editMode ? 'Defina uma nota mínima válida (0-10) antes de atualizar' : 'Defina uma nota mínima válida (0-10) antes de concluir');
       }
+      
       // Transformar dados do frontend para formato do backend
       const examData = {
         fkCurso: cursoId, // Backend espera fkCurso
@@ -122,7 +123,7 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
         questoes: questions.map((q, qIdx) => {
           const correctAlt = q.alternatives.find(alt => alt.isCorrect);
           if (!correctAlt) {
-            throw new Error(`Selecione a alternativa correta na questão ${qIdx + 1}.`);
+            throw new Error(`Questão ${qIdx + 1}: marque a alternativa correta`);
           }
           // Encontrar o índice (ordemAlternativa) da alternativa correta
           const correctAltIndex = q.alternatives.findIndex(alt => alt.isCorrect);
@@ -141,20 +142,19 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
         })
       };
       console.log('[ExamBuilder] Dados enviados ao backend:', JSON.stringify(examData, null, 2));
-      const createdExam = await createExam(examData);
-      setModal({
-        open: true,
-        title: 'Sucesso',
-        message: 'Avaliação criada com sucesso!',
-        type: 'success',
-        actions: null
-      });
-      // Reset form
-      setQuestions([]);
-      setMinScore('');
-      // Callback para página pai
-      if (onExamCreated) {
-        onExamCreated(createdExam);
+      if (editMode && onExamSaved) {
+        await onExamSaved(examData);
+        alert('Avaliação atualizada com sucesso!');
+      } else {
+        const createdExam = await createExam(examData);
+        alert('Avaliação criada com sucesso!');
+        // Reset form
+        setQuestions([]);
+        setMinScore('');
+        // Callback para página pai
+        if (onExamCreated) {
+          onExamCreated(createdExam);
+        }
       }
     } catch (err) {
       // Tratamento especial para erro 409 (avaliação já existe)
@@ -162,14 +162,7 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
       if (msg.includes('409') || msg.toLowerCase().includes('existe uma avaliação')) {
         msg = 'Já existe uma avaliação cadastrada para este curso.';
       }
-      setModal({
-        open: true,
-        title: 'Erro',
-        message: msg,
-        type: 'error',
-        actions: null
-      });
-      // Remover setError(msg) para não exibir na tela
+      setError(msg);
       console.error('Erro ao salvar avaliação:', err);
     } finally {
       setLoading(false);
@@ -178,58 +171,29 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
   
   const handleClearAll = () => {
     if (questions.length === 0) {
-      setModal({
-        open: true,
-        title: 'Atenção',
-        message: 'Não há questões para limpar',
-        type: 'warning',
-        actions: null
-      });
+      alert('Não há questões para limpar');
       return;
     }
-    setPendingClearAll(true);
-    setModal({
-      open: true,
-      title: 'Limpar Tudo',
-      message: 'Tem certeza que deseja limpar todas as questões?',
-      type: 'warning',
-      actions: (
-        <>
-          <Button
-            variant="Cancel"
-            label="Cancelar"
-            onClick={() => {
-              setModal(m => ({ ...m, open: false }));
-              setPendingClearAll(false);
-            }}
-          />
-          <button
-            className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 transition"
-            onClick={() => {
-              setQuestions([]);
-              setMinScore('');
-              setModal(m => ({ ...m, open: false }));
-              setPendingClearAll(false);
-            }}
-            autoFocus
-          >Limpar</button>
-        </>
-      )
-    });
+    
+    if (confirm('Tem certeza que deseja limpar todas as questões?')) {
+      setQuestions([]);
+      setMinScore('');
+      setError(null);
+    }
   };
 
   return (
     <div className="w-[60rem] mx-auto bg-[#1D262D] rounded-lg p-6">
-      {/* Modal customizado para feedback e confirmação */}
-      <Modal
-        open={modal.open}
-        title={modal.title}
-        message={modal.message}
-        type={modal.type}
-        onClose={() => setModal(m => ({ ...m, open: false }))}
-        actions={modal.actions}
-      />
-      {/* Error Message removido para evitar exibição duplicada */}
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded shadow-sm animate-pulse">
+          <div className="flex items-center gap-2 mb-1">
+            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>
+            <span className="font-bold text-red-700">Erro:</span>
+          </div>
+          <p className="text-red-700 font-medium">{error}</p>
+        </div>
+      )}
       
       {/* Header Buttons */}
       <div className="flex justify-between items-center mb-6">
@@ -241,8 +205,8 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
         
         <div className="flex gap-4">
           <Button 
-            variant="Confirm" 
-            label={loading ? "Salvando..." : "Concluir"}
+            variant={editMode ? "Primary" : "Confirm"} 
+            label={loading ? "Salvando..." : (editMode ? "Atualizar" : "Concluir")}
             onClick={handleSaveExam}
             disabled={loading || questions.length === 0}
           />
@@ -255,12 +219,11 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
         </div>
       </div>
       
-      {/* Min Score Modal (com blur e animação) */}
-      <Modal
-        open={showMinScoreModal}
-        title="Nota Mínima para Aprovação"
-        message={
-          <div>
+      {/* Min Score Modal */}
+      {showMinScoreModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4 text-gray-900">Nota Mínima para Aprovação</h3>
             <p className="text-gray-600 mb-4">Defina a nota mínima (0-10) que o aluno precisa atingir:</p>
             <input
               type="number"
@@ -271,39 +234,28 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
               onChange={(e) => setMinScore(e.target.value)}
               className="w-full p-3 border border-gray-300 rounded-lg text-lg mb-4"
               placeholder="Ex: 6"
-              autoFocus
             />
+            <div className="flex gap-4 justify-end">
+              <Button
+                variant="Cancel"
+                label="Cancelar"
+                onClick={() => setShowMinScoreModal(false)}
+              />
+              <Button
+                variant="Confirm"
+                label="Confirmar"
+                onClick={() => {
+                  if (minScore && Number(minScore) >= 0 && Number(minScore) <= 10) {
+                    setShowMinScoreModal(false);
+                  } else {
+                    alert('Digite uma nota válida entre 0 e 10');
+                  }
+                }}
+              />
+            </div>
           </div>
-        }
-        type="info"
-        onClose={() => setShowMinScoreModal(false)}
-        actions={
-          <>
-            <Button
-              variant="Cancel"
-              label="Cancelar"
-              onClick={() => setShowMinScoreModal(false)}
-            />
-            <Button
-              variant="Confirm"
-              label="Confirmar"
-              onClick={() => {
-                if (minScore && Number(minScore) >= 0 && Number(minScore) <= 10) {
-                  setShowMinScoreModal(false);
-                } else {
-                  setModal({
-                    open: true,
-                    title: 'Nota inválida',
-                    message: 'Digite uma nota válida entre 0 e 10',
-                    type: 'warning',
-                    actions: null
-                  });
-                }
-              }}
-            />
-          </>
-        }
-      />
+        </div>
+      )}
 
       {/* Empty State - Show when no questions */}
       {questions.length === 0 && (
@@ -347,16 +299,11 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
               <div className="space-y-3 mb-4">
                 {question.alternatives.map((alternative, altIndex) => (
                   <div key={alternative.id} className="flex items-center gap-4">
-                    {/* Letter as selector */}
-                    <button
-                      type="button"
-                      className={`w-8 h-8 rounded border flex items-center justify-center font-bold transition
-                        ${alternative.isCorrect ? 'bg-green-500 text-white border-green-600' : 'bg-gray-200 text-black border-gray-400 hover:bg-green-100'}`}
-                      onClick={() => toggleCorrectAnswer(question.id, alternative.id)}
-                      aria-label={alternative.isCorrect ? 'Alternativa correta' : 'Selecionar como correta'}
-                    >
-                      {letters[altIndex]}
-                    </button>
+                    {/* Letter */}
+                    <div className="w-8 h-8 bg-gray-200 rounded border border-gray-400 flex items-center justify-center">
+                      <span className="font-bold text-black">{letters[altIndex]}</span>
+                    </div>
+                    
                     {/* Alternative Text */}
                     <input
                       type="text"
@@ -365,6 +312,16 @@ function ExamBuilder({ cursoId = 1, onExamCreated = null }) {
                       placeholder="Adicionar Resposta"
                       className="flex-1 p-2 border border-gray-300 rounded text-base"
                     />
+                    
+                    {/* Correct Answer Checkbox */}
+                    <div className="w-6 h-6">
+                      <input
+                        type="checkbox"
+                        checked={alternative.isCorrect}
+                        onChange={() => toggleCorrectAnswer(question.id, alternative.id)}
+                        className="w-full h-full"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
