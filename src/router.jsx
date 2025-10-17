@@ -24,12 +24,17 @@ import MaterialsListPage from "./pages/MaterialsListPage.jsx";
 import MaterialsRoutePage from "./pages/MaterialsRoutePage.jsx";
 import MaterialPage from "./pages/MaterialPage.jsx";
 import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
-import FeedbackPage from "./pages/FeedbackPage.jsx";
+// import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import EditExamPage from "./pages/EditExamPage.jsx";
 
+// Novos: páginas que criamos
+import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
+import FeedbacksDoCursoPage from "./pages/FeedbacksDoCursoPage.jsx";
+import StudentCourseFeedbacksPage from "./pages/StudentCourseFeedbacksPage.jsx";
+
 // 1 = funcionário
-// 2 = colabora a dor
+// 2 = colaborador
 
 export const router = createBrowserRouter([
   {
@@ -125,7 +130,18 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <FeedbackPage />
+          <FeedbacksDoCursoPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    // Colaborador vê apenas o próprio feedback do curso
+    path: "/cursos/:idCurso/meu-feedback",
+    element: (
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini" headerType="student">
+          <StudentCourseFeedbacksPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -215,11 +231,12 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/avaliacoes/:idCurso/:tentativa",
+    // Atualizado: usamos nossa página de detalhes de tentativa do aluno
+    path: "/avaliacoes/:idCurso/:idTentativa",
     element: (
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
-          <StudentAnswerSheetPage />
+          <TentativaDetalhePage />
         </Layout>
       </ProtectedRoute>
     ),

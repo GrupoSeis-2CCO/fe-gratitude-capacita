@@ -499,22 +499,38 @@ export default function StudentMaterialsListPage() {
           )}
         </div>
 
-        {/* Avaliação Final banner (kept but not creating anything) */}
-        <div className="mt-8 bg-orange-100 border-l-4 border-orange-500 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-orange-200 rounded-lg flex items-center justify-center">
-                <FileText size={32} className="text-orange-600" />
+        {/* Ações do curso: Avaliação + Meu Feedback */}
+        <div className="mt-8 flex flex-col md:flex-row gap-4">
+          <div className="flex-1 bg-orange-100 border-l-4 border-orange-500 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 bg-orange-200 rounded-lg flex items-center justify-center">
+                  <FileText size={32} className="text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Avaliação Final</h3>
+                  <p className="text-sm text-gray-600">10 Questões Objetivas</p>
+                  <p className="text-sm text-gray-600">Nota mínima: 6/10</p>
+                </div>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">Avaliação Final</h3>
-                <p className="text-sm text-gray-600">10 Questões Objetivas</p>
-                <p className="text-sm text-gray-600">Nota mínima: 6/10</p>
+                <button onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)} className="px-4 py-2 bg-black text-white rounded">Iniciar Avaliação</button>
               </div>
             </div>
-            <div>
-              {/* navigation only; no creation */}
-              <button onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)} className="px-4 py-2 bg-black text-white rounded">Iniciar Avaliação</button>
+          </div>
+
+          <div className="w-full md:w-72 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Meu Feedback</h3>
+                <p className="mt-1 text-sm text-gray-600">Veja o feedback que você enviou para este curso.</p>
+              </div>
+              <button
+                onClick={() => navigate(`/cursos/${idCurso}/meu-feedback`)}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Abrir Meu Feedback
+              </button>
             </div>
           </div>
         </div>

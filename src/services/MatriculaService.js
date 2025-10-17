@@ -103,6 +103,26 @@ export async function updateUltimoAcesso(fkUsuario, fkCurso) {
   return run;
 }
 
+// Marca a matrícula como concluída (necessário para permitir envio de feedback)
+export async function completarMatricula(fkUsuario, fkCurso) {
+  const u = Number(fkUsuario);
+  const c = Number(fkCurso);
+  if (!u || !c) throw new Error("Parâmetros inválidos para completarMatricula");
+  try {
+    const resp = await api.put(`/matriculas/completar/${u}/${c}`);
+    return resp?.data ?? { completo: true };
+  } catch (e) {
+    const status = e?.response?.status;
+    // Tratar idempotência/erros benignos como OK
+    if (status === 409) {
+      // caso de conflito tratado como já completo
+      return { completo: true, conflict: true };
+    }
+    // Propaga 404/400 para o chamador decidir
+    throw e;
+  }
+}
+
 export async function getMatriculasPorUsuario(fkUsuario) {
   const u = Number(fkUsuario);
   if (!u) throw new Error("Parâmetro inválido para getMatriculasPorUsuario");
@@ -115,5 +135,5 @@ export async function getMatriculasPorUsuario(fkUsuario) {
   }
 }
 
-const MatriculaService = { ensureMatricula, updateUltimoAcesso, getMatriculasPorUsuario };
+const MatriculaService = { ensureMatricula, updateUltimoAcesso, completarMatricula, getMatriculasPorUsuario };
 export default MatriculaService;

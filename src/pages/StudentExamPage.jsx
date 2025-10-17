@@ -4,7 +4,10 @@ import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamTaker from "../components/ExamTaker.jsx";
+import ConfirmModal from "../components/ConfirmModal.jsx";
 import ExamPageService from "../services/ExamPageService.js";
+import { api } from "../services/api.js";
+import { completarMatricula } from "../services/MatriculaService.js";
 
 // Página para colaboradores (usuários tipo 2) realizarem a avaliação de um curso
 export default function StudentExamPage() {
@@ -25,6 +28,12 @@ export default function StudentExamPage() {
   const [error, setError] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showAllQuestionsModal, setShowAllQuestionsModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackStars, setFeedbackStars] = useState(0); // 0..10 (meia estrela = 1)
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackAnonimo, setFeedbackAnonimo] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -68,7 +77,8 @@ export default function StudentExamPage() {
     if (questions.length === 0 || !examId) return;
     const answeredCount = Object.keys(answers || {}).length;
     if (answeredCount < questions.length) {
-      setSubmitResult({ error: "Responda todas as questões antes de enviar." });
+      // Exibir modal de aviso utilizando nosso componente de confirmação
+      setShowAllQuestionsModal(true);
       return;
     }
 
@@ -78,11 +88,8 @@ export default function StudentExamPage() {
     try {
       const result = await ExamPageService.submitExam(Number(examId), Number(uid), answers);
       setSubmitResult(result || { success: true });
-      // Opcional: redirecionar de volta à lista de materiais do curso após sucesso
-      if (idCurso) {
-        // Pequeno delay para o usuário ver o sucesso antes do redirect
-        setTimeout(() => navigate(`/cursos/${idCurso}/material`), 1200);
-      }
+      // Abrir modal de feedback após concluir a avaliação
+      setShowFeedbackModal(true);
     } catch (err) {
       console.error("Erro ao enviar respostas:", err);
       setSubmitResult({ error: "Erro ao enviar respostas" });
@@ -95,7 +102,84 @@ export default function StudentExamPage() {
     ? `Avaliação de conhecimento do ${courseName}`
     : "Avaliação de conhecimento";
 
+  async function submitFeedback() {
+    try {
+      setFeedbackError(null);
+      const uid = getUserIdFromJwt();
+      if (!uid) throw new Error("Usuário não identificado");
+      if (!idCurso) throw new Error("Curso não identificado");
+      // Garante matrícula concluída antes de permitir feedback (backend exige completo=true)
+      try {
+        await completarMatricula(Number(uid), Number(idCurso));
+      } catch (e) {
+        // Se 404/400, vamos tentar mesmo assim e deixar o backend responder (mas logamos)
+        console.debug('Não foi possível marcar matrícula como completa antes do feedback:', e?.response?.data || e?.message);
+      }
+  // feedbackStars é 1..10 -> usar diretamente como inteiro no backend
+  const estrelasInt = Math.max(1, Math.min(10, Math.round(feedbackStars || 0)));
+
+      const payload = {
+        idCurso: Number(idCurso),
+        estrelas: estrelasInt,
+        motivo: feedbackComment || null,
+        fkUsuario: Number(uid),
+        anonimo: Boolean(feedbackAnonimo)
+      };
+      await api.post('/feedbacks', payload);
+      setShowFeedbackModal(false);
+      if (idCurso) setTimeout(() => navigate(`/cursos/${idCurso}/material`), 200);
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 409) {
+        // Tenta marcar matrícula como completa e reenviar uma vez
+        try {
+          const uid = getUserIdFromJwt();
+          await completarMatricula(Number(uid), Number(idCurso));
+          const estrelasInt = Math.max(1, Math.min(10, Math.round(feedbackStars || 0)));
+          await api.post('/feedbacks', {
+            idCurso: Number(idCurso),
+            estrelas: estrelasInt,
+            motivo: feedbackComment || null,
+            fkUsuario: Number(uid),
+            anonimo: Boolean(feedbackAnonimo)
+          });
+          setShowFeedbackModal(false);
+          if (idCurso) setTimeout(() => navigate(`/cursos/${idCurso}/material`), 200);
+        } catch (retryErr) {
+          console.error('Falha ao reenviar feedback após completar matrícula:', retryErr);
+          setFeedbackError(retryErr?.response?.data?.message || retryErr?.message || 'Falha ao reenviar feedback.');
+        }
+      } else if (status === 400) {
+        // Ambiente legado pode aceitar apenas 1..5. Tenta reenvio com clamp 1..5 uma vez.
+        try {
+          const uid = getUserIdFromJwt();
+          const estrelas5 = Math.max(1, Math.min(5, Math.round(feedbackStars || 0)));
+          const fallbackPayload = {
+            idCurso: Number(idCurso),
+            estrelas: estrelas5,
+            motivo: feedbackComment || null,
+            fkUsuario: Number(uid),
+            anonimo: Boolean(feedbackAnonimo)
+          };
+          await api.post('/feedbacks', fallbackPayload);
+          // sucesso no fallback
+          setShowFeedbackModal(false);
+          if (idCurso) setTimeout(() => navigate(`/cursos/${idCurso}/material`), 200);
+        } catch (fallbackErr) {
+          console.error('Reenvio (1..5) falhou:', fallbackErr);
+          const msg = fallbackErr?.response?.data?.message || fallbackErr?.message || 'Erro ao enviar feedback.';
+          setFeedbackError(msg);
+        }
+      } else {
+        console.error('Erro ao enviar feedback:', e);
+        setFeedbackError(e?.response?.data?.message || e?.message || 'Erro ao enviar feedback.');
+      }
+      // Em caso de erro, mantém o modal aberto para o usuário ajustar
+    }
+  }
+
   return (
+    <>
     <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
       {/* Decorative rails left and right */}
       <GradientSideRail className="left-10" />
@@ -115,12 +199,91 @@ export default function StudentExamPage() {
               {submitResult.error}
             </div>
           )}
+          {/* Modal para obrigatoriedade de responder todas as questões */}
+          <ConfirmModal
+            open={showAllQuestionsModal}
+            title="Atenção"
+            message="Responda todas as questões antes de enviar."
+            confirmLabel="OK"
+            hideCancel={true}
+            onConfirm={() => setShowAllQuestionsModal(false)}
+            onCancel={() => setShowAllQuestionsModal(false)}
+          />
           {!loading && !error && !submitting && (
             <ExamTaker questions={questions} onSubmit={handleSubmit} />
           )}
         </div>
       </div>
     </div>
+    {showFeedbackModal && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
+        <div className="bg-white rounded-2xl w-full max-w-2xl p-8 shadow-2xl border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Deixe seu feedback do curso</h2>
+          <p className="text-base text-gray-700 mb-4">Qual nota você daria para a aula? (1 = Ruim e 10 = Excelente)</p>
+          {feedbackError && (
+            <div className="mb-4 rounded-md border border-red-300 bg-red-50 text-red-700 px-3 py-2 text-sm">
+              {feedbackError}
+            </div>
+          )}
+
+          <div className="mb-5">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+              <span>Ruim</span>
+              <span>Excelente</span>
+            </div>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+              {[...Array(10)].map((_, i) => {
+                const active = i < feedbackStars;
+                const value = i + 1; // 1..10
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`h-10 sm:h-11 rounded-md border text-sm font-semibold transition-colors ${active ? 'bg-yellow-400 border-yellow-500 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    onClick={() => setFeedbackStars(value)}
+                    aria-label={`Selecionar ${value} de 10`}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-sm text-gray-600">Selecionado: {feedbackStars} / 10</span>
+              <span className="text-base sm:text-lg font-semibold text-gray-800">{feedbackStars} / 10</span>
+            </div>
+          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Deixe um comentário sobre sua experiência:</label>
+          <textarea
+            className="w-full border rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+            rows={5}
+            maxLength={1000}
+            value={feedbackComment}
+            onChange={(e) => setFeedbackComment(e.target.value)}
+            placeholder="Escreva aqui..."
+          />
+          <div className="text-right text-xs text-gray-500 mb-3">{feedbackComment.length}/1000</div>
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-sm font-medium text-gray-700">Deseja que esse feedback seja anônimo?</span>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-1 text-sm cursor-pointer">
+                <input type="radio" name="anonimo" checked={feedbackAnonimo === true} onChange={() => setFeedbackAnonimo(true)} />
+                Sim
+              </label>
+              <label className="flex items-center gap-1 text-sm cursor-pointer">
+                <input type="radio" name="anonimo" checked={feedbackAnonimo === false} onChange={() => setFeedbackAnonimo(false)} />
+                Não
+              </label>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <button className="px-5 py-2.5 rounded-md border text-gray-700" onClick={() => { setShowFeedbackModal(false); if (idCurso) navigate(`/cursos/${idCurso}/material`); }}>Pular</button>
+            <button className="px-5 py-2.5 rounded-md bg-blue-600 text-white" onClick={submitFeedback}>Enviar</button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
