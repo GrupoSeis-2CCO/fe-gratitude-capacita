@@ -15,6 +15,15 @@ export const userService = {
       let tipo = response.data.userType ?? response.data.tipo ?? response.data.cargo ?? response.data.idCargo;
       tipo = parseInt(tipo, 10);
       localStorage.setItem("userType", tipo);
+      // Persistir também o id do usuário para facilitar outras operações (ex.: matrícula)
+      try {
+        const uid = response.data.idUsuario ?? response.data.id ?? response.data.usuarioId ?? response.data.userId;
+        if (uid != null) {
+          localStorage.setItem("usuarioId", String(uid));
+        }
+      } catch (_) {
+        // noop
+      }
       return response.data;
     } catch (error) {
       console.error("Erro no login:", error);

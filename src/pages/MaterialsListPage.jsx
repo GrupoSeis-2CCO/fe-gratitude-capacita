@@ -58,6 +58,19 @@ export default function MaterialsListPage() {
 		}
 	}
 
+	// Listen for material finalization events (dispatched by MaterialPage) and reload list
+	useEffect(() => {
+		let mounted = true;
+		async function refetchOnEvent(e) {
+			const { idCurso: courseId } = e.detail || {};
+			if (String(courseId) !== String(idCurso)) return;
+			// small debounce to avoid rapid repeated reloads
+			setTimeout(() => { if (!mounted) return; loadMaterials(); }, 150);
+		}
+		window.addEventListener('material:finalizado', refetchOnEvent);
+		return () => { mounted = false; window.removeEventListener('material:finalizado', refetchOnEvent); };
+	}, [idCurso]);
+
 	useEffect(() => { loadMaterials(); }, []);
 
 	// When in reordering mode we render and operate directly on `materials` (which are ordered by their saved order)

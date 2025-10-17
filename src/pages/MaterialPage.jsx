@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import { FileText, Youtube, ArrowLeft } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
+import SmartImage from "../components/SmartImage.jsx";
 
 export default function MaterialPage() {
   const { idCurso, idMaterial } = useParams();
@@ -202,7 +203,7 @@ export default function MaterialPage() {
           const thumb = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
           return (
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-              <img src={thumb} alt={material.titulo} className="w-full h-full object-cover" />
+              <SmartImage src={thumb} alt={material.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setVideoLoaded(true)}
                 className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition"
@@ -296,14 +297,8 @@ export default function MaterialPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
-          </div>
-          <div className="text-center">
-            <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
-          </div>
-          <div className="w-24" />
+        <div className="text-center mb-8">
+          <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
         </div>
 
         <div className="mb-6">
