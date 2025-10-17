@@ -10,11 +10,42 @@ export const userService = {
     try {
       const response = await api.post("/usuarios/login", loginData);
       localStorage.setItem("token", response.data.token);
-      console.log('Login backend response:', response.data);
-      // Tenta salvar o tipo de usuário usando os campos possíveis
-      let tipo = response.data.userType ?? response.data.tipo ?? response.data.cargo ?? response.data.idCargo;
-      tipo = parseInt(tipo, 10);
-      localStorage.setItem("userType", tipo);
+  // Mapeia tipo de usuário de forma robusta
+  // Convenção global neste frontend e no backend: 1 = Funcionário, 2 = Colaborador
+      let tipoFinal = null;
+
+      // Tenta extrair informações do próprio token (JWT)
+      try {
+        const parts = String(response.data.token || '').split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1] || '')) || {};
+          const idCargoClaim = parseInt(payload.idCargo ?? payload.cargo ?? payload.fkCargo, 10);
+          if (!Number.isNaN(idCargoClaim)) {
+            tipoFinal = idCargoClaim; // 1=Funcionário, 2=Colaborador
+          } else {
+            const tipoClaim = parseInt(payload.tipo ?? payload.userType ?? payload.type, 10);
+            if (!Number.isNaN(tipoClaim)) tipoFinal = tipoClaim;
+          }
+        }
+      } catch (_) {
+        // ignore
+      }
+
+      // Se ainda não definido, tenta pelo corpo da resposta
+      if (tipoFinal == null) {
+        const idCargoResp = parseInt(response.data.idCargo ?? response.data.cargo, 10);
+        if (!Number.isNaN(idCargoResp)) {
+          tipoFinal = idCargoResp; // 1=Funcionário, 2=Colaborador
+        } else {
+          const tipoRaw = response.data.userType ?? response.data.tipo;
+          const tipoParsed = parseInt(tipoRaw, 10);
+          if (!Number.isNaN(tipoParsed)) tipoFinal = tipoParsed;
+        }
+      }
+
+      if (tipoFinal != null) {
+        localStorage.setItem("userType", String(tipoFinal));
+      }
       // Persistir também o id do usuário para facilitar outras operações (ex.: matrícula)
       try {
         const uid = response.data.idUsuario ?? response.data.id ?? response.data.usuarioId ?? response.data.userId;

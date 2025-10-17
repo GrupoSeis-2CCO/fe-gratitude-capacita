@@ -5,8 +5,6 @@ import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { AccessPage } from "./pages/AccessPage.jsx";
 import { RegisterPage } from "./pages/RegisterPage.jsx";
-import { ProfilePage } from "./pages/ProfilePage.jsx";
-import ProfileRoutePage from "./pages/ProfileRoutePage.jsx";
 import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
 import { UserClassesPage } from "./pages/UserClassesPage.jsx";
 import TestPage from "./pages/TestPage.jsx";
@@ -32,6 +30,7 @@ import EditExamPage from "./pages/EditExamPage.jsx";
 import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
 import FeedbacksDoCursoPage from "./pages/FeedbacksDoCursoPage.jsx";
 import StudentCourseFeedbacksPage from "./pages/StudentCourseFeedbacksPage.jsx";
+import StudentProfile from "./pages/StudentProfile.jsx";
 
 // 1 = funcionário
 // 2 = colaborador
@@ -82,8 +81,10 @@ export const router = createBrowserRouter([
   {
     path: "/perfil",
     element: (
-      <ProtectedRoute allowedUserTypes={[1,2]}>
-        <ProfileRoutePage />
+      <ProtectedRoute allowedUserTypes={[2]}>
+        <Layout footerType="mini" headerType="student">
+          <StudentProfile />
+        </Layout>
       </ProtectedRoute>
     ),
   },
