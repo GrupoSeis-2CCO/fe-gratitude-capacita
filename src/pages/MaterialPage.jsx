@@ -395,7 +395,7 @@ export default function MaterialPage() {
                 if (material.url) {
                   window.open(material.url, '_blank');
                 } else {
-                  alert('PDF não disponível');
+                  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'PDF não disponível' } }));
                 }
               }}
             />
@@ -417,7 +417,8 @@ export default function MaterialPage() {
             <TituloPrincipal>{(() => {
               const { index } = getDisplayPosition();
               const num = index >= 0 ? (index + 1) : (parsedParam.idNum ?? 1);
-              const cleanTitle = material && typeof material.titulo === 'string' && /\.pdf$/i.test(material.titulo) ? material.titulo.replace(/\.pdf$/i, '') : (material?.titulo || '...');
+              const rawTitle = material ? (material.titulo ?? material.nomeApostila ?? material.nomeVideo ?? '...') : '...';
+              const cleanTitle = typeof rawTitle === 'string' && /\.pdf$/i.test(rawTitle) ? rawTitle.replace(/\.pdf$/i, '') : rawTitle;
               return `Material ${num} - ${cleanTitle}`;
             })()}</TituloPrincipal>
           </div>
@@ -435,12 +436,13 @@ export default function MaterialPage() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600">
             <h2 className="text-2xl font-bold text-white">
-              {(() => {
-                const { index } = getDisplayPosition();
-                const num = index >= 0 ? (index + 1) : (parsedParam.idNum ?? 1);
-                const cleanTitle = material && typeof material.titulo === 'string' && /\.pdf$/i.test(material.titulo) ? material.titulo.replace(/\.pdf$/i, '') : (material?.titulo || '...');
-                return `Material ${num} - ${cleanTitle}`;
-              })()}
+                {(() => {
+                  const { index } = getDisplayPosition();
+                  const num = index >= 0 ? (index + 1) : (parsedParam.idNum ?? 1);
+                  const rawTitle = material ? (material.titulo ?? material.nomeApostila ?? material.nomeVideo ?? '...') : '...';
+                  const cleanTitle = typeof rawTitle === 'string' && /\.pdf$/i.test(rawTitle) ? rawTitle.replace(/\.pdf$/i, '') : rawTitle;
+                  return `Material ${num} - ${cleanTitle}`;
+                })()}
             </h2>
             <div className="flex items-center mt-2 text-orange-100">
               {material ? (material.tipo === 'video' ? <Youtube size={20} className="mr-2" /> : <FileText size={20} className="mr-2" />) : null}

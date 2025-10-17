@@ -45,7 +45,7 @@ export const useAuth = () => {
     message = "Você precisa estar logado para acessar esta página."
   ) => {
     // Para compatibilidade, mantém alert mas pode ser substituído por notificação
-    alert(message);
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Login necessário', message } }));
     navigate("/login", {
       state: { from: location, message },
       replace: true,
@@ -63,7 +63,7 @@ export const useAuth = () => {
         redirectToLogin(
           "🔒 Você precisa estar logado para acessar esta página. Faça login para continuar."
         );
-      }, 100);
+      }, 50);
       return false;
     }
 
@@ -83,13 +83,14 @@ export const useAuth = () => {
         .map((type) => getUserTypeLabel(type))
         .join(" ou ");
 
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Acesso negado', message: `Página restrita a: ${allowedLabels}. Você está logado como: ${getUserTypeLabel(userType)}.` } }));
       setTimeout(() => {
         redirectToLogin(
           `🚫 Acesso negado. Esta página é restrita para: ${allowedLabels}. Você está logado como: ${getUserTypeLabel(
             userType
           )}.`
         );
-      }, 100);
+      }, 200);
       return false;
     }
 

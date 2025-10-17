@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, allowedUserTypes = [1, 2] }) 
 
       // Usuário não logado
       if (!token) {
-        alert("🔒 Você precisa estar logado para acessar esta página. Faça login para continuar.");
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Login necessário', message: 'Faça login para continuar.' } }));
         navigate("/login", { 
           state: { 
             from: location, 
@@ -40,7 +40,7 @@ export default function ProtectedRoute({ children, allowedUserTypes = [1, 2] }) 
         
         const message = `🚫 Acesso negado. Esta página é restrita para: ${allowedLabels}. Você está logado como: ${getUserTypeLabel(userType)}.`;
         
-        alert(message);
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Acesso negado', message } }));
         navigate("/login", { 
           state: { 
             from: location, 

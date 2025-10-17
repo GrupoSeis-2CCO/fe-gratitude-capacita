@@ -30,9 +30,9 @@ export function RegisterPage() {
         email: formData.email,
         cargo: idCargo
       });
-      alert('Cadastro realizado com sucesso!');
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Cadastro realizado' } }));
     } catch (error) {
-      alert('Erro ao cadastrar. Verifique os dados e tente novamente.');
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao cadastrar', message: 'Verifique os dados e tente novamente' } }));
     }
     setLoading(false);
   };
