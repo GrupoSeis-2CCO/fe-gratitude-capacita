@@ -114,6 +114,9 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     if (onEdit) onEdit(material);
   }
 
+  const displayNumber = material?.displayOrder ?? material?.order ?? (index + 1);
+  const displayTitle = material?.title ? ((material.type === 'pdf') ? String(material.title).replace(/\.pdf$/i, '') : material.title) : '';
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6">
       <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
@@ -129,9 +132,14 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
       </div>
       <div className="flex-1">
         <div className="flex justify-between items-start">
-          <h3 className="text-xl font-bold text-gray-800 mb-2">
-            Material {index + 1} - {material.title}
-          </h3>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+              <span>{`Material ${displayNumber} - ${displayTitle}`}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${material.type === 'pdf' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                {material.type === 'pdf' ? 'Apostila' : 'Vídeo'}
+              </span>
+            </h3>
+          </div>
           <div className="relative" ref={ref}>
             <button className="text-gray-500 hover:text-gray-800" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
               <MoreHorizontal size={24} />

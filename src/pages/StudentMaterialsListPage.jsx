@@ -6,7 +6,7 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import { FileText, Play } from 'lucide-react';
 import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import { api } from "../services/api.js";
-import { ensureMatricula } from "../services/MatriculaService.js";
+import { ensureMatricula, updateUltimoAcesso, getMatriculasPorUsuario } from "../services/MatriculaService.js";
 
 function getStatusColor(status) {
   switch (status) {
@@ -34,10 +34,10 @@ function getStatusText(status) {
   }
 }
 
-function normalizeMaterial(m) {
+function normalizeMaterial(m, idx) {
   if (!m) return null;
   const id = m.id ?? m.idApostila ?? m.idVideo ?? m.idMaterial ?? null;
-  const title = m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? m.title ?? `Material ${id ?? ''}`;
+  let title = m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? m.title ?? `Material ${id ?? ''}`;
   // determine type
   const tipoRaw = (m.tipo || m.type || '').toString().toLowerCase();
   const type = tipoRaw.includes('video') ? 'video' : (tipoRaw.includes('apostila') || tipoRaw.includes('pdf') ? 'pdf' : (tipoRaw.includes('avaliacao') ? 'avaliacao' : (m.urlVideo || m.url ? 'video' : 'pdf')));
@@ -70,7 +70,8 @@ function normalizeMaterial(m) {
   return {
     ...m,
     id,
-    title,
+    // strip trailing .pdf for apostilas (defensive)
+    title: type === 'pdf' && typeof title === 'string' ? title.replace(/\.pdf$/i, '') : title,
     type,
     description,
     status,
@@ -91,6 +92,10 @@ export default function StudentMaterialsListPage() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Filtros
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  // acessoFilter removed per UX request
 
   function getUserIdFromJwtOrStorage() {
     // prefer explicit localStorage key, else parse JWT token
@@ -170,17 +175,50 @@ export default function StudentMaterialsListPage() {
         console.debug('[StudentMaterialsList] raw materiais-alunos:', arr);
         console.debug('[StudentMaterialsList] raw materiais-alunos JSON:', JSON.stringify(arr, null, 2));
       } catch (_) {}
-      // usar chave composta por tipo+id; somente considerar concluído quando backend traz fkVideo/fkApostila + finalizado=true
-      const concludedSet = new Set();
+      // Construir mapa robusto chave->registro para aplicar diretamente ao material correspondente
+      // Aceitamos várias formas de id do backend e tentamos casar com as propriedades do material normalizado
+      const mapKeyToRecord = new Map();
       for (const r of arr) {
         const concludedBackend = isConcludedBackend(r);
         if (!concludedBackend) continue;
-        const { id, type } = extractMaterialKey(r);
-        if (id == null || !type) continue; // sem FKs explícitos, não inferir
-        concludedSet.add(`${type}:${Number(id)}`);
+        // extrai possível id e tipo explicitamente
+        const { id: recId, type: recType } = extractMaterialKey(r);
+        // tentar também extrair id composto (caso venha dentro de idMaterialAlunoComposto)
+        const idMaterialAluno = r?.idMaterialAluno ?? r?.idMaterialAlunoComposto?.idMaterialAluno ?? r?.idMaterialAlunoComposto?.idMaterial ?? r?.idMaterialAluno;
+
+        if (recId != null && recType) {
+          mapKeyToRecord.set(`${recType}:${Number(recId)}`, { raw: r, idMaterialAluno: idMaterialAluno });
+        } else if (recId != null) {
+          // tipo não explícito — registrar sob uma chave genérica para tentar casar por id posteriormente
+          mapKeyToRecord.set(`any:${Number(recId)}`, { raw: r, idMaterialAluno: idMaterialAluno });
+        } else {
+          // se não houver id, ignoramos esse registro (não dá para casar com segurança)
+        }
       }
-      console.debug('[StudentMaterialsList] concluded material keys from backend (strict):', Array.from(concludedSet));
-      return normalizedMaterials.map(m => concludedSet.has(`${m.type}:${Number(m.id)}`) ? { ...m, status: 'concluido' } : m);
+      console.debug('[StudentMaterialsList] concluded material keys from backend (strict):', Array.from(mapKeyToRecord.keys()));
+
+      // Agora, mapeia os materiais normalizados e aplica marcações quando encontrarmos um registro correspondente
+      return normalizedMaterials.map(m => {
+        try {
+          const keysToCheck = [];
+          if (m.type) keysToCheck.push(`${m.type}:${Number(m.id)}`);
+          // também verificar chaves com nomes alternativos se o material expuser idApostila/idVideo
+          if (m.idApostila) keysToCheck.push(`pdf:${Number(m.idApostila)}`);
+          if (m.idVideo) keysToCheck.push(`video:${Number(m.idVideo)}`);
+          // fallback: check any:id
+          keysToCheck.push(`any:${Number(m.id)}`);
+
+          for (const k of keysToCheck) {
+            if (mapKeyToRecord.has(k)) {
+              const rec = mapKeyToRecord.get(k);
+              return { ...m, status: 'concluido', finalizado: true, idMaterialAluno: rec?.idMaterialAluno ?? m.idMaterialAluno };
+            }
+          }
+        } catch (_) {
+          // ignore per-item errors and return original material
+        }
+        return m;
+      });
     } catch (e) {
       // se falhar, retorna como veio
       console.debug('[StudentMaterialsList] mergeWithAlunoMateriais failed:', e?.response?.data || e?.message);
@@ -213,8 +251,16 @@ export default function StudentMaterialsListPage() {
             }
           }
           if (uid) {
-            console.debug('[StudentMaterialsList] ensureMatricula before load', { uid, idCurso: Number(idCurso) });
-            await ensureMatricula(uid, Number(idCurso));
+            const idCursoNum = Number(idCurso);
+            console.debug('[StudentMaterialsList] ensureMatricula before load', { uid, idCurso: idCursoNum });
+            await ensureMatricula(uid, idCursoNum);
+            // marca último acesso no backend
+            await updateUltimoAcesso(uid, idCursoNum);
+            // lê matrícula para saber se já acessou alguma vez
+            const mats = await getMatriculasPorUsuario(uid);
+            const forThis = (Array.isArray(mats) ? mats : []).find(m => Number(m?.curso?.idCurso ?? m?.fkCurso?.idCurso ?? m?.fkCurso) === idCursoNum);
+            const ua = forThis?.ultimoAcesso || forThis?.ultimo_senso || forThis?.ultimoAcessoMatricula || null;
+            // access tracking kept server-side, no local filtro
           }
         } catch (e) {
           console.debug('[StudentMaterialsList] ensureMatricula failed (continuing):', e?.response?.data || e?.message);
@@ -229,8 +275,18 @@ export default function StudentMaterialsListPage() {
         else if (resp?.materials) arr = resp.materials;
         else if (resp) arr = Array.isArray(resp) ? resp : [resp];
 
-        let normalized = (arr || []).map(normalizeMaterial).filter(Boolean);
+  let normalized = (arr || []).map((m, i) => normalizeMaterial(m, i)).filter(Boolean);
+        // ensure order field and strip .pdf if needed
+        normalized = normalized.map((m, i) => ({ ...m, order: m.order ?? m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? (i + 1), title: (m.type === 'pdf' && typeof m.title === 'string') ? m.title.replace(/\.pdf$/i, '') : m.title }));
         normalized = await mergeWithAlunoMateriais(Number(idCurso), normalized);
+        // stable combined ordering: sort by order asc, within same order put videos before pdfs, then assign displayOrder sequentially
+        normalized.sort((a, b) => {
+          const oa = Number(a.order || 0), ob = Number(b.order || 0);
+          if (oa !== ob) return oa - ob;
+          const weight = (t) => t === 'video' ? 0 : (t === 'pdf' ? 1 : 2);
+          return weight(a.type) - weight(b.type);
+        });
+        normalized = normalized.map((m, i) => ({ ...m, displayOrder: i + 1 }));
         setMaterials(normalized);
       } catch (err) {
         console.error('Erro ao carregar materiais:', err);
@@ -257,8 +313,16 @@ export default function StudentMaterialsListPage() {
         else if (resp?.data && Array.isArray(resp.data)) arr = resp.data;
         else if (resp?.materials) arr = resp.materials;
         else if (resp) arr = Array.isArray(resp) ? resp : [resp];
-        let normalized = (arr || []).map(normalizeMaterial).filter(Boolean);
+  let normalized = (arr || []).map((m, i) => normalizeMaterial(m, i)).filter(Boolean);
+        normalized = normalized.map((m, i) => ({ ...m, order: m.order ?? m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? (i + 1), title: (m.type === 'pdf' && typeof m.title === 'string') ? m.title.replace(/\.pdf$/i, '') : m.title }));
         normalized = await mergeWithAlunoMateriais(Number(idCurso), normalized);
+        normalized.sort((a, b) => {
+          const oa = Number(a.order || 0), ob = Number(b.order || 0);
+          if (oa !== ob) return oa - ob;
+          const weight = (t) => t === 'video' ? 0 : (t === 'pdf' ? 1 : 2);
+          return weight(a.type) - weight(b.type);
+        });
+        normalized = normalized.map((m, i) => ({ ...m, displayOrder: i + 1 }));
         return mounted ? normalized : null;
       } catch (e) {
         // mantém estado atual em caso de erro
@@ -296,17 +360,40 @@ export default function StudentMaterialsListPage() {
     return () => { mounted = false; window.removeEventListener('material:finalizado', onCompleted); };
   }, [idCurso]);
 
+  // Remover avaliação da lista base (acesso à avaliação via banner/botão dedicado)
+  // keep a single combined, ordered list (videos + apostilas) — exclude only 'avaliacao'
+  const baseMaterials = useMemo(() => {
+    const arr = (materials || []).filter(m => (m?.type || m?.tipo) !== 'avaliacao');
+    // prefer displayOrder (assigned after normalization), fall back to order
+    return arr.slice().sort((a, b) => (Number(a.displayOrder ?? a.order ?? 0) - Number(b.displayOrder ?? b.order ?? 0)));
+  }, [materials]);
+
+  // Aplicar filtros (nome/título e status)
+  const filteredMaterials = useMemo(() => {
+    const text = searchText.trim().toLowerCase();
+    let arr = baseMaterials.filter(m => {
+      const title = (m.title || m.titulo || '').toString().toLowerCase();
+      const desc = (m.description || m.descricao || '').toString().toLowerCase();
+      const matchesText = text ? (title.includes(text) || desc.includes(text)) : true;
+      const matchesStatus = statusFilter ? (String(m.status).toLowerCase() === statusFilter) : true;
+      return matchesText && matchesStatus;
+    });
+    // preserve global ordering by `displayOrder` after filtering
+    const sorted = arr.slice().sort((a, b) => (Number(a.displayOrder ?? a.order ?? 0) - Number(b.displayOrder ?? b.order ?? 0)));
+    return sorted;
+  }, [baseMaterials, searchText, statusFilter]);
+
   const { total, completed, percent } = useMemo(() => {
-    const total = materials.length;
-    const completed = materials.filter(m => m.status === 'concluido').length;
+    const total = baseMaterials.length;
+    const completed = baseMaterials.filter(m => m.status === 'concluido').length;
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
     return { total, completed, percent };
-  }, [materials]);
+  }, [baseMaterials]);
 
   const MaterialItem = ({ material, index }) => (
     <div
       className="bg-white border border-gray-200 rounded-lg p-4 flex gap-4 mb-4 relative cursor-pointer hover:shadow-lg transition-shadow"
-      onClick={() => navigate(`/cursos/${idCurso}/material/${material.id}`)}
+      onClick={() => navigate(`/cursos/${idCurso}/material/${(material.type || material.tipo)}-${material.id}`)}
     >
       <div className={`absolute top-0 right-0 w-3 h-full rounded-r-lg ${getStatusColor(material.status)}`}></div>
 
@@ -325,7 +412,7 @@ export default function StudentMaterialsListPage() {
       <div className="flex-1 pr-4">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors">
-            Material {index + 1} - {material.title}
+            Material {material.displayOrder ?? material.order ?? (index + 1)} - {material.title}
           </h3>
           <span className="text-sm text-gray-500">{getStatusText(material.status)}</span>
         </div>
@@ -357,16 +444,41 @@ export default function StudentMaterialsListPage() {
           </div>
         </div>
 
-        {/* Ordenação simplificada (visual only) */}
+        {/* Filtros */}
         <div className="mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Ordenar por</span>
-            <select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
-              <option value="">Selecione</option>
-              <option value="ordem">Ordem</option>
-              <option value="tipo">Tipo</option>
-              <option value="status">Status</option>
-            </select>
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
+            <div className="flex-1">
+              <label className="block text-sm text-gray-700 mb-1">Nome</label>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Pesquisar por título ou descrição"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+              />
+            </div>
+            <div className="w-full md:w-56">
+              <label className="block text-sm text-gray-700 mb-1">Status</label>
+              <select
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="" disabled>Selecione</option>
+                <option value="concluido">Concluído</option>
+                <option value="a-fazer">A Fazer</option>
+              </select>
+            </div>
+            {/* Acesso ao curso filter removed per request */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setSearchText(""); setStatusFilter(""); }}
+                className="px-4 py-2 border border-gray-300 rounded text-sm"
+              >
+                Limpar filtros
+              </button>
+            </div>
           </div>
         </div>
 
@@ -375,10 +487,10 @@ export default function StudentMaterialsListPage() {
             <div>Carregando...</div>
           ) : error ? (
             <div className="text-red-600">{error}</div>
-          ) : materials.length === 0 ? (
+          ) : baseMaterials.length === 0 ? (
             <div className="text-gray-600">Nenhum material disponível.</div>
           ) : (
-            materials.map((material, index) => {
+            filteredMaterials.map((material, index) => {
               const uid = material?.id != null ? String(material.id) : `${material.type || 'mat'}-${index}`;
               // incluir o tipo no key para evitar colisões entre video/apostila com mesmo id
               const key = `${idCurso}-${material.type || 'mat'}-${uid}`;

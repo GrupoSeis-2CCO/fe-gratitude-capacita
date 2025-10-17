@@ -45,5 +45,75 @@ export async function ensureMatricula(fkUsuario, fkCurso) {
   return doPost;
 }
 
-const MatriculaService = { ensureMatricula };
+export async function updateUltimoAcesso(fkUsuario, fkCurso) {
+  const u = Number(fkUsuario);
+  const c = Number(fkCurso);
+  if (!u || !c) throw new Error("Parâmetros inválidos para updateUltimoAcesso");
+  // Throttle simples por sessão para evitar atualizações concorrentes e erros 1020 do MySQL
+  const key = `ultimoAcesso:${u}:${c}`;
+  try {
+    const last = Number(sessionStorage.getItem(key) || '0');
+    const now = Date.now();
+    // janela de 15s
+    if (last && (now - last) < 15000) {
+      return null;
+    }
+  } catch (_) { /* ignore */ }
+
+  // Memoriza a execução em andamento para evitar duplicidade em renders concorrentes
+  if (!updateUltimoAcesso._inflight) updateUltimoAcesso._inflight = new Map();
+  const inflightKey = `${u}:${c}`;
+  if (updateUltimoAcesso._inflight.has(inflightKey)) {
+    return updateUltimoAcesso._inflight.get(inflightKey);
+  }
+
+  const run = (async () => {
+    try {
+      const resp = await api.put(`/matriculas/atualizar-ultimo-acesso/${u}/${c}`);
+      try { sessionStorage.setItem(key, String(Date.now())); } catch (_) {}
+      return resp?.data ?? null;
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.message || '';
+      // Tratar erro de concorrência como benigno e não propagar
+      if (msg && /Record has changed since last read/i.test(msg)) {
+        try { sessionStorage.setItem(key, String(Date.now())); } catch (_) {}
+        return null;
+      }
+      // uma pequena nova tentativa com jitter em erros transitórios 5xx
+      const status = e?.response?.status;
+      if (status && status >= 500 && status < 600) {
+        try { await new Promise(r => setTimeout(r, 200 + Math.floor(Math.random()*300))); } catch (_) {}
+        try {
+          const resp2 = await api.put(`/matriculas/atualizar-ultimo-acesso/${u}/${c}`);
+          try { sessionStorage.setItem(key, String(Date.now())); } catch (_) {}
+          return resp2?.data ?? null;
+        } catch (e2) {
+          console.debug('[MatriculaService] falha ao atualizar último acesso (retry):', e2?.response?.data || e2?.message);
+          return null;
+        }
+      }
+      // não bloquear fluxo por causa disso
+      console.debug('[MatriculaService] falha ao atualizar último acesso:', e?.response?.data || e?.message);
+      return null;
+    } finally {
+      updateUltimoAcesso._inflight.delete(inflightKey);
+    }
+  })();
+  updateUltimoAcesso._inflight.set(inflightKey, run);
+  return run;
+}
+
+export async function getMatriculasPorUsuario(fkUsuario) {
+  const u = Number(fkUsuario);
+  if (!u) throw new Error("Parâmetro inválido para getMatriculasPorUsuario");
+  try {
+    const resp = await api.get(`/matriculas/usuario/${u}`);
+    return Array.isArray(resp?.data) ? resp.data : [];
+  } catch (e) {
+    console.debug('[MatriculaService] falha ao listar matrículas do usuário:', e?.response?.data || e?.message);
+    return [];
+  }
+}
+
+const MatriculaService = { ensureMatricula, updateUltimoAcesso, getMatriculasPorUsuario };
 export default MatriculaService;

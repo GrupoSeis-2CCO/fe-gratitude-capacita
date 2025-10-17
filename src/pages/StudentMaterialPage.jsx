@@ -6,14 +6,25 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
 import { FileText, Youtube, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
+import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
-import { ensureMatricula } from "../services/MatriculaService.js";
+import { ensureMatricula, updateUltimoAcesso } from "../services/MatriculaService.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { api } from "../services/api.js";
 
 // Student view of a single material with backend integration, transcript and PDF rendering
 export default function StudentMaterialPage() {
   const { idCurso, idMaterial } = useParams();
+  // Aceita formatos "123" (legado) e "video-123" / "apostila-4"
+  const parsed = React.useMemo(() => {
+    const raw = String(idMaterial || '').trim();
+    const m = raw.match(/^(video|apostila|pdf)-(\d+)$/i);
+    if (m) {
+      const t = m[1].toLowerCase() === 'pdf' ? 'apostila' : m[1].toLowerCase();
+      return { tipo: t, id: Number(m[2]) };
+    }
+    return { tipo: null, id: Number(raw) };
+  }, [idMaterial]);
   const navigate = useNavigate();
   const { getCurrentUserType, isLoggedIn } = useAuth?.() || { getCurrentUserType: () => undefined, isLoggedIn: () => true };
   const userType = getCurrentUserType?.();
@@ -24,6 +35,7 @@ export default function StudentMaterialPage() {
   }
 
   const [material, setMaterial] = useState(null);
+  const [materialsList, setMaterialsList] = useState([]); // lista para navegação correta
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -41,7 +53,8 @@ export default function StudentMaterialPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await MaterialPageService.getMaterialDoCurso(parseInt(idCurso), parseInt(idMaterial));
+      const targetId = Number(parsed.id);
+      const res = await MaterialPageService.getMaterialDoCurso(parseInt(idCurso), targetId, parsed.tipo || (material?.tipo));
       setMaterial(res);
     } catch (err) {
       const serverData = err?.response?.data;
@@ -53,8 +66,46 @@ export default function StudentMaterialPage() {
     }
   }
 
-  useEffect(() => { loadMaterial(); }, [idCurso, idMaterial]);
+  useEffect(() => { loadMaterial(); }, [idCurso, idMaterial, parsed.id]);
   useEffect(() => { setVideoLoaded(false); finalizedRef.current = false; }, [idMaterial, idCurso]);
+
+  // Carrega a lista de materiais para permitir navegação por ordem/IDs corretos
+  useEffect(() => {
+    let mounted = true;
+    async function loadList() {
+      try {
+        if (!idCurso) return;
+        const resp = await getMateriaisPorCurso(idCurso);
+        let arr = [];
+        if (Array.isArray(resp)) arr = resp; else if (resp?.materiais) arr = resp.materiais; else if (resp?.data && Array.isArray(resp.data)) arr = resp.data; else if (resp) arr = [resp];
+        // excluir avaliação
+        const onlyMaterials = (arr || []).filter(m => (m?.tipo || m?.type) !== 'avaliacao');
+        // normalizar para ter id, tipo ('video'|'apostila'), order e displayOrder consistentes com a listagem
+        let normalized = onlyMaterials.map((m, idx) => {
+          const id = m.id ?? m.idApostila ?? m.idVideo ?? m.idMaterial ?? null;
+          const tRaw = (m.tipo || m.type || '').toString().toLowerCase();
+          const tipo = tRaw.includes('video') ? 'video' : (tRaw.includes('apostila') || tRaw.includes('pdf') ? 'apostila' : (m.urlVideo || m.url ? 'video' : 'apostila'));
+          const order = m.order ?? m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? (idx + 1);
+          return { ...m, id, tipo, order };
+        });
+        // ordenar por order asc; dentro do mesmo order, videos antes de apostilas (alinha com StudentMaterialsListPage)
+        const weight = (t) => t === 'video' ? 0 : (t === 'apostila' ? 1 : 2);
+        normalized.sort((a, b) => {
+          const oa = Number(a.order || 0), ob = Number(b.order || 0);
+          if (oa !== ob) return oa - ob;
+          return weight(a.tipo) - weight(b.tipo);
+        });
+        // atribuir displayOrder sequencial para uso no título/numeração estável
+        normalized = normalized.map((m, i) => ({ ...m, displayOrder: i + 1 }));
+        if (mounted) setMaterialsList(normalized);
+      } catch (e) {
+        // mantém navegação ingênua em caso de falha
+        if (mounted) setMaterialsList([]);
+      }
+    }
+    loadList();
+    return () => { mounted = false };
+  }, [idCurso]);
 
   // Garante matrícula ao abrir a página do material (evita 404 na listagem/finalização)
   useEffect(() => {
@@ -63,7 +114,19 @@ export default function StudentMaterialPage() {
       const fkUsuario = raw ? Number(String(raw).trim()) : undefined;
       const fkCurso = Number(String(idCurso || '').trim());
       if (fkUsuario && fkCurso) {
-        ensureMatricula(fkUsuario, fkCurso).catch(() => {});
+        const key = `ultimoAcesso:${fkUsuario}:${fkCurso}`;
+        const now = Date.now();
+        const last = Number(sessionStorage.getItem(key) || '0');
+        const shouldUpdate = !last || (now - last) > 15000; // 15s de janela
+        ensureMatricula(fkUsuario, fkCurso)
+          .then(() => {
+            if (shouldUpdate) {
+              return updateUltimoAcesso(fkUsuario, fkCurso)
+                .catch(() => {})
+                .finally(() => { try { sessionStorage.setItem(key, String(Date.now())); } catch (_) {} });
+            }
+          })
+          .catch(() => {});
       }
     } catch (_) {}
   }, [idCurso]);
@@ -127,8 +190,45 @@ export default function StudentMaterialPage() {
   }, [videoLoaded, material]);
 
   const handleGoBack = () => navigate(`/cursos/${idCurso}/material`);
-  const handleNextMaterial = () => { const next = (material?.id ? material.id + 1 : Number(idMaterial) + 1); navigate(`/cursos/${idCurso}/material/${next}`); };
-  const handlePreviousMaterial = () => { const prev = (material?.id ? material.id - 1 : Number(idMaterial) - 1); if (prev > 0) navigate(`/cursos/${idCurso}/material/${prev}`); };
+  const navList = materialsList;
+  const currentIndex = React.useMemo(() => {
+    const curId = Number(parsed.id);
+    const curType = parsed.tipo || (material?.tipo);
+    return navList.findIndex(m => Number(m?.id) === curId && ((m?.tipo || m?.type) === curType || !curType));
+  }, [navList, parsed.id, parsed.tipo, material?.tipo]);
+  const currentOrderNumber = React.useMemo(() => {
+    if (currentIndex >= 0 && navList[currentIndex]) {
+      const o = navList[currentIndex]?.displayOrder ?? navList[currentIndex]?.ordem ?? navList[currentIndex]?.order;
+      if (o != null) return o;
+      return currentIndex + 1;
+    }
+  return (material?.ordem ?? material?.order ?? Number(parsed.id)) || 1;
+  }, [currentIndex, navList, material?.ordem, material?.order, parsed.id]);
+  const handleNextMaterial = () => {
+    if (navList.length === 0) {
+      const next = Number(parsed.id) + 1; // fallback
+      return navigate(`/cursos/${idCurso}/material/${next}`);
+    }
+    const nextIdx = currentIndex >= 0 ? currentIndex + 1 : -1;
+    if (nextIdx >= 0 && nextIdx < navList.length) {
+      const n = navList[nextIdx];
+      const nextSlug = `${(n?.tipo || n?.type)}-${n?.id}`;
+      if (n?.id != null) navigate(`/cursos/${idCurso}/material/${nextSlug}`);
+    }
+  };
+  const handlePreviousMaterial = () => {
+    if (navList.length === 0) {
+      const prev = Number(parsed.id) - 1; // fallback
+      if (prev > 0) navigate(`/cursos/${idCurso}/material/${prev}`);
+      return;
+    }
+    const prevIdx = currentIndex > 0 ? currentIndex - 1 : -1;
+    if (prevIdx >= 0) {
+      const p = navList[prevIdx];
+      const prevSlug = `${(p?.tipo || p?.type)}-${p?.id}`;
+      if (p?.id != null) navigate(`/cursos/${idCurso}/material/${prevSlug}`);
+    }
+  };
 
   // Finalize helpers
   function getUserIdFromJwtOrStorage() {
@@ -285,9 +385,46 @@ export default function StudentMaterialPage() {
   }
 
   // PDF.js via CDN (sem instalar pacotes)
-  const pdfCanvasRef = useRef(null);
+  // Inline PDF viewer (multi-page) using pdf.js
+  const pdfContainerRef = useRef(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [pdfScale, setPdfScale] = useState(1.1);
+  const pdfCurrentUrlRef = useRef('');
+
+  // Build absolute backend URL for relative paths (e.g., /uploads/...) and auth headers
+  function buildAbsoluteUrl(url) {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    const base = api?.defaults?.baseURL || '';
+    if (!base) return url;
+    return `${String(base).replace(/\/$/, '')}/${String(url).replace(/^\//, '')}`;
+  }
+  function getAuthHeaders() {
+    try {
+      const token = localStorage.getItem('token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  // Some backends return 'urlArquivo' (camel) or 'url_arquivo' (snake) for apostilas
+  function getPdfUrl(m) {
+    if (!m) return '';
+    let candidate = m.url || m.urlArquivo || m.url_arquivo || m.arquivoUrl || m.link;
+    if (candidate && typeof candidate === 'string') return candidate;
+    const storageName = m.nomeApostilaArmazenamento || m.nome_apostila_armazenamento;
+    if (storageName && typeof storageName === 'string') {
+      let clean = storageName.startsWith('/') ? storageName.slice(1) : storageName;
+      // Avoid duplicates if value already contains 'uploads/'
+      if (/^uploads\//i.test(clean)) {
+        return `/${clean}`;
+      }
+      return `/uploads/${clean}`;
+    }
+    return '';
+  }
 
   async function ensurePdfJsLoaded() {
     if (window.pdfjsLib) return window.pdfjsLib;
@@ -309,22 +446,50 @@ export default function StudentMaterialPage() {
     });
   }
 
-  async function renderPdf(url) {
+  async function renderPdf(url, attempt = 0, scale = pdfScale) {
     setPdfLoading(true);
     setPdfError(null);
     try {
       const pdfjsLib = await ensurePdfJsLoaded();
-      const loadingTask = pdfjsLib.getDocument(url);
+      const absUrl = buildAbsoluteUrl(url);
+      // Fetch the PDF as a Blob (with Authorization if present) to avoid CORS/credentials issues
+      const resp = await fetch(absUrl, { headers: { ...getAuthHeaders() } });
+      if (!resp.ok) throw new Error(`Falha ao buscar PDF (${resp.status})`);
+      const arrayBuffer = await resp.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
       const pdf = await loadingTask.promise;
-      // render primeira página
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1.2 });
-      const canvas = pdfCanvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // Ensure container exists
+      const container = pdfContainerRef.current;
+      if (!container) {
+        if (attempt < 3) {
+          setTimeout(() => renderPdf(url, attempt + 1, scale), 150);
+        } else {
+          throw new Error('Container não disponível para renderização do PDF.');
+        }
+        return;
+      }
+
+      // Clear previous content
+      while (container.firstChild) container.removeChild(container.firstChild);
+
+      // Render all pages
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
+        const wrapper = document.createElement('div');
+        wrapper.style.margin = '12px 0';
+        wrapper.style.display = 'flex';
+        wrapper.style.justifyContent = 'center';
+        const canvas = document.createElement('canvas');
+        canvas.className = 'shadow rounded bg-white';
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        wrapper.appendChild(canvas);
+        container.appendChild(wrapper);
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
     } catch (e) {
       console.error('Erro ao renderizar PDF:', e);
       setPdfError('Não foi possível carregar o PDF.');
@@ -333,13 +498,105 @@ export default function StudentMaterialPage() {
     }
   }
 
+  // Robust PDF open/download actions
+  async function handlePdfOpenNewTab() {
+    const url = buildAbsoluteUrl(getPdfUrl(material));
+    if (!url) return;
+    // Se for mesma origem, abrir direto é mais confiável
+    try {
+      const u = new URL(url);
+      if (u.origin === window.location.origin || url.startsWith(api?.defaults?.baseURL || '')) {
+        window.open(url, '_blank', 'noopener');
+        return;
+      }
+    } catch (_) { /* ignore */ }
+
+    // Caso contrário, abre janela e redireciona via Blob para evitar CORS
+    const newWin = window.open('', '_blank');
+    if (!newWin) {
+      setPdfError('Pop-up bloqueado pelo navegador. Autorize pop-ups para abrir em nova aba.');
+      return;
+    }
+    newWin.document.write('<p style="font-family: sans-serif; color: #444;">Abrindo PDF...</p>');
+    newWin.document.close();
+    try {
+      const resp = await fetch(url, { headers: { ...getAuthHeaders() } });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      newWin.opener = null;
+      newWin.location.href = objectUrl;
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+    } catch (e) {
+      console.error('Falha ao abrir PDF em nova aba:', e);
+      // fallback: tentar abrir diretamente a URL
+      try { newWin.location.href = url; } catch (_) {}
+      setPdfError('Não foi possível abrir via Blob; tentando abrir diretamente.');
+    }
+  }
+
+  async function handlePdfDownload() {
+    try {
+      const url = buildAbsoluteUrl(getPdfUrl(material));
+      if (!url) return;
+      const resp = await fetch(url, { headers: { ...getAuthHeaders() } });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const dlUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      // Prefer original filename from backend or derive from URL
+      const originalName = material?.nomeApostilaOriginal || material?.nome_apostila_original || (() => {
+        try {
+          const u = new URL(url);
+          const last = u.pathname.split('/').pop() || '';
+          return decodeURIComponent(last);
+        } catch (_) { return ''; }
+      })();
+      const baseName = (originalName || material?.titulo || 'apostila').replace(/[^a-z0-9-_.]+/gi, '_');
+      const safeName = baseName.toLowerCase().endsWith('.pdf') ? baseName : `${baseName}.pdf`;
+      a.href = dlUrl;
+      a.download = safeName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(dlUrl), 60_000);
+    } catch (e) {
+      console.error('Falha ao baixar PDF:', e);
+      // fallback para tentativa de download direto (mesma origem)
+      try {
+        const url = buildAbsoluteUrl(getPdfUrl(material));
+        const a = document.createElement('a');
+        const originalName = material?.nomeApostilaOriginal || material?.nome_apostila_original || 'apostila.pdf';
+        a.href = url;
+        a.download = originalName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (_) {
+        setPdfError('Não foi possível baixar o PDF.');
+      }
+    }
+  }
+
   useEffect(() => {
-    // quando tipo for apostila, tenta renderizar automaticamente
-    if (material?.tipo === 'apostila' && material?.url) {
-      renderPdf(material.url);
+    // quando tipo for apostila, renderiza automaticamente dentro da página
+    if (material?.tipo === 'apostila') {
+      const pdfUrl = getPdfUrl(material);
+      if (pdfUrl) {
+        pdfCurrentUrlRef.current = pdfUrl;
+        renderPdf(pdfUrl, 0, pdfScale);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [material?.tipo, material?.url]);
+  }, [material?.tipo, material?.url, material?.urlArquivo, material?.url_arquivo, material?.nomeApostilaArmazenamento, material?.nome_apostila_armazenamento]);
+
+  // Re-render on zoom changes
+  useEffect(() => {
+    if (material?.tipo === 'apostila' && pdfCurrentUrlRef.current) {
+      renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pdfScale]);
 
   function renderMaterialContent() {
     if (!material) return null;
@@ -427,40 +684,53 @@ export default function StudentMaterialPage() {
     }
 
     if (material.tipo === 'apostila') {
+      const displayName = (() => {
+        const raw = material?.nomeApostilaOriginal || material?.nome_apostila_original || material?.titulo || '';
+        const name = String(raw);
+        return name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`;
+      })();
       return (
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="border border-gray-200 rounded-lg p-3">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <FileText size={20} className="text-red-600" />
-                <span className="text-sm font-medium">{material.titulo}.pdf</span>
+                <span className="text-sm font-medium">{displayName}</span>
               </div>
               <div className="flex items-center gap-2">
+                {/* Zoom controls for inline viewer */}
+                <div className="flex items-center gap-2 mr-2">
+                  <Button variant="Default" label="-" onClick={() => setPdfScale(s => Math.max(0.6, Number((s - 0.1).toFixed(2))))} />
+                  <span className="text-sm text-gray-600 min-w-[48px] text-center">{Math.round(pdfScale * 100)}%</span>
+                  <Button variant="Default" label="+" onClick={() => setPdfScale(s => Math.min(2.0, Number((s + 0.1).toFixed(2))))} />
+                </div>
                 <Button
                   variant="Default"
                   label="Baixar PDF"
-                  onClick={() => {
-                    if (!material.url) return;
-                    const link = document.createElement('a');
-                    link.href = material.url; link.download = `${material.titulo}.pdf`;
-                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-                  }}
+                  onClick={handlePdfDownload}
                 />
                 <Button
                   variant="Confirm"
                   label="Abrir em nova aba"
-                  onClick={() => material?.url && window.open(material.url, '_blank')}
+                  onClick={handlePdfOpenNewTab}
                 />
               </div>
             </div>
-            <div className="w-full overflow-auto flex items-center justify-center bg-gray-50" style={{ minHeight: 480 }}>
-              {pdfLoading ? (
-                <div className="flex items-center gap-2 text-gray-500 py-12"><Loader2 className="animate-spin" size={18} /> Carregando PDF...</div>
-              ) : pdfError ? (
-                <div className="text-red-600 py-12">{pdfError}</div>
-              ) : (
-                <canvas ref={pdfCanvasRef} className="shadow rounded" />
+            <div className="relative w-full overflow-auto bg-gray-50" style={{ minHeight: 480 }}>
+              {pdfLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex items-center gap-2 text-gray-500 bg-white/70 rounded px-3 py-2"><Loader2 className="animate-spin" size={18} /> Carregando PDF...</div>
+                </div>
               )}
+              {pdfError && (
+                <div className="p-4">
+                  <div className="text-red-600 mb-3">{pdfError}</div>
+                  <Button variant="Default" label="Tentar novamente" onClick={() => {
+                    if (pdfCurrentUrlRef.current) renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
+                  }} />
+                </div>
+              )}
+              <div ref={pdfContainerRef} className="w-full max-w-full flex flex-col items-center px-2 py-4" />
             </div>
           </div>
         </div>
@@ -506,7 +776,7 @@ export default function StudentMaterialPage() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600">
             <h2 className="text-2xl font-bold text-white">
-              Material {idMaterial} - {material ? material.titulo : '...'}
+              Material {currentOrderNumber} - {material ? material.titulo : '...'}
             </h2>
             <div className="flex items-center mt-2 text-orange-100">
               {material ? (material.tipo === 'video' ? <Youtube size={20} className="mr-2" /> : <FileText size={20} className="mr-2" />) : null}
