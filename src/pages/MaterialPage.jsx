@@ -6,21 +6,36 @@ import Button from "../components/Button";
 import { FileText, Youtube, ArrowLeft } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
+import SmartImage from "../components/SmartImage.jsx";
 
 export default function MaterialPage() {
   const { idCurso, idMaterial } = useParams();
   const navigate = useNavigate();
 
+  // support idMaterial formats like "video-5" or "pdf-3" (student routes use type-id)
+  const parsedParam = (() => {
+    const raw = String(idMaterial || '');
+    if (raw.includes('-')) {
+      const [maybeType, maybeId] = raw.split('-');
+      const num = Number(maybeId);
+      if (!Number.isNaN(num)) return { typePrefix: maybeType, idNum: num };
+    }
+    const num = Number(raw);
+    return { typePrefix: null, idNum: Number.isNaN(num) ? null : num };
+  })();
+
   const [material, setMaterial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [materialsList, setMaterialsList] = useState([]);
 
   async function loadMaterial() {
     setLoading(true);
     setError(null);
     try {
-      const res = await MaterialPageService.getMaterialDoCurso(parseInt(idCurso), parseInt(idMaterial));
+  const idNum = parsedParam.idNum ?? parseInt(idMaterial);
+  const res = await MaterialPageService.getMaterialDoCurso(parseInt(idCurso), Number(idNum));
       setMaterial(res);
     } catch (err) {
       // prefer the server-provided JSON error body when available
@@ -39,6 +54,55 @@ export default function MaterialPage() {
   useEffect(() => {
     loadMaterial();
   }, [idCurso, idMaterial]);
+
+  // Carregar lista para obter ordem global e manter numeração estável mesmo com filtros
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { getMateriaisPorCurso } = await import('../services/MaterialListPageService.js');
+        const resp = await getMateriaisPorCurso(idCurso);
+        let arr = [];
+        if (Array.isArray(resp)) arr = resp; else if (resp?.materiais) arr = resp.materiais; else if (resp?.data && Array.isArray(resp.data)) arr = resp.data; else if (resp) arr = [resp];
+        const onlyMaterials = (arr || []).filter(m => (m?.tipo || m?.type) !== 'avaliacao');
+        // map to the same shape MaterialsListPage uses so ordering and ids match exactly
+        const mapped = onlyMaterials.map((m, idx) => {
+          const type = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
+          const rawTitle = m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? `Material ${m.id ?? idx}`;
+          const cleanTitle = typeof rawTitle === 'string' && /\.pdf$/i.test(rawTitle) ? rawTitle.replace(/\.pdf$/i, '') : rawTitle;
+          const finalTitle = type === 'pdf' ? cleanTitle : rawTitle;
+          return ({
+            ...m,
+            id: m.id ?? m.idApostila ?? m.idVideo ?? m.idMaterial ?? idx,
+            title: finalTitle,
+            type,
+            description: m.descricao ?? m.descricaoApostila ?? m.descricaoVideo ?? '',
+            url: m.url ?? m.urlArquivo ?? m.urlVideo ?? null,
+            hidden: (typeof m.isApostilaOculto !== 'undefined') ? (m.isApostilaOculto === 1) : (typeof m.isVideoOculto !== 'undefined' ? (m.isVideoOculto === 1) : false),
+            order: m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? (idx + 1),
+            __idx: idx
+          });
+        });
+        mapped.sort((a, b) => {
+          const ao = Number(a.order ?? Number.MAX_SAFE_INTEGER);
+          const bo = Number(b.order ?? Number.MAX_SAFE_INTEGER);
+          if (ao !== bo) return ao - bo;
+          const weight = (t) => (t === 'video' || t === 'video' ? 0 : (t === 'apostila' || t === 'pdf' ? 1 : 2));
+          return weight(a.tipo || a.type) - weight(b.tipo || b.type);
+        });
+        // sort by order asc, within same order prefer videos then pdfs (same tie-breaker as MaterialsListPage)
+        mapped.sort((a, b) => {
+          const oa = Number(a.order || 0), ob = Number(b.order || 0);
+          if (oa !== ob) return oa - ob;
+          const weight = (t) => t === 'video' ? 0 : (t === 'pdf' ? 1 : 2);
+          return weight(a.type) - weight(b.type);
+        });
+        const withDisplay = mapped.map((m, i) => ({ ...m, displayOrder: i + 1 }));
+        if (mounted) setMaterialsList(withDisplay.map(({ __idx, ...m }) => m));
+      } catch (_) {}
+    })();
+    return () => { mounted = false };
+  }, [idCurso]);
 
   // reset videoLoaded when the material changes (so thumbnails show for new materials)
   useEffect(() => {
@@ -176,16 +240,65 @@ export default function MaterialPage() {
   const handleGoBack = () => {
     navigate(`/cursos/${idCurso}/material`);
   };
+  // helper to match a material record by various possible id fields
+  const matchesMaterialId = (m, num) => {
+    if (m == null || num == null) return false;
+    const n = Number(num);
+    return (
+      Number(m.id) === n ||
+      Number(m.idApostila || 0) === n ||
+      Number(m.idVideo || 0) === n ||
+      Number(m.idMaterial || 0) === n ||
+      Number(m.fkApostila?.idApostila || m.fk_apostila?.idApostila || 0) === n ||
+      Number(m.fkVideo?.idVideo || m.fk_video?.idVideo || 0) === n
+    );
+  };
 
   const handleNextMaterial = () => {
-    const next = (material && material.id) ? material.id + 1 : parseInt(idMaterial) + 1;
-    navigate(`/cursos/${idCurso}/material/${next}`);
+    const idNum = parsedParam.idNum ?? Number(idMaterial);
+    const list = materialsList || [];
+    const idx = list.findIndex(m => matchesMaterialId(m, idNum) && (() => {
+      if (!parsedParam.typePrefix) return true;
+      const want = (parsedParam.typePrefix || '').toLowerCase() === 'pdf' ? 'apostila' : (parsedParam.typePrefix || '').toLowerCase();
+      const t = (m?.tipo || m?.type || '').toLowerCase();
+      return t.includes(want);
+    })());
+    if (idx >= 0 && idx + 1 < list.length) {
+      const next = list[idx + 1];
+      const seg = (next?.tipo || next?.type) ? `${(next?.tipo || next?.type)}-${next.id ?? next.idVideo ?? next.idApostila}` : `${next.id ?? next.idVideo ?? next.idApostila}`;
+      navigate(`/cursos/${idCurso}/material/${seg}`);
+    }
   };
 
   const handlePreviousMaterial = () => {
-    const prev = (material && material.id) ? material.id - 1 : parseInt(idMaterial) - 1;
-    if (prev > 0) navigate(`/cursos/${idCurso}/material/${prev}`);
+    const idNum = parsedParam.idNum ?? Number(idMaterial);
+    const list = materialsList || [];
+    const idx = list.findIndex(m => matchesMaterialId(m, idNum) && (() => {
+      if (!parsedParam.typePrefix) return true;
+      const want = (parsedParam.typePrefix || '').toLowerCase() === 'pdf' ? 'apostila' : (parsedParam.typePrefix || '').toLowerCase();
+      const t = (m?.tipo || m?.type || '').toLowerCase();
+      return t.includes(want);
+    })());
+    if (idx > 0) {
+      const prev = list[idx - 1];
+      const seg = (prev?.tipo || prev?.type) ? `${(prev?.tipo || prev?.type)}-${prev.id ?? prev.idVideo ?? prev.idApostila}` : `${prev.id ?? prev.idVideo ?? prev.idApostila}`;
+      navigate(`/cursos/${idCurso}/material/${seg}`);
+    }
   };
+
+  // helpers to compute display number by total ordering (index in materialsList)
+  function getDisplayPosition() {
+    const list = materialsList || [];
+    const idNum = parsedParam.idNum ?? Number(idMaterial);
+    // prefer exact type match when route provides type prefix
+    const idx = list.findIndex(m => matchesMaterialId(m, idNum) && (() => {
+      if (!parsedParam.typePrefix) return true;
+      const want = (parsedParam.typePrefix || '').toLowerCase() === 'pdf' ? 'apostila' : (parsedParam.typePrefix || '').toLowerCase();
+      const t = (m?.tipo || m?.type || '').toLowerCase();
+      return t.includes(want);
+    })());
+    return { index: idx, total: list.length };
+  }
 
   function renderMaterialContent() {
     if (!material) return null;
@@ -202,7 +315,7 @@ export default function MaterialPage() {
           const thumb = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
           return (
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-              <img src={thumb} alt={material.titulo} className="w-full h-full object-cover" />
+              <SmartImage src={thumb} alt={material.titulo} className="w-full h-full object-cover" />
               <button
                 onClick={() => setVideoLoaded(true)}
                 className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition"
@@ -266,11 +379,15 @@ export default function MaterialPage() {
     }
 
     if (material.tipo === 'apostila') {
+      const displayTitle = (() => {
+        const raw = material?.titulo || '';
+        return typeof raw === 'string' && /\.pdf$/i.test(raw) ? raw.replace(/\.pdf$/i, '') : raw;
+      })();
       return (
         <div className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 aspect-video flex items-center justify-center">
           <div className="flex flex-col items-center text-gray-600">
             <FileText size={64} className="mb-4" />
-            <p className="text-lg font-medium">Visualizador de PDF</p>
+            <p className="text-lg font-medium">{displayTitle || 'Visualizador de PDF'}</p>
             <Button
               variant="Default"
               label="Abrir PDF"
@@ -296,15 +413,14 @@ export default function MaterialPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+        <div className="text-center mb-8">
+            <TituloPrincipal>{(() => {
+              const { index } = getDisplayPosition();
+              const num = index >= 0 ? (index + 1) : (parsedParam.idNum ?? 1);
+              const cleanTitle = material && typeof material.titulo === 'string' && /\.pdf$/i.test(material.titulo) ? material.titulo.replace(/\.pdf$/i, '') : (material?.titulo || '...');
+              return `Material ${num} - ${cleanTitle}`;
+            })()}</TituloPrincipal>
           </div>
-          <div className="text-center">
-            <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
-          </div>
-          <div className="w-24" />
-        </div>
 
         <div className="mb-6">
           <button
@@ -319,7 +435,12 @@ export default function MaterialPage() {
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600">
             <h2 className="text-2xl font-bold text-white">
-              Material {idMaterial} - {material ? material.titulo : '...'}
+              {(() => {
+                const { index } = getDisplayPosition();
+                const num = index >= 0 ? (index + 1) : (parsedParam.idNum ?? 1);
+                const cleanTitle = material && typeof material.titulo === 'string' && /\.pdf$/i.test(material.titulo) ? material.titulo.replace(/\.pdf$/i, '') : (material?.titulo || '...');
+                return `Material ${num} - ${cleanTitle}`;
+              })()}
             </h2>
             <div className="flex items-center mt-2 text-orange-100">
               {material ? (material.tipo === 'video' ? <Youtube size={20} className="mr-2" /> : <FileText size={20} className="mr-2" />) : null}
@@ -379,12 +500,12 @@ export default function MaterialPage() {
         <div className="mt-6 bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-600">Progresso no curso</span>
-            <span className="text-sm text-gray-600">Material {idMaterial} de 5</span>
+             <span className="text-sm text-gray-600">{(() => { const { index, total } = getDisplayPosition(); return `Material ${index >= 0 ? index + 1 : (parsedParam.idNum ?? 1)} de ${total || 1}`; })()}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(material && material.id) ? (material.id / 5) * 100 : (parseInt(idMaterial) / 5) * 100}%` }}
+          className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-300"
+          style={{ width: `${(() => { const { index, total } = getDisplayPosition(); const n = (index >= 0 ? index + 1 : (parsedParam.idNum ?? 1)); return total > 0 ? (n / total) * 100 : 0; })()}%` }}
             ></div>
           </div>
         </div>

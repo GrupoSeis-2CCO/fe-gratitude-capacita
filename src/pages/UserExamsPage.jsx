@@ -129,6 +129,21 @@ export default function UserExamsPage({ courseId = 1 }) {
     return '—';
   }
 
+  // Tenta extrair um id numérico de curso da tentativa (para compor keys únicas)
+  function getCursoId(tentativa) {
+    // prefer direct numeric ids
+    const fromAvaliacao = tentativa?.avaliacao?.fkCurso?.idCurso ?? tentativa?.avaliacao?.fkCurso;
+    if (typeof fromAvaliacao === 'number') return fromAvaliacao;
+
+    const fromMatricula = tentativa?.matricula?.curso?.idCurso ?? tentativa?.matricula?.fkCurso;
+    if (typeof fromMatricula === 'number') return fromMatricula;
+
+    const fromEmbedded = tentativa?.fkCurso ?? tentativa?.idTentativaComposto?.idMatriculaComposto?.fkCurso;
+    if (typeof fromEmbedded === 'number') return fromEmbedded;
+
+    return effectiveCourseId; // fallback to current page course context
+  }
+
   // Calcular número da tentativa por curso
   function getTentativaNumero(tentativa, currentIndex) {
     const cursoTitulo = getCursoTitulo(tentativa);
@@ -180,6 +195,7 @@ export default function UserExamsPage({ courseId = 1 }) {
               {tentativas.map((t, idx) => {
                 // infer id for navigation
                 const idTentativa = t?.idTentativaComposto?.idTentativa ?? t?.id ?? t?.idTentativa ?? idx;
+                const cursoId = getCursoId(t);
                 const cursoTitulo = getCursoTitulo(t);
                 const tentativaNum = getTentativaNumero(t, idx);
                 const nota = getNotaText(t);
@@ -189,7 +205,7 @@ export default function UserExamsPage({ courseId = 1 }) {
                 
                 return (
                   <tr 
-                    key={idTentativa ?? idx} 
+                    key={`c${cursoId}-t${idTentativa ?? idx}`} 
                     className={`${bgColor} hover:bg-blue-100 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all duration-200 border-b border-gray-200`}
                     onClick={() => navigate(`/participantes/${participanteAtual || participanteId || ''}/avaliacoes/${idTentativa}`)}
                   >

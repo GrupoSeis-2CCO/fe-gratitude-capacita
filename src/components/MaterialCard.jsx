@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { MoreHorizontal, ClipboardCheck } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { FileText, Youtube } from 'lucide-react';
+import SmartImage from './SmartImage.jsx';
+import { api } from '../services/api.js';
 import MaterialService from '../services/MaterialService.js';
 import ConfirmModal from './ConfirmModal.jsx';
 
-export default function MaterialCard({ material, index, idCurso, onEdit = null, onActionComplete = null }) {
-  const navigate = useNavigate();
+export default function MaterialCard({ material, index, onEdit = null, onActionComplete = null }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
@@ -57,7 +57,12 @@ export default function MaterialCard({ material, index, idCurso, onEdit = null, 
       fetch(oembed)
         .then(res => res.json())
         .then(data => {
-          if (data && data.thumbnail_url) setThumbnailUrl(data.thumbnail_url);
+          if (data && data.thumbnail_url) {
+            // usa proxy para evitar CORS em domínios terceiros
+            const apiBase = api?.defaults?.baseURL || '';
+            const proxied = apiBase ? `${apiBase}/proxy/image?url=${encodeURIComponent(data.thumbnail_url)}` : data.thumbnail_url;
+            setThumbnailUrl(proxied);
+          }
         })
         .catch(() => {
           // ignore errors and keep thumbnail null
@@ -104,58 +109,22 @@ export default function MaterialCard({ material, index, idCurso, onEdit = null, 
     }
   }
 
-  function handleEdit(e) {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  function handleEdit() {
     setOpen(false);
-    const cursoIdStr = String(idCurso || '');
-    if (material.type === 'avaliacao') {
-      navigate(`/cursos/${cursoIdStr}/material/avaliacao/editar`);
-    } else if (onEdit) {
-      onEdit(material);
-    }
+    if (onEdit) onEdit(material);
   }
 
-  function handleNavigate() {
-    if (!material) return;
-    if (material.type === 'avaliacao') {
-      navigate(`/cursos/${idCurso}/material/avaliacao`);
-    } else if (material.id) {
-      navigate(`/cursos/${idCurso}/material/${material.id}`);
-    }
-  }
+  const displayNumber = material?.displayOrder ?? material?.order ?? (index + 1);
+  const displayTitle = material?.title ? ((material.type === 'pdf') ? String(material.title).replace(/\.pdf$/i, '') : material.title) : '';
 
-  function handleKeyDown(e) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleNavigate();
-    }
-  }
-
-  const isAvaliacao = material.type === 'avaliacao';
   return (
-    <div
-      data-material-id={material?.id}
-      className={
-        `${isAvaliacao
-          ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200'
-          : 'bg-white border border-gray-200'} rounded-lg shadow-md p-4 flex gap-6 mb-6 cursor-pointer hover:shadow-lg transition`
-      }
-      onClick={handleNavigate}
-      role="button"
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-    >
-      <div className={`w-48 h-32 rounded-lg flex items-center justify-center overflow-hidden ${isAvaliacao ? 'bg-blue-100 border-2 border-blue-300' : 'bg-gray-100'}`}>
-        {isAvaliacao ? (
-          <ClipboardCheck size={56} className="text-blue-600" />
-        ) : material.type === 'pdf' ? (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6">
+      <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+        {material.type === 'pdf' ? (
           <FileText size={48} className="text-gray-500" />
         ) : (
           thumbnailUrl ? (
-            <img src={thumbnailUrl} alt={material.title} className="w-full h-full object-cover" />
+            <SmartImage src={thumbnailUrl} alt={material.title} className="w-full h-full object-cover" />
           ) : (
             <Youtube size={48} className="text-red-600" />
           )
@@ -163,19 +132,21 @@ export default function MaterialCard({ material, index, idCurso, onEdit = null, 
       </div>
       <div className="flex-1">
         <div className="flex justify-between items-start">
-          <h3 className={`text-xl font-bold mb-2 ${isAvaliacao ? 'text-blue-800' : 'text-gray-800'}`}>
-            {isAvaliacao ? 'Avaliação' : `Material ${index + 1}`} - {material.title}
-          </h3>
-          {isAvaliacao && (
-            <span className="inline-block bg-blue-200 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full mr-2">Avaliação</span>
-          )}
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+              <span>{`Material ${displayNumber} - ${displayTitle}`}</span>
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${material.type === 'pdf' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                {material.type === 'pdf' ? 'Apostila' : 'Vídeo'}
+              </span>
+            </h3>
+          </div>
           <div className="relative" ref={ref}>
             <button className="text-gray-500 hover:text-gray-800" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
               <MoreHorizontal size={24} />
             </button>
             {open && (
               <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-50">
-                <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={e => handleEdit(e)} disabled={loading}>Editar</button>
+                <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleEdit} disabled={loading}>Editar</button>
                 <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => setConfirmOpen(true)} disabled={loading}>Excluir</button>
                 <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleToggleHidden} disabled={loading}>{material.hidden ? 'Tornar visível' : 'Ocultar'}</button>
               </div>

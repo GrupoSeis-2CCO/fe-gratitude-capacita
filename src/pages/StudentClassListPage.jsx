@@ -1,95 +1,149 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import CourseCard from "../components/CourseCard.jsx";
+import { getCourses } from "../services/ClassListPageService.js";
+
+function normalizeCourses(data) {
+  if (!Array.isArray(data)) return [];
+
+  return data.map((course) => {
+    const id = course.idCurso ?? course.id ?? course.codigo ?? course.codigoCurso ?? null;
+    const titulo = course.tituloCurso || course.title || course.nome || course.nomeCurso || `Curso ${id ?? ""}`;
+    const descricao = course.descricao || course.description || course.descricaoCurso || "";
+    const imagem = course.imagem || course.imageUrl || course.bannerUrl || null;
+    const duration = course.duracaoEstimada ?? course.hours ?? course.totalHoras ?? null;
+    const normalizedDuration = typeof duration === "number" ? `${duration}h` : (duration || "00:00h");
+
+    const materialsRaw = course.totalMateriais ?? course.materials ?? course.qtdMateriais ?? course.stats?.materials;
+    const studentsRaw = course.totalAlunos ?? course.students ?? course.qtdAlunos ?? course.stats?.students;
+
+    const toNumberOrZero = (value) => {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    return {
+      ...course,
+      id,
+      title: titulo,
+      description: descricao,
+      imageUrl: imagem,
+      stats: {
+        materials: toNumberOrZero(materialsRaw),
+        students: toNumberOrZero(studentsRaw),
+        hours: normalizedDuration,
+      },
+    };
+  });
+}
 
 export default function StudentClassListPage() {
-	const { getCurrentUserType, isLoggedIn } = useAuth();
-	const userType = getCurrentUserType();
-	const navigate = useNavigate();
+  const { getCurrentUserType, isLoggedIn } = useAuth();
+  const userType = getCurrentUserType?.();
+  const navigate = useNavigate();
 
-	// Proteção: apenas colaboradores (tipo 2) podem acessar esta página
-	if (!isLoggedIn() || userType !== 2) {
-		return <Navigate to="/login" replace />;
-	}
-	
-	// Mock data baseado no Figma - participantes de cursos
-	const mockCourses = [
-		{
-			id: "x",
-			title: "Curso x",
-			imageUrl: "https://via.placeholder.com/192x128",
-			description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit consec adiscing elasit.",
-			stats: {
-				materials: "00",
-				students: "00", 
-				hours: "00:00h"
-			}
-		},
-		{
-			id: "y",
-			title: "Curso y", 
-			imageUrl: "https://via.placeholder.com/192x128",
-			description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit consec adiscing elasit.",
-			stats: {
-				materials: "00",
-				students: "00",
-				hours: "00:00h"
-			}
-		},
-		{
-			id: "z",
-			title: "Curso z",
-			imageUrl: "https://via.placeholder.com/192x128", 
-			description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit consec adiscing elasit.",
-			stats: {
-				materials: "00",
-				students: "00",
-				hours: "00:00h"
-			}
-		}
-	];
+  // Proteção: apenas colaboradores (tipo 2) podem acessar esta página
+  if (isLoggedIn?.() === false || userType !== 2) {
+    return <Navigate to="/login" replace />;
+  }
 
-	return (
-		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
-			{/* Decorative rails left and right */}
-			<GradientSideRail className="left-10" />
-			<GradientSideRail className="right-10" variant="inverted" />
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const isMountedRef = useRef(true);
+  const [sortBy, setSortBy] = useState("");
 
-			<div className="w-full max-w-4xl mx-auto flex-grow">
-				<div className="text-center mb-10">
-					<TituloPrincipal>Participantes do Curso x</TituloPrincipal>
-				</div>
+  useEffect(() => {
+    isMountedRef.current = true;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getCourses();
+        if (!isMountedRef.current) return;
+        setCourses(normalizeCourses(data));
+      } catch (err) {
+        if (!isMountedRef.current) return;
+        console.error("Erro ao carregar cursos:", err);
+        setError(err?.message || "Erro ao carregar cursos");
+      } finally {
+        if (isMountedRef.current) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-				{/* Dropdown para ordenação */}
-				<div className="mb-8">
-					<div className="flex items-center gap-2">
-						<span className="text-sm text-gray-700">Ordenar por</span>
-						<select className="border border-gray-300 rounded px-3 py-1 text-sm bg-white">
-							<option value="">Selecione</option>
-							<option value="nome">Nome</option>
-							<option value="progresso">Progresso</option>
-							<option value="data">Data de inscrição</option>
-						</select>
-					</div>
-				</div>
+  function sortedCourses() {
+    if (!sortBy) return courses;
+    const copy = [...courses];
+    if (sortBy === "nome") {
+      return copy.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+    }
+    if (sortBy === "progresso") {
+      return copy.sort((a, b) => (b.stats?.students || 0) - (a.stats?.students || 0));
+    }
+    if (sortBy === "data") {
+      return copy.sort((a, b) => {
+        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
+        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
+        return db - da;
+      });
+    }
+    return copy;
+  }
 
-				{/* Lista de cursos */}
-				<div className="mt-8 w-full space-y-4">
-					{mockCourses.map((course, index) => (
-						<div key={course.id} className="relative">
-							
-							<CourseCard 
-								course={course} 
-								onClick={() => navigate(`/cursos/${course.id}/material`)} 
-							/>
-						</div>
-					))}
-				</div>
-			</div>
+  return (
+    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+      {/* Decorative rails left and right */}
+      <GradientSideRail className="left-10" />
+      <GradientSideRail className="right-10" variant="inverted" />
 
-		</div>
-	);
+      <div className="w-full max-w-4xl mx-auto flex-grow">
+        <div className="text-center mb-10">
+          <TituloPrincipal>Participantes / Cursos</TituloPrincipal>
+        </div>
+
+        {/* Dropdown para ordenação */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Ordenar por</span>
+            <select
+              className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="" disabled>Selecione</option>
+              <option value="nome">Nome</option>
+              <option value="progresso">Progresso</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-8 w-full space-y-4">
+          {loading ? (
+            <div>Carregando...</div>
+          ) : error ? (
+            <div className="text-red-600">{error}</div>
+          ) : courses.length === 0 ? (
+            <div className="text-gray-600">Nenhum curso disponível.</div>
+          ) : (
+            sortedCourses().map((course) => (
+              <div key={course.id ?? course.idCurso} className="relative">
+                <CourseCard
+                  course={course}
+                  onClick={() => navigate(`/cursos/${course.id ?? course.idCurso}/material`)}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

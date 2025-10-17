@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Navigate, useParams, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
-import Button from "../components/Button";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
@@ -11,8 +10,6 @@ import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import { updateVideo, updateApostila } from "../services/UploadService.js";
 
 export default function MaterialsListPage() {
-	const { idCurso } = useParams();
-	const navigate = useNavigate();
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
 
@@ -31,25 +28,41 @@ export default function MaterialsListPage() {
 	const [dragOverIndex, setDragOverIndex] = useState(null);
 	const [savingOrder, setSavingOrder] = useState(false);
 
-		async function loadMaterials() {
-			setLoading(true);
-			try {
-				const cursoId = Number(idCurso) || 1;
-				const mats = await getMateriaisPorCurso(cursoId);
+	async function loadMaterials() {
+		setLoading(true);
+		try {
+			const cursoId = 1; // ajuste conforme necessário ou pegue da rota/contexto
+			const mats = await getMateriaisPorCurso(cursoId);
 			// mapear para o formato do MaterialCard (id, title, type, description, url, hidden)
-			const mapped = (mats || []).map((m, idx) => ({
-				id: m.id ?? m.idApostila ?? m.idVideo ?? idx,
-				title: m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? `Material ${m.id ?? idx}`,
-				type: m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao'),
-				description: m.descricao ?? m.descricaoApostila ?? m.descricaoVideo ?? '',
-				url: m.url ?? m.urlArquivo ?? m.urlVideo ?? null,
-				hidden: (typeof m.isApostilaOculto !== 'undefined') ? (m.isApostilaOculto === 1) : (typeof m.isVideoOculto !== 'undefined' ? (m.isVideoOculto === 1) : false),
-				order: m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? idx
-			}));
+			const mapped = (mats || []).map((m, idx) => {
+				const type = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
+				// Title normalization: use clean title for apostilas (strip .pdf suffix)
+				const rawTitle = m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? `Material ${m.id ?? idx}`;
+				const cleanTitle = typeof rawTitle === 'string' && /\.pdf$/i.test(rawTitle) ? rawTitle.replace(/\.pdf$/i, '') : rawTitle;
+				const finalTitle = type === 'pdf' ? cleanTitle : rawTitle;
+				return ({
+					id: m.id ?? m.idApostila ?? m.idVideo ?? idx,
+					title: finalTitle,
+					type,
+					description: m.descricao ?? m.descricaoApostila ?? m.descricaoVideo ?? '',
+					url: m.url ?? m.urlArquivo ?? m.urlVideo ?? null,
+					hidden: (typeof m.isApostilaOculto !== 'undefined') ? (m.isApostilaOculto === 1) : (typeof m.isVideoOculto !== 'undefined' ? (m.isVideoOculto === 1) : false),
+					// Persisted order when available; this drives stable numbering even when filtering
+					order: m.ordem ?? m.ordemVideo ?? m.ordemApostila ?? (idx + 1)
+				});
+			});
 
 			// ensure base materials are sorted by stored order initially
 			mapped.sort((a, b) => (a.order || 0) - (b.order || 0));
-			setMaterials(mapped);
+			// stable combined ordering: within same order prefer videos before pdfs
+			mapped.sort((a, b) => {
+				const oa = Number(a.order || 0), ob = Number(b.order || 0);
+				if (oa !== ob) return oa - ob;
+				const weight = (t) => t === 'video' ? 0 : (t === 'pdf' ? 1 : 2);
+				return weight(a.type) - weight(b.type);
+			});
+			const withDisplay = mapped.map((m, i) => ({ ...m, displayOrder: i + 1 }));
+			setMaterials(withDisplay);
 		} catch (e) {
 			console.error('Erro carregando materiais:', e);
 			setMaterials([]);
@@ -130,14 +143,8 @@ export default function MaterialsListPage() {
 			<GradientSideRail className="right-10" variant="inverted" />
 
 			<div className="w-full max-w-4xl mx-auto flex-grow">
-				<div className="mb-10 flex items-center justify-between">
-					<div>
-						<Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
-					</div>
-					<div className="text-center">
-						<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
-					</div>
-					<div className="w-24" />
+				<div className="text-center mb-10">
+					<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
 				</div>
 
 				<AddMaterialSection initialMaterial={editingMaterial} onAdded={() => { setEditingMaterial(null); loadMaterials(); }} onCancelEdit={() => setEditingMaterial(null)} />
@@ -163,26 +170,26 @@ export default function MaterialsListPage() {
 					) : (
 							listToRender.map((material, index) => {
 								const key = `${material.type}-${material.id}`;
-												if (!isReordering) {
-													return (
-														<MaterialCard key={key} material={material} index={index} idCurso={idCurso}
-															onEdit={(m) => setEditingMaterial(m)}
-															onActionComplete={() => loadMaterials()} />
-													);
-												}
+								if (!isReordering) {
+									return (
+										<MaterialCard key={key} material={material} index={index}
+											onEdit={(m) => setEditingMaterial(m)}
+											onActionComplete={() => loadMaterials()} />
+									);
+								}
 
 								// draggable wrapper
-												return (
-													<div key={key}
-														draggable
-														onDragStart={(e) => handleDragStart(e, index)}
-														onDragOver={(e) => handleDragOver(e, index)}
-														onDrop={(e) => handleDrop(e, index)}
-														onDragEnd={handleDragEnd}
-														className={`cursor-move ${dragOverIndex === index ? 'bg-yellow-50' : ''}`}>
-														<MaterialCard material={material} index={index} idCurso={idCurso} onEdit={(m) => setEditingMaterial(m)} onActionComplete={() => loadMaterials()} />
-													</div>
-												);
+								return (
+									<div key={key}
+										draggable
+										onDragStart={(e) => handleDragStart(e, index)}
+										onDragOver={(e) => handleDragOver(e, index)}
+										onDrop={(e) => handleDrop(e, index)}
+										onDragEnd={handleDragEnd}
+										className={`cursor-move ${dragOverIndex === index ? 'bg-yellow-50' : ''}`}>
+										<MaterialCard material={material} index={index} onEdit={(m) => setEditingMaterial(m)} onActionComplete={() => loadMaterials()} />
+									</div>
+								);
 							})
 					)}
 				</div>

@@ -32,7 +32,7 @@ function ExamTaker({ questions = [], onSubmit }) {
       {questions.length > 0 && (
         <div className="space-y-8">
           {questions.map((question, questionIndex) => (
-            <div key={question.id} className="bg-white rounded-lg p-6">
+            <div key={`q-${question.id ?? questionIndex}`} className="bg-white rounded-lg p-6">
               {/* Question Header */}
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-black">Questão {questionIndex + 1}</h3>
@@ -46,7 +46,7 @@ function ExamTaker({ questions = [], onSubmit }) {
               {/* Alternatives */}
               <div className="space-y-3">
                 {question.alternatives.map((alternative, altIndex) => (
-                  <div key={alternative.id} className="flex items-center gap-4">
+                  <div key={`q${question.id ?? questionIndex}-a${alternative.id ?? altIndex}`} className="flex items-center gap-4">
                     {/* Radio Button */}
                     <input
                       type="radio"

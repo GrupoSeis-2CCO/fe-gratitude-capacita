@@ -6,6 +6,7 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
   const [menuOpen, setMenuOpen] = React.useState(false);
   const imageSrc = course.imageUrl || '/default-course-icon.svg';
   const isHidden = Boolean(course.ocultado);
+  const canManage = Boolean(onEdit || onDelete || onToggleHidden);
 
   // Normalize hours display to "Xh" format with fallbacks
   const rawHours = (course && course.stats && course.stats.hours) ?? course?.duracaoEstimada ?? null;
@@ -34,32 +35,34 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
             </span>
           )}
         </div>
-        <div className="relative">
-          <button
-            className="text-gray-500 hover:text-gray-800 p-1 rounded-full focus:outline-none"
-            onClick={() => setMenuOpen((v) => !v)}
-            tabIndex={0}
-            aria-label="Ações do curso"
-          >
-            <MoreHorizontal size={24} />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-              <button
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                onClick={() => { setMenuOpen(false); onEdit && onEdit(course); }}
-              >Editar</button>
-              <button
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                onClick={() => { setMenuOpen(false); onDelete && onDelete(course); }}
-              >Excluir</button>
-              <button
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                onClick={() => { setMenuOpen(false); onToggleHidden && onToggleHidden(course); }}
-              >{course.ocultado ? 'Tornar visível' : 'Ocultar'}</button>
-            </div>
-          )}
-        </div>
+        {canManage && (
+          <div className="relative">
+            <button
+              className="text-gray-500 hover:text-gray-800 p-1 rounded-full focus:outline-none"
+              onClick={() => setMenuOpen((v) => !v)}
+              tabIndex={0}
+              aria-label="Ações do curso"
+            >
+              <MoreHorizontal size={24} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                <button
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => { setMenuOpen(false); onEdit && onEdit(course); }}
+                >Editar</button>
+                <button
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => { setMenuOpen(false); onDelete && onDelete(course); }}
+                >Excluir</button>
+                <button
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => { setMenuOpen(false); onToggleHidden && onToggleHidden(course); }}
+                >{course.ocultado ? 'Tornar visível' : 'Ocultar'}</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div
         onClick={() => onClick && onClick(course)}

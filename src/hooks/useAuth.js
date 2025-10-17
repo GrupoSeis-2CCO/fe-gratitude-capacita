@@ -33,8 +33,8 @@ export const useAuth = () => {
       token,
       userType,
       isAuthenticated: !!token,
-      isColaborador: userType === 1,
-      isFuncionario: userType === 2,
+      isColaborador: userType === 2,
+      isFuncionario: userType === 1,
     };
   };
 
@@ -71,9 +71,9 @@ export const useAuth = () => {
       const getUserTypeLabel = (type) => {
         switch (type) {
           case 1:
-            return "Colaborador";
-          case 2:
             return "Funcionário";
+          case 2:
+            return "Colaborador";
           default:
             return "Usuário";
         }

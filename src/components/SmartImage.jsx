@@ -71,7 +71,12 @@ export default function SmartImage({ src, alt = '', className = '', style = {}, 
     const drive = transformDriveLink(input);
     if (drive) return drive;
 
-    // Otherwise, return as-is (http/https or relative)
+    // For absolute remote images, prefer using our proxy to avoid CORS/ORB blocks
+    if (/^https?:\/\//i.test(input)) {
+      return buildProxyUrl(input);
+    }
+
+    // Otherwise, return as-is (relative to frontend or backend base)
     return input;
   }
 
