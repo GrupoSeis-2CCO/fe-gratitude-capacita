@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ConfirmModal from './ConfirmModal.jsx';
 import Button from './Button';
 import { createExam } from '../services/CreateExamPageService.js';
 
@@ -24,6 +25,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
   }, [editMode, initialData]);
   const [showMinScoreModal, setShowMinScoreModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [error, setError] = useState(null);
   const MAX_QUESTIONS = 20; // Limite máximo de questões
 
@@ -144,10 +146,10 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
       console.log('[ExamBuilder] Dados enviados ao backend:', JSON.stringify(examData, null, 2));
       if (editMode && onExamSaved) {
         await onExamSaved(examData);
-        alert('Avaliação atualizada com sucesso!');
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Avaliação atualizada' } }));
       } else {
         const createdExam = await createExam(examData);
-        alert('Avaliação criada com sucesso!');
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Avaliação criada' } }));
         // Reset form
         setQuestions([]);
         setMinScore('');
@@ -171,15 +173,10 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
   
   const handleClearAll = () => {
     if (questions.length === 0) {
-      alert('Não há questões para limpar');
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Nada para limpar', message: 'Não há questões para limpar' } }));
       return;
     }
-    
-    if (confirm('Tem certeza que deseja limpar todas as questões?')) {
-      setQuestions([]);
-      setMinScore('');
-      setError(null);
-    }
+    setShowClearConfirm(true);
   };
 
   return (
@@ -221,8 +218,8 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
       
       {/* Min Score Modal */}
       {showMinScoreModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-50 transition-opacity">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full border-t-8 border-blue-500 shadow-xl transform transition-all">
             <h3 className="text-xl font-bold mb-4 text-gray-900">Nota Mínima para Aprovação</h3>
             <p className="text-gray-600 mb-4">Defina a nota mínima (0-10) que o aluno precisa atingir:</p>
             <input
@@ -248,7 +245,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                   if (minScore && Number(minScore) >= 0 && Number(minScore) <= 10) {
                     setShowMinScoreModal(false);
                   } else {
-                    alert('Digite uma nota válida entre 0 e 10');
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Valor inválido', message: 'Digite uma nota entre 0 e 10' } }));
                   }
                 }}
               />
@@ -256,6 +253,16 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={showClearConfirm}
+        title="Limpar questões"
+        message="Tem certeza que deseja limpar todas as questões?"
+        onCancel={() => setShowClearConfirm(false)}
+        onConfirm={() => { setQuestions([]); setMinScore(''); setError(null); setShowClearConfirm(false); }}
+        confirmLabel="Limpar"
+        tone="orange"
+      />
 
       {/* Empty State - Show when no questions */}
       {questions.length === 0 && (

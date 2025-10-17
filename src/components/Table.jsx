@@ -1,39 +1,46 @@
-export default function Table({ columns, data, headerClassName, rowClassName, onClickRow }) {
+import React from "react";
+
+// Minimal reusable Table component used by AccessPage and others
+// props:
+// - columns: [{ header, accessor }]
+// - data: array of row objects
+// - headerClassName, rowClassName
+// - onClickRow: (row) => void
+export default function Table({ columns = [], data = [], headerClassName = "", rowClassName = "", onClickRow }) {
   return (
-    <div className="w-full overflow-x-auto my-4 bg-[#1D262D] rounded-md shadow-md p-2">
-      <table className="w-full border-[4px] border-[#1D262D] rounded-lg overflow-hidden border-separate border-spacing-0 bg-transparent">
+    <div className="overflow-x-auto rounded-md">
+      <table className="min-w-full border-collapse">
         <thead>
-          <tr>
-            {columns.map((col, index) => (
-              <th
-                key={index}
-                className={`${headerClassName || "bg-[#ff8800] text-[#111] font-bold text-[1.25rem] border-b-[3px] border-[#1D262D] px-6 py-4 text-center"}`}
-              >
+          <tr className={headerClassName || "bg-gray-100"}>
+            {columns.map((col, idx) => (
+              <th key={idx} className="text-left px-4 py-3 border-b border-gray-200 whitespace-nowrap">
                 {col.header}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {data.map((row, rIndex) => (
-            <tr
-              key={row.id ?? rIndex}
-              className={`${rowClassName || "bg-[#FFE8DA] hover:bg-[#ffb877] transition-colors"} ${onClickRow ? 'cursor-pointer' : ''}`}
-              onClick={() => onClickRow && onClickRow(row)}
-              role={onClickRow ? "button" : undefined}
-              tabIndex={onClickRow ? 0 : undefined}
-              onKeyDown={onClickRow ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClickRow(row); } : undefined}
-            >
-              {columns.map((col, cIndex) => (
-                <td
-                  key={cIndex}
-                  className="border border-[#1D262D] px-5 py-3 text-center align-middle text-[1rem]"
-                >
-                  {row[col.accessor]}
-                </td>
-              ))}
+          {data && data.length > 0 ? (
+            data.map((row, rIdx) => (
+              <tr
+                key={rIdx}
+                className={(rowClassName || "hover:bg-gray-50") + " cursor-pointer"}
+                onClick={() => onClickRow && onClickRow(row)}
+              >
+                {columns.map((col, cIdx) => (
+                  <td key={cIdx} className="px-4 py-3 border-b border-gray-200 whitespace-nowrap">
+                    {row[col.accessor]}
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-6 text-center text-gray-500">
+                Nenhum dado encontrado.
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

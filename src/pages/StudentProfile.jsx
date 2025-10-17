@@ -103,11 +103,14 @@ export default function StudentProfile() {
     if (!passwordForm.senhaAtual || !passwordForm.novaSenha) return;
     try {
       await changePassword({ id: formData.id, ...passwordForm });
-      setPasswordForm({ senhaAtual: "", novaSenha: "" });
-      alert('Senha alterada com sucesso.');
+  setPasswordForm({ senhaAtual: "", novaSenha: "" });
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Senha atualizada' } }));
     } catch (e) {
-      if (e?.response?.status === 401) alert('Senha atual incorreta.');
-      else alert('Erro ao alterar senha.');
+      if (e?.response?.status === 401) {
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Senha atual incorreta' } }));
+      } else {
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao alterar senha' } }));
+      }
     }
   };
 
@@ -116,7 +119,7 @@ export default function StudentProfile() {
     // Validação leve de tamanho (até 5MB conforme ajuda visual)
     const maxBytes = 5 * 1024 * 1024;
     if (file.size > maxBytes) {
-      alert('Arquivo muito grande. Tamanho máximo: 5MB');
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Arquivo muito grande', message: 'Tamanho máximo: 5MB' } }));
       return;
     }
     try {
@@ -125,8 +128,8 @@ export default function StudentProfile() {
       const url = resp.fotoUrl || resp.url;
       setFormData(prev => ({ ...prev, fotoUrl: url }));
     } catch (e) {
-      console.error('Erro ao enviar avatar:', e);
-      alert('Falha ao enviar imagem.');
+  console.error('Erro ao enviar avatar:', e);
+  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao enviar imagem' } }));
     } finally {
       setUploading(false);
       // limpa o input para permitir reenvio do mesmo arquivo se necessário

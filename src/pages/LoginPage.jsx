@@ -20,7 +20,7 @@ export function LoginPage() {
   // Redireciona para /cursos para qualquer cargo
   navigate("/cursos");
     } catch (error) {
-      alert("Email ou senha inválidos. Tente novamente.");
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Login inválido', message: 'Email ou senha incorretos' } }));
       setLoading(false);
     }
   };

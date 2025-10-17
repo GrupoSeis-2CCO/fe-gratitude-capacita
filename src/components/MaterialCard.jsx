@@ -1,15 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { MoreHorizontal } from 'lucide-react';
-import { FileText, Youtube } from 'lucide-react';
+import { FileText, Youtube, ClipboardList, Star } from 'lucide-react';
 import SmartImage from './SmartImage.jsx';
 import { api } from '../services/api.js';
 import MaterialService from '../services/MaterialService.js';
 import ConfirmModal from './ConfirmModal.jsx';
 
-export default function MaterialCard({ material, index, onEdit = null, onActionComplete = null }) {
+export default function MaterialCard({ material, index, onEdit = null, onActionComplete = null, onClick = undefined }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const ref = useRef();
 
   useEffect(() => {
@@ -70,8 +71,6 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     }
   }, [material]);
 
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
   async function handleDeleteConfirmed() {
     setLoading(true);
     try {
@@ -83,7 +82,7 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
       if (onActionComplete) onActionComplete();
     } catch (err) {
       console.error('Erro ao deletar material', err);
-      alert('Erro ao deletar material: ' + (err?.response?.data || err.message));
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao excluir material', message: String(err?.response?.data || err?.message || err) } }));
     } finally {
       setLoading(false);
       setOpen(false);
@@ -102,7 +101,7 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
       if (onActionComplete) onActionComplete();
     } catch (err) {
       console.error('Erro ao alternar visibilidade', err);
-      alert('Erro ao alternar visibilidade: ' + (err?.response?.data || err.message));
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao alternar visibilidade', message: String(err?.response?.data || err?.message || err) } }));
     } finally {
       setLoading(false);
       setOpen(false);
@@ -114,13 +113,22 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     if (onEdit) onEdit(material);
   }
 
-  const displayNumber = material?.displayOrder ?? material?.order ?? (index + 1);
-  const displayTitle = material?.title ? ((material.type === 'pdf') ? String(material.title).replace(/\.pdf$/i, '') : material.title) : '';
+  const isAvaliacao = (material?.type === 'avaliacao' || material?.tipo === 'avaliacao');
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex gap-6 mb-6">
+    <div
+      className={`border rounded-lg shadow-md p-4 flex gap-6 mb-6 ${isAvaliacao ? 'bg-orange-50 border-orange-300' : 'bg-white border-gray-200'} ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
       <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-        {material.type === 'pdf' ? (
+        {isAvaliacao ? (
+          <div className="flex flex-col items-center justify-center">
+            <ClipboardList size={44} className="text-orange-600" />
+            <span className="mt-1 text-xs font-semibold text-orange-700 uppercase tracking-wide">Avaliação</span>
+          </div>
+        ) : material.type === 'pdf' ? (
           <FileText size={48} className="text-gray-500" />
         ) : (
           thumbnailUrl ? (
@@ -132,31 +140,33 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
       </div>
       <div className="flex-1">
         <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-              <span>{`Material ${displayNumber} - ${displayTitle}`}</span>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${material.type === 'pdf' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                {material.type === 'pdf' ? 'Apostila' : 'Vídeo'}
-              </span>
-            </h3>
-          </div>
-          <div className="relative" ref={ref}>
-            <button className="text-gray-500 hover:text-gray-800" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
-              <MoreHorizontal size={24} />
-            </button>
-            {open && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-50">
-                <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleEdit} disabled={loading}>Editar</button>
-                <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => setConfirmOpen(true)} disabled={loading}>Excluir</button>
-                <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleToggleHidden} disabled={loading}>{material.hidden ? 'Tornar visível' : 'Ocultar'}</button>
-              </div>
-            )}
-            <ConfirmModal open={confirmOpen} title="Excluir material" message={`Deseja realmente excluir \"${material.title}\"? Esta ação não pode ser desfeita.`} onCancel={() => setConfirmOpen(false)} onConfirm={handleDeleteConfirmed} confirmLabel="Excluir" cancelLabel="Cancelar" />
-          </div>
+          <h3 className={`text-xl font-bold mb-2 ${isAvaliacao ? 'text-orange-800' : 'text-gray-800'}`}>
+            {isAvaliacao ? `Avaliação - ${material.title || 'Avaliação'}` : `Material ${material?.displayOrder ?? material?.order ?? (index + 1)} - ${material.title}`}
+          </h3>
+          {!isAvaliacao && (
+            <div className="relative" ref={ref}>
+              <button className="text-gray-500 hover:text-gray-800" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
+                <MoreHorizontal size={24} />
+              </button>
+              {open && (
+                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-50">
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleEdit} disabled={loading}>Editar</button>
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => setConfirmOpen(true)} disabled={loading}>Excluir</button>
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleToggleHidden} disabled={loading}>{material.hidden ? 'Tornar visível' : 'Ocultar'}</button>
+                </div>
+              )}
+              <ConfirmModal open={confirmOpen} title="Excluir material" message={`Deseja realmente excluir \"${material.title}\"? Esta ação não pode ser desfeita.`} onCancel={() => setConfirmOpen(false)} onConfirm={handleDeleteConfirmed} confirmLabel="Excluir" cancelLabel="Cancelar" />
+            </div>
+          )}
         </div>
-        <p className="text-gray-600 text-sm">
+        <p className={`text-sm ${isAvaliacao ? 'text-orange-800' : 'text-gray-600'}`}>
           {material.description}
         </p>
+        {isAvaliacao && (
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold uppercase tracking-wide">
+            <Star size={14} className="text-orange-600" /> Avaliação do Curso
+          </div>
+        )}
       </div>
     </div>
   );
