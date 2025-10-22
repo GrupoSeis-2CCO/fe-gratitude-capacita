@@ -20,6 +20,10 @@ export function AccessPage() {
   const [cursoSelecionado, setCursoSelecionado] = useState("");
   const [buscaNome, setBuscaNome] = useState("");
   const [participantes, setParticipantes] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -67,8 +71,10 @@ export function AccessPage() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await AccessPageService.listarParticipantesPorCurso(Number(cursoSelecionado));
-        setParticipantes(resp);
+        const resp = await AccessPageService.listarParticipantesPorCurso(Number(cursoSelecionado), { page, size });
+        setParticipantes(resp.content || []);
+        setTotalPages(Number(resp.totalPages || 0));
+        setTotalElements(Number(resp.totalElements || (resp.content || []).length));
       } catch (e) {
         setError(e?.message || "Erro ao carregar participantes");
         setParticipantes([]);
@@ -76,7 +82,7 @@ export function AccessPage() {
         setLoading(false);
       }
     })();
-  }, [cursoSelecionado]);
+  }, [cursoSelecionado, page, size]);
 
   const columns = useMemo(() => ([
     { header: "Nome do Colaborador", accessor: "nome" },
@@ -119,6 +125,41 @@ export function AccessPage() {
     const idNum = Number(cursoSelecionado);
     return (cursos || []).find(c => Number(c.idCurso) === idNum) || null;
   }, [cursos, cursoSelecionado]);
+
+  function Pagination() {
+    const canPrev = page > 0;
+    const canNext = totalPages ? (page + 1) < totalPages : (participantes.length === size);
+    return (
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`}
+            disabled={!canPrev}
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+          >
+            Anterior
+          </button>
+          <select
+            className="px-2 py-1 border rounded"
+            value={size}
+            onChange={(e) => { setPage(0); setSize(Number(e.target.value)); }}
+          >
+            {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
+          </select>
+          <button
+            className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`}
+            disabled={!canNext}
+            onClick={() => setPage(p => p + 1)}
+          >
+            Próxima
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
@@ -174,6 +215,7 @@ export function AccessPage() {
               ) : error ? (
                 <div className="text-red-300 px-2 py-3">{error}</div>
               ) : (
+                <>
                 <Table
                   columns={columns}
                   data={dadosTabela}
@@ -185,6 +227,8 @@ export function AccessPage() {
                     }
                   }}
                 />
+                <Pagination />
+                </>
               )}
             </div>
           </div>

@@ -21,6 +21,10 @@ export default function MaterialsListPage() {
 	}
 
 	const [materials, setMaterials] = useState([]);
+	const [page, setPage] = useState(0);
+	const [size, setSize] = useState(10);
+	const [totalPages, setTotalPages] = useState(0);
+	const [totalElements, setTotalElements] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const [editingMaterial, setEditingMaterial] = useState(null);
 	// (removed manual sorting UI — we rely on persisted order and reordering)
@@ -32,9 +36,16 @@ export default function MaterialsListPage() {
 
 	async function loadMaterials() {
 		setLoading(true);
-		try {
-			const cursoId = Number(idCurso || 1); // prefer route param
-			const mats = await getMateriaisPorCurso(cursoId);
+			try {
+				const cursoId = Number(idCurso || 1); // prefer route param
+				let matsResp;
+				if (isReordering) {
+					// reordering needs full list to avoid cross-page reorder confusion
+					matsResp = await getMateriaisPorCurso(cursoId);
+				} else {
+					matsResp = await getMateriaisPorCurso(cursoId, { page, size });
+				}
+				const mats = Array.isArray(matsResp?.content) ? matsResp.content : (Array.isArray(matsResp) ? matsResp : []);
 			// mapear para o formato do MaterialCard (id, title, type, description, url, hidden)
 			const mapped = (mats || []).map((m, idx) => {
 				const type = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
@@ -71,6 +82,11 @@ export default function MaterialsListPage() {
 				return { ...m, displayOrder: null };
 			});
 			setMaterials(withDisplay);
+			// pagination metadata
+			const total = Number(matsResp?.totalElements || withDisplay.length);
+			const totalP = Number(matsResp?.totalPages || Math.ceil(total / size));
+			setTotalElements(total);
+			setTotalPages(totalP);
 			} catch (err) {
 				console.error('Erro salvando nova ordem:', err);
 				window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao salvar ordem', message: String(err?.response?.data || err?.message || err) } }));
@@ -79,7 +95,7 @@ export default function MaterialsListPage() {
 		}
 	}
 
-	useEffect(() => { loadMaterials(); }, [idCurso]);
+		useEffect(() => { loadMaterials(); }, [idCurso, page, size, isReordering]);
 
 	// When in reordering mode we render and operate directly on `materials` (which are ordered by their saved order)
 	const listToRender = materials;
@@ -176,7 +192,8 @@ export default function MaterialsListPage() {
 					{loading ? (
 						<div>Carregando...</div>
 					) : (
-							listToRender.map((material, index) => {
+							<>
+							{listToRender.map((material, index) => {
 								const key = `${material.type}-${material.id}`;
 								if (!isReordering) {
 									return (
@@ -200,7 +217,7 @@ export default function MaterialsListPage() {
 								}
 
 								// draggable wrapper
-								return (
+																return (
 									<div key={key}
 										draggable
 										onDragStart={(e) => handleDragStart(e, index)}
@@ -211,7 +228,20 @@ export default function MaterialsListPage() {
 										<MaterialCard material={material} index={index} onEdit={(m) => setEditingMaterial(m)} onActionComplete={() => loadMaterials()} />
 									</div>
 								);
-							})
+														})}
+														{!isReordering && (
+															<div className="flex items-center justify-between mt-4">
+																<div className="text-sm text-gray-600">Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens</div>
+																<div className="flex items-center gap-2">
+																	<button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={() => setPage(p => Math.max(0, p-1))}>Anterior</button>
+																	<select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
+																		{[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
+																	</select>
+																	<button className={`px-3 py-1 border rounded ${ (totalPages ? (page+1)<totalPages : (listToRender.length===size)) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={ totalPages ? (page+1)>=totalPages : (listToRender.length<size)} onClick={() => setPage(p => p+1)}>Próxima</button>
+																</div>
+															</div>
+														)}
+														</>
 					)}
 				</div>
 
