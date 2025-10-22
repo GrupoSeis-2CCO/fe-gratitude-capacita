@@ -390,6 +390,15 @@ export default function StudentMaterialsListPage() {
     return { total, completed, percent };
   }, [baseMaterials]);
 
+  // Client-side pagination for student list (keeps merge correctness)
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const pagedMaterials = useMemo(() => {
+    const start = page * size;
+    const end = start + size;
+    return filteredMaterials.slice(start, end);
+  }, [filteredMaterials, page, size]);
+
   const MaterialItem = ({ material, index }) => (
     <div
       className="bg-white border border-gray-200 rounded-lg p-4 flex gap-4 mb-4 relative cursor-pointer hover:shadow-lg transition-shadow"
@@ -490,7 +499,7 @@ export default function StudentMaterialsListPage() {
           ) : baseMaterials.length === 0 ? (
             <div className="text-gray-600">Nenhum material disponível.</div>
           ) : (
-            filteredMaterials.map((material, index) => {
+            pagedMaterials.map((material, index) => {
               const uid = material?.id != null ? String(material.id) : `${material.type || 'mat'}-${index}`;
               // incluir o tipo no key para evitar colisões entre video/apostila com mesmo id
               const key = `${idCurso}-${material.type || 'mat'}-${uid}`;
@@ -498,6 +507,20 @@ export default function StudentMaterialsListPage() {
             })
           )}
         </div>
+
+        {/* Pagination controls */}
+        {filteredMaterials.length > 0 && (
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-600">Página {page + 1} de {Math.max(1, Math.ceil(filteredMaterials.length / size))} • {filteredMaterials.length} itens</div>
+            <div className="flex items-center gap-2">
+              <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
+              <select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
+                {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
+              </select>
+              <button className={`px-3 py-1 border rounded ${(page+1) < Math.ceil(filteredMaterials.length / size) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={(page+1) >= Math.ceil(filteredMaterials.length / size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
+            </div>
+          </div>
+        )}
 
         {/* Ações do curso: Avaliação + Meu Feedback */}
         <div className="mt-8 flex flex-col md:flex-row gap-4">

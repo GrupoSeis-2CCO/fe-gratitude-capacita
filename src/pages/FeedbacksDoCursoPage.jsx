@@ -4,6 +4,7 @@ import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
 import { api } from "../services/api.js";
+import feedbackService from "../services/feedbackService.js";
 
 export default function FeedbacksDoCursoPage() {
   const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -21,6 +22,11 @@ export default function FeedbacksDoCursoPage() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [cursoTitulo, setCursoTitulo] = useState(null);
   const [info, setInfo] = useState(null);
+  // Paginação (aplicada para admins/professores). Colaboradores veem apenas o próprio feedback.
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   // Estado do formulário "meu feedback"
   const uid = useMemo(() => getUserIdFromJwt(), []);
   const [meuEstrelas, setMeuEstrelas] = useState(10);
@@ -33,8 +39,18 @@ export default function FeedbacksDoCursoPage() {
     setLoading(true);
     setError(null);
     try {
-      const resp = await api.get(`/feedbacks/curso/${idCursoNum}`);
-      const list = Array.isArray(resp.data) ? resp.data : [];
+      let list;
+      if (userType === 2) {
+        // colaborador busca sem paginação e filtra somente o seu
+        const resp = await api.get(`/feedbacks/curso/${idCursoNum}`);
+        list = Array.isArray(resp.data) ? resp.data : [];
+        setTotalPages(1); setTotalElements(list.length);
+      } else {
+        const paged = await feedbackService.getFeedbacksByCurso(idCursoNum, { page, size });
+        list = Array.isArray(paged?.content) ? paged.content : (Array.isArray(paged) ? paged : []);
+        setTotalPages(Number(paged?.totalPages || 0));
+        setTotalElements(Number(paged?.totalElements || list.length));
+      }
 
       // Prefill do meu feedback (se existir), usando a lista completa
       if (uid) {
@@ -86,7 +102,7 @@ export default function FeedbacksDoCursoPage() {
     } finally {
       setLoading(false);
     }
-  }, [idCursoNum, uid, userType]);
+  }, [idCursoNum, uid, userType, page, size]);
 
   useEffect(() => {
     let mounted = true;
@@ -224,6 +240,18 @@ export default function FeedbacksDoCursoPage() {
                   ) : null}
                 </div>
               ))}
+              {userType !== 2 && (
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-sm text-gray-600">Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens</div>
+                  <div className="flex items-center gap-2">
+                    <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
+                    <select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
+                      {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
+                    </select>
+                    <button className={`px-3 py-1 border rounded ${(totalPages ? (page+1)<totalPages : feedbacks.length===size) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={ totalPages ? (page+1)>=totalPages : (feedbacks.length<size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

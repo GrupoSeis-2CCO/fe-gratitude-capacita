@@ -12,6 +12,10 @@ export function ClassUsersPage() {
   const navigate = useNavigate();
   const { idCurso } = useParams();
   const [participantes, setParticipantes] = useState([]);
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,10 +31,11 @@ export function ClassUsersPage() {
         setError(null);
 
         console.log("🔵 [FRONT] Chamando getParticipantesByCurso com idCurso:", idCurso);
-        const data = await getParticipantesByCurso(idCurso);
+  const data = await getParticipantesByCurso(idCurso, { page, size });
         console.log("🟢 [FRONT] Dados recebidos do backend:", data);
+  const list = data?.content ?? (Array.isArray(data) ? data : []);
 
-        const participantesMapeados = (data || []).map(p => {
+  const participantesMapeados = (list || []).map(p => {
           // Materiais: usa os campos que o backend agora fornece
           const materiaisConcluidos = Number(p.materiaisConcluidos) || 0;
           const materiaisTotais = Number(p.materiaisTotais) || 0;
@@ -81,7 +86,9 @@ export function ClassUsersPage() {
           };
         });
 
-        setParticipantes(participantesMapeados);
+  setParticipantes(participantesMapeados);
+  setTotalPages(Number(data?.totalPages || 0));
+  setTotalElements(Number(data?.totalElements || participantesMapeados.length));
       } catch (err) {
         console.error("❌ [FRONT] Erro ao buscar participantes:", err?.message || err);
         setError(err?.message || "Erro desconhecido");
@@ -94,7 +101,7 @@ export function ClassUsersPage() {
     if (idCurso) {
       fetchParticipantes();
     }
-  }, [idCurso]);
+  }, [idCurso, page, size]);
 
   const columns = [
     { header: "Nome do Colaborador", accessor: "nome" },
@@ -102,6 +109,25 @@ export function ClassUsersPage() {
     { header: "Avaliação", accessor: "avaliacao" },
     { header: "Último acesso", accessor: "ultimoAcesso" },
   ];
+
+  function Pagination() {
+    const canPrev = page > 0;
+    const canNext = totalPages ? (page + 1) < totalPages : (participantes.length === size);
+    return (
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-gray-600">
+          Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens
+        </div>
+        <div className="flex items-center gap-2">
+          <button className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canPrev} onClick={() => setPage(p => Math.max(0, p - 1))}>Anterior</button>
+          <select className="px-2 py-1 border rounded" value={size} onChange={(e) => { setPage(0); setSize(Number(e.target.value)); }}>
+            {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
+          </select>
+          <button className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canNext} onClick={() => setPage(p => p + 1)}>Próxima</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28 pb-12">
@@ -152,6 +178,7 @@ export function ClassUsersPage() {
                   columns={columns}
                   data={participantes}
                 />
+                <Pagination />
               </div>
             )}
           </div>

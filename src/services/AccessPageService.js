@@ -20,12 +20,26 @@ export async function listarCursos() {
   }
 }
 
-export async function listarParticipantesPorCurso(idCurso) {
-  if (!idCurso) return [];
+export async function listarParticipantesPorCurso(idCurso, { page = 0, size = 10 } = {}) {
+  if (!idCurso) return { content: [], page: 0, size, totalElements: 0, totalPages: 0 };
   try {
-    const resp = await api.get(`/matriculas/curso/${idCurso}/participantes`);
-    if (resp.status === 204 || !Array.isArray(resp.data)) return [];
-    return resp.data;
+    const resp = await api.get(`/matriculas/curso/${idCurso}/participantes/paginated`, { params: { page, size } });
+    if (resp.status === 204 || !resp.data) {
+      return { content: [], page, size, totalElements: 0, totalPages: 0 };
+    }
+    // Backend returns PagedResponse
+    const d = resp.data;
+    if (Array.isArray(d)) {
+      // backward-compat: if server returns array, wrap it
+      return { content: d, page, size, totalElements: d.length, totalPages: Math.ceil(d.length / size) };
+    }
+    return {
+      content: d.content ?? [],
+      page: Number(d.page ?? page),
+      size: Number(d.size ?? size),
+      totalElements: Number(d.totalElements ?? (d.content?.length || 0)),
+      totalPages: Number(d.totalPages ?? Math.ceil((d.content?.length || 0) / (d.size || size || 10)))
+    };
   } catch (err) {
     const msg = normalizeError(err, "Erro ao listar participantes do curso");
     throw new Error(msg);

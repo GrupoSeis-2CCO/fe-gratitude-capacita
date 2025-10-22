@@ -1,7 +1,7 @@
 import { api } from "./api.js";
 import { ensureMatricula } from "./MatriculaService.js";
 
-export async function getMateriaisPorCurso(idCurso) {
+export async function getMateriaisPorCurso(idCurso, { page, size } = {}) {
   if (!idCurso) {
     console.warn("⚠️ idCurso está vazio!");
     return [];
@@ -9,7 +9,12 @@ export async function getMateriaisPorCurso(idCurso) {
 
   try {
     console.log(`🔍 Buscando materiais do curso ${idCurso}...`);
-    const resp = await api.get(`/cursos/${idCurso}/materiais`);
+    let resp;
+    if (page != null && size != null) {
+      resp = await api.get(`/cursos/${idCurso}/materiais/paginated`, { params: { page, size } });
+    } else {
+      resp = await api.get(`/cursos/${idCurso}/materiais`);
+    }
     console.log("✅ Resposta recebida:", resp);
     if (resp.status === 204 || !resp.data) {
       console.warn("⚠️ Nenhum dado retornado (204 ou data vazio)");
@@ -42,13 +47,13 @@ export async function getMateriaisPorCursoEnsuringMatricula(idCurso) {
   } catch (_) { /* noop */ }
 
   try {
-    return await getMateriaisPorCurso(idCurso);
+  return await getMateriaisPorCurso(idCurso);
   } catch (e) {
     // Se o erro for de matrícula inexistente em chamadas subsequentes, tentaremos criar e refazer uma vez
     const msg = (e?.message || '').toLowerCase();
     if (uid && String(msg).includes('matr')) {
       try { await ensureMatricula(uid, Number(idCurso)); } catch (_) {}
-      return await getMateriaisPorCurso(idCurso);
+  return await getMateriaisPorCurso(idCurso);
     }
     throw e;
   }
