@@ -1,0 +1,1 @@
+// Aqui ficará a pilha com histórico de navegação
