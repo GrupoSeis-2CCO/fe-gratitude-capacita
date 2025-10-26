@@ -51,6 +51,17 @@ jobs:
           # Angular: ./dist/nome-projeto
           SOURCE: "./dist/"
 
+      # 5.1 Copiar compose-nginx.yaml do repositório para a EC2 pública
+      - name: Copiar compose-nginx.yaml para EC2 Pública
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.FRONTEND_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: /home/${{ secrets.REMOTE_USER }}/
+          ARGS: "-rltgoDzvO"
+          SOURCE: "./compose-nginx.yaml"
+
       # 6. Configurar NGINX para proxy reverso ao backend
       - name: Configurar NGINX como Proxy Reverso
         uses: appleboy/ssh-action@v1.0.3
@@ -100,8 +111,8 @@ jobs:
             
             echo "Configuração do NGINX criada com sucesso"
 
-      # 7. Atualizar docker-compose.yaml do NGINX com a configuração customizada
-      - name: Atualizar Docker Compose do NGINX
+      # 7. Verificar compose-nginx.yaml copiado e ajustar permissões
+      - name: Verificar compose-nginx.yaml no host
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.FRONTEND_HOST }}
@@ -109,22 +120,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            
-            # Criar ou atualizar compose.yaml para NGINX
-            cat <<'EOF' > /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml
-            services:
-              web_server:
-                image: nginx:latest
-                container_name: frontend_nginx
-                ports:
-                  - "80:80"
-                volumes:
-                  - /home/${{ secrets.REMOTE_USER }}/frontend:/usr/share/nginx/html
-                  - /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf:/etc/nginx/conf.d/default.conf
-                restart: unless-stopped
-            EOF
-            
-            echo "Docker Compose do NGINX atualizado"
+
+            if [ -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml ]; then
+              echo "compose-nginx.yaml encontrado em /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml"
+              sudo chown ubuntu:ubuntu /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml || true
+            else
+              echo "AVISO: compose-nginx.yaml não encontrado — o workflow anterior deveria copiá-lo"
+            fi
 
       # 8. Reiniciar container NGINX
       - name: Reiniciar NGINX
