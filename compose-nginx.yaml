@@ -11,7 +11,6 @@ services:
     
     # Mapeia o volume: Pasta_Local:Pasta_No_Container
     # Mapeia a pasta 'frontend' para o diretório de conteúdo do NGINX
-    # ATENÇÃO! se o usuário da EC2 for ubuntu, trocar ec2-user por ubuntu
     volumes:
       - /home/ubuntu/frontend:/usr/share/nginx/html
     
