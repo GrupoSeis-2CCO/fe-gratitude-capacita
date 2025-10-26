@@ -1,91 +1,157 @@
-#!/bin/bash
-# User-data para EC2 Frontend (Pública)
-# Prepara ambiente Docker + Nginx com configuração inicial
+name: CI/CD Frontend - EC2 Pública (NGINX)
 
-exec > >(tee /var/log/user-data-frontend.log)
-exec 2>&1
+on:
+  push:
+    branches:
+      - main
 
-echo "=== Iniciando configuração frontend $(date) ==="
+jobs:
+  deploy_frontend:
+    runs-on: ubuntu-latest
 
-# Variáveis de configuração (serão substituídas pelo Terraform)
-BACKEND_HOST="${BACKEND_PRIVATE_IP}"  # IP privado da EC2 Backend (via Terraform)
-BACKEND_PORT="8080"
+    steps:
+      # 1. Checkout do código
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
 
-# Instalar Docker
-apt-get update -y
-apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+      # 2. Configurar Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      # 3. Instalar dependências
+      - name: Instalar Dependências
+        run: npm install
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      # 4. Build da aplicação React/Vue/Angular
+      - name: Build da Aplicação
+        run: npm run build
+        env:
+          # Configurar URL da API backend via proxy reverso do NGINX
+          # O NGINX na EC2 pública deve ter proxy_pass configurado para o backend privado
+          REACT_APP_API_URL: /api
+          # ou para Vue: VITE_API_URL=/api
+          # ou para Angular: ajustar em environment.prod.ts
 
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+      # 5. Copiar arquivos de build para EC2 pública via rsync
+      - name: Deploy - Copiar build para EC2 Pública
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.FRONTEND_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          # Diretório onde o NGINX serve os arquivos (conforme compose-nginx.yaml)
+          TARGET: /home/${{ secrets.REMOTE_USER }}/frontend/
+          ARGS: "-rltgoDzvO --delete"
+          # SOURCE: diretório de build (ajustar conforme seu framework)
+          # React/Vite: ./dist
+          # Create React App: ./build
+          # Angular: ./dist/nome-projeto
+          SOURCE: "./dist/"
 
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io
+      # 5.1 Copiar compose-nginx.yaml do repositório para a EC2 pública
+      - name: Copiar compose-nginx.yaml para EC2 Pública
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.FRONTEND_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: /home/${{ secrets.REMOTE_USER }}/
+          ARGS: "-rltgoDzvO"
+          SOURCE: "./compose-nginx.yaml"
 
-systemctl enable docker
-systemctl start docker
-usermod -aG docker ubuntu
+      # 6. Configurar NGINX para proxy reverso ao backend
+      - name: Configurar NGINX como Proxy Reverso
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "Configurando NGINX como proxy reverso para o backend..."
+            
+            # Criar configuração customizada do NGINX
+            sudo mkdir -p /home/${{ secrets.REMOTE_USER }}/nginx-config
+            
+            # Criar arquivo de configuração do NGINX
+            cat <<'EOF' | sudo tee /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf
+            server {
+                listen 80;
+                server_name _;
+                
+                # Serve os arquivos estáticos do frontend
+                location / {
+                    root /usr/share/nginx/html;
+                    try_files $uri $uri/ /index.html;
+                }
+                
+                # Proxy reverso para o backend privado
+                location /api/ {
+                    # IP privado do backend (obtido do Terraform output)
+                    proxy_pass http://BACKEND_PRIVATE_IP:8080/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    
+                    # Timeouts
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                }
+            }
+            EOF
+            
+            # Substituir BACKEND_PRIVATE_IP pelo IP real do backend
+            sudo sed -i "s/BACKEND_PRIVATE_IP/${{ secrets.BACKEND_PRIVATE_IP }}/g" /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf
+            
+            echo "Configuração do NGINX criada com sucesso"
 
-# Instalar Docker Compose
-curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+      # 7. Verificar compose-nginx.yaml copiado e ajustar permissões
+      - name: Verificar compose-nginx.yaml no host
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
 
-# Criar diretórios para CI/CD
-mkdir -p /home/ubuntu/frontend
-mkdir -p /home/ubuntu/nginx-config
-mkdir -p /home/ubuntu/backend-deploy
+            if [ -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml ]; then
+              echo "compose-nginx.yaml encontrado em /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml"
+              sudo chown ubuntu:ubuntu /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml || true
+            else
+              echo "AVISO: compose-nginx.yaml não encontrado — o workflow anterior deveria copiá-lo"
+            fi
 
-# Criar configuração padrão do Nginx com proxy para o backend
-cat > /home/ubuntu/nginx-config/default.conf << 'NGINXCONF'
-server {
-    listen 80;
-    server_name _;
-    
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Logs
-    access_log /var/log/nginx/access.log;
-    error_log /var/log/nginx/error.log;
-
-    # Frontend React - SPA routing (todas as rotas vão para index.html)
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Proxy reverso para o backend no Droplet DigitalOcean
-    location /api/ {
-        proxy_pass http://BACKEND_HOST:BACKEND_PORT/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # Timeouts
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
-        
-        # CORS headers
-        add_header 'Access-Control-Allow-Origin' '*' always;
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-        add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
-        
-        if ($request_method = 'OPTIONS') {
-            return 204;
-        }
-    }
-}
-NGINXCONF
-
-# Substituir variáveis na configuração do Nginx
-sed -i "s|BACKEND_HOST|${BACKEND_HOST}|g" /home/ubuntu/nginx-config/default.conf
-sed -i "s|BACKEND_PORT|${BACKEND_PORT}|g" /home/ubuntu/nginx-config/default.conf
-
-# Ajustar permissões
-chown -R ubuntu:ubuntu /home/ubuntu/frontend /home/ubuntu/nginx-config /home/ubuntu/backend-deploy
-
-echo "=== Ambiente frontend pronto para CI/CD (Docker Compose) ==="
-echo "=== User-data concluído $(date) ==="
+      # 8. Reiniciar container NGINX
+      - name: Reiniciar NGINX
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "Parando containers do NGINX..."
+            sudo docker compose -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml down || true
+            
+            echo "Iniciando containers do NGINX com nova configuração..."
+            sudo docker compose -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml up -d
+            
+            echo "Aguardando NGINX inicializar..."
+            sleep 5
+            
+            echo "Verificando status do NGINX:"
+            sudo docker ps | grep frontend_nginx || echo "Container não encontrado!"
+            
+            echo "Logs do NGINX (últimas 30 linhas):"
+            sudo docker logs --tail=30 frontend_nginx
+            
+            echo "Deploy do frontend concluído com sucesso!"
+            echo "Acesse: http://${{ secrets.FRONTEND_HOST }}"
