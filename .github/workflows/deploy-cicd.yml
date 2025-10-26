@@ -45,7 +45,6 @@ jobs:
           # Diretório onde o NGINX serve os arquivos (conforme compose-nginx.yaml)
           TARGET: /home/${{ secrets.REMOTE_USER }}/frontend/
           ARGS: "-rltgoDzvO --delete"
-          # SOURCE: diretório de build (ajustar conforme seu framework)
           # React/Vite: ./dist
           # Create React App: ./build
           # Angular: ./dist/nome-projeto
