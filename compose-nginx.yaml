@@ -1,0 +1,19 @@
+services:
+  web_server:
+    # Usa a imagem oficial do NGINX
+    image: nginx:latest
+    container_name: frontend_nginx
+    
+    # Mapeia as portas: Porta_Externa:Porta_Interna
+    # Aqui, a porta 80 da sua máquina será mapeada para a porta 80 do contêiner (padrão do NGINX)
+    ports:
+      - "80:80"
+    
+    # Mapeia o volume: Pasta_Local:Pasta_No_Container
+    # Mapeia a pasta 'frontend' para o diretório de conteúdo do NGINX
+    # ATENÇÃO! se o usuário da EC2 for ubuntu, trocar ec2-user por ubuntu
+    volumes:
+      - /home/ubuntu/frontend:/usr/share/nginx/html
+    
+    # Reinicia o contêiner automaticamente, a menos que ele seja parado explicitamente.
+    restart: unless-stopped
