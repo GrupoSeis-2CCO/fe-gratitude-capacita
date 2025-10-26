@@ -1,0 +1,155 @@
+name: CI/CD Frontend - EC2 Pública (NGINX)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do código
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      # 2. Configurar Node.js
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      # 3. Instalar dependências
+      - name: Instalar Dependências
+        run: npm install
+
+      # 4. Build da aplicação React/Vue/Angular
+      - name: Build da Aplicação
+        run: npm run build
+        env:
+          # Configurar URL da API backend via proxy reverso do NGINX
+          # O NGINX na EC2 pública deve ter proxy_pass configurado para o backend privado
+          REACT_APP_API_URL: /api
+          # ou para Vue: VITE_API_URL=/api
+          # ou para Angular: ajustar em environment.prod.ts
+
+      # 5. Copiar arquivos de build para EC2 pública via rsync
+      - name: Deploy - Copiar build para EC2 Pública
+        uses: easingthemes/ssh-deploy@main
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.FRONTEND_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          # Diretório onde o NGINX serve os arquivos (conforme compose-nginx.yaml)
+          TARGET: /home/${{ secrets.REMOTE_USER }}/frontend/
+          ARGS: "-rltgoDzvO --delete"
+          # SOURCE: diretório de build (ajustar conforme seu framework)
+          # React/Vite: ./dist
+          # Create React App: ./build
+          # Angular: ./dist/nome-projeto
+          SOURCE: "./dist/"
+
+      # 6. Configurar NGINX para proxy reverso ao backend
+      - name: Configurar NGINX como Proxy Reverso
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "Configurando NGINX como proxy reverso para o backend..."
+            
+            # Criar configuração customizada do NGINX
+            sudo mkdir -p /home/${{ secrets.REMOTE_USER }}/nginx-config
+            
+            # Criar arquivo de configuração do NGINX
+            cat <<'EOF' | sudo tee /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf
+            server {
+                listen 80;
+                server_name _;
+                
+                # Serve os arquivos estáticos do frontend
+                location / {
+                    root /usr/share/nginx/html;
+                    try_files $uri $uri/ /index.html;
+                }
+                
+                # Proxy reverso para o backend privado
+                location /api/ {
+                    # IP privado do backend (obtido do Terraform output)
+                    proxy_pass http://BACKEND_PRIVATE_IP:8080/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                    
+                    # Timeouts
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                }
+            }
+            EOF
+            
+            # Substituir BACKEND_PRIVATE_IP pelo IP real do backend
+            sudo sed -i "s/BACKEND_PRIVATE_IP/${{ secrets.BACKEND_PRIVATE_IP }}/g" /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf
+            
+            echo "Configuração do NGINX criada com sucesso"
+
+      # 7. Atualizar docker-compose.yaml do NGINX com a configuração customizada
+      - name: Atualizar Docker Compose do NGINX
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            # Criar ou atualizar compose.yaml para NGINX
+            cat <<'EOF' > /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml
+            services:
+              web_server:
+                image: nginx:latest
+                container_name: frontend_nginx
+                ports:
+                  - "80:80"
+                volumes:
+                  - /home/${{ secrets.REMOTE_USER }}/frontend:/usr/share/nginx/html
+                  - /home/${{ secrets.REMOTE_USER }}/nginx-config/default.conf:/etc/nginx/conf.d/default.conf
+                restart: unless-stopped
+            EOF
+            
+            echo "Docker Compose do NGINX atualizado"
+
+      # 8. Reiniciar container NGINX
+      - name: Reiniciar NGINX
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FRONTEND_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "Parando containers do NGINX..."
+            sudo docker compose -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml down || true
+            
+            echo "Iniciando containers do NGINX com nova configuração..."
+            sudo docker compose -f /home/${{ secrets.REMOTE_USER }}/compose-nginx.yaml up -d
+            
+            echo "Aguardando NGINX inicializar..."
+            sleep 5
+            
+            echo "Verificando status do NGINX:"
+            sudo docker ps | grep frontend_nginx || echo "Container não encontrado!"
+            
+            echo "Logs do NGINX (últimas 30 linhas):"
+            sudo docker logs --tail=30 frontend_nginx
+            
+            echo "Deploy do frontend concluído com sucesso!"
+            echo "Acesse: http://${{ secrets.FRONTEND_HOST }}"
