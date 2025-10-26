@@ -11,8 +11,10 @@ services:
     
     # Mapeia o volume: Pasta_Local:Pasta_No_Container
     # Mapeia a pasta 'frontend' para o diretório de conteúdo do NGINX
+    # Mapeia a configuração customizada do NGINX (proxy reverso para backend)
     volumes:
       - /home/ubuntu/frontend:/usr/share/nginx/html
+      - /home/ubuntu/nginx-config/default.conf:/etc/nginx/conf.d/default.conf:ro
     
     # Reinicia o contêiner automaticamente, a menos que ele seja parado explicitamente.
     restart: unless-stopped
