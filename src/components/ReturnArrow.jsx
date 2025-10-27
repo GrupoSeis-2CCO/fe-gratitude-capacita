@@ -1,6 +1,6 @@
 export default function ReturnArrow() {
   return (
-    <div className="cursor-pointer p-4">
+    <div className="cursor-pointer p-4 w-fit">
         <img 
             src="/back-arrow.svg" 
             alt="Voltar" 
