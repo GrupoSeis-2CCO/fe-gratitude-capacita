@@ -30,7 +30,6 @@ jobs:
         run: npm run build
         env:
           # Configurar URL da API backend via proxy reverso do NGINX
-          # O NGINX na EC2 pública deve ter proxy_pass configurado para o backend privado
           REACT_APP_API_URL: /api
           # ou para Vue: VITE_API_URL=/api
           # ou para Angular: ajustar em environment.prod.ts
