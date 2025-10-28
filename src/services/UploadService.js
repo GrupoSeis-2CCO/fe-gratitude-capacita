@@ -6,16 +6,23 @@ export async function uploadFileToS3(file, tipoBucket = 'bronze') {
   form.append('file', file);
   form.append('tipoBucket', tipoBucket);
   try {
+    console.log('[UploadService] Enviando arquivo para /arquivos/upload:', file, 'tipoBucket:', tipoBucket);
     const resp = await api.post('/arquivos/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    console.log('[UploadService] Resposta recebida do backend:', resp.data);
     return resp.data; // espera algo como '/uploads/<filename>'
   } catch (err) {
     // Mensagens mais amigáveis para 413 (payload too large)
     const status = err?.response?.status;
     if (status === 413) {
+      console.error('[UploadService] Arquivo muito grande:', file);
       throw new Error('Arquivo muito grande. Tente uma imagem menor ou comprima antes de enviar.');
     }
     // rethrow with server message if available
-    if (err?.response?.data) throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload do arquivo');
+    if (err?.response?.data) {
+      console.error('[UploadService] Erro do backend:', err.response.data);
+      throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload do arquivo');
+    }
+    console.error('[UploadService] Erro desconhecido:', err);
     throw new Error(err?.message || 'Falha no upload do arquivo');
   }
 }
