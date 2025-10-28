@@ -27,18 +27,35 @@ export async function createCourse(courseInput) {
     throw new Error("Título do curso é obrigatório.");
   }
 
-  const payload = { tituloCurso: courseInput.tituloCurso };
-  if (typeof courseInput.descricao === 'string' && courseInput.descricao.trim() !== '') payload.descricao = courseInput.descricao.trim();
-  if (typeof courseInput.imagem === 'string' && courseInput.imagem.trim() !== '') payload.imagem = courseInput.imagem.trim();
-  if (typeof courseInput.duracaoEstimada === 'number') payload.duracaoEstimada = courseInput.duracaoEstimada;
-
-  try {
-    const resp = await api.post("/cursos", payload);
-    return resp.data;
-  } catch (err) {
-    const message = normalizeError(err, "Erro ao criar o curso.");
-    console.error("❌ Erro ao criar curso:", message, err);
-    throw new Error(message);
+  // Se courseInput.file existir, envia como multipart
+  if (courseInput.file instanceof File) {
+    const form = new FormData();
+    form.append('tituloCurso', courseInput.tituloCurso);
+    if (typeof courseInput.descricao === 'string' && courseInput.descricao.trim() !== '') form.append('descricao', courseInput.descricao.trim());
+    if (typeof courseInput.duracaoEstimada === 'number') form.append('duracaoEstimada', courseInput.duracaoEstimada);
+    form.append('imagem', courseInput.file); // campo do arquivo
+    try {
+      const resp = await api.post("/cursos", form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return resp.data;
+    } catch (err) {
+      const message = normalizeError(err, "Erro ao criar o curso.");
+      console.error("❌ Erro ao criar curso (multipart):", message, err);
+      throw new Error(message);
+    }
+  } else {
+    // Fallback: sem imagem ou só URL
+    const payload = { tituloCurso: courseInput.tituloCurso };
+    if (typeof courseInput.descricao === 'string' && courseInput.descricao.trim() !== '') payload.descricao = courseInput.descricao.trim();
+    if (typeof courseInput.imagem === 'string' && courseInput.imagem.trim() !== '') payload.imagem = courseInput.imagem.trim();
+    if (typeof courseInput.duracaoEstimada === 'number') payload.duracaoEstimada = courseInput.duracaoEstimada;
+    try {
+      const resp = await api.post("/cursos", payload);
+      return resp.data;
+    } catch (err) {
+      const message = normalizeError(err, "Erro ao criar o curso.");
+      console.error("❌ Erro ao criar curso:", message, err);
+      throw new Error(message);
+    }
   }
 }
 

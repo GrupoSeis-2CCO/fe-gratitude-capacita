@@ -87,38 +87,32 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
             if (content && content.length > DESC_MAX) { setError(`Descrição muito longa (máx. ${DESC_MAX} caracteres)`); return; }
             setLoading(true);
             try {
-              let finalImageUrl = image || null;
+              let payload;
               if (file) {
-                const uploadedUrl = await uploadFileToS3(file, 'bronze');
-                finalImageUrl = uploadedUrl;
-              }
-              // Accept any image URL scheme, only enforce backend length limit
-              if (finalImageUrl) {
-                if (finalImageUrl.length > IMAGE_MAX_BACKEND) {
-                  setError(`URL da imagem muito longa (máx. ${IMAGE_MAX_BACKEND} caracteres).`);
-                  setLoading(false);
-                  return;
-                }
-              }
-
-              const payload = { tituloCurso: title.trim() };
-              if (content && content.trim()) payload.descricao = content.trim();
-              if (finalImageUrl) payload.imagem = finalImageUrl;
-              // valida e aplica duracaoEstimada (horas inteiras)
-              if (hours !== "") {
-                const hNum = parseInt(String(hours).trim(), 10);
-                if (!Number.isFinite(hNum) || hNum < 0) {
-                  setError('Total de horas inválido: informe um número inteiro maior ou igual a 0.');
-                  setLoading(false);
-                  return;
-                }
-                payload.duracaoEstimada = hNum;
+                // Monta objeto, serviço já faz o FormData
+                payload = {
+                  tituloCurso: title.trim(),
+                  descricao: content?.trim() || '',
+                  duracaoEstimada: hours !== "" ? parseInt(String(hours).trim(), 10) : undefined,
+                  file: file
+                };
+              } else {
+                // Sem arquivo, pode ser só URL
+                payload = {
+                  tituloCurso: title.trim(),
+                  descricao: content?.trim() || '',
+                  duracaoEstimada: hours !== "" ? parseInt(String(hours).trim(), 10) : undefined,
+                  imagem: image || null
+                };
               }
 
+              console.log('[AddCourseSection] Payload enviado para backend:', payload);
               if (isUpdate && idCurso) {
                 await updateCourse(idCurso, payload);
+                console.log('[AddCourseSection] Curso atualizado:', idCurso);
               } else {
                 await createCourse(payload);
+                console.log('[AddCourseSection] Curso criado');
               }
               setIsEditing(false);
               setIdCurso(null);
@@ -130,7 +124,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
               setError(null);
               if (onCourseCreated) await onCourseCreated();
             } catch (e) {
-              console.error(e);
+              console.error('[AddCourseSection] Erro ao salvar curso:', e);
               setError(e?.response?.data || e?.message || 'Falha ao salvar curso');
             } finally {
               setLoading(false);
