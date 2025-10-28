@@ -1,5 +1,5 @@
 name: CI/CD Frontend - EC2 Pública (NGINX)
-
+#Tentando ajustar a conexão com o front 
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout do códigoo
+      # 1. Checkout do código
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
