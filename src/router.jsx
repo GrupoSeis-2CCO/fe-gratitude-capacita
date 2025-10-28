@@ -182,6 +182,14 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/cursos/:idCurso/material/avaliacao/:idAvaliacao",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1,2]}>
+        <ExamRoutePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/cursos/:idCurso/participantes",
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
