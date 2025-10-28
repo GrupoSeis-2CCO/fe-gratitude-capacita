@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import { Navigate } from "react-router-dom";
 import MaterialsListPage from "./MaterialsListPage.jsx";
 import StudentMaterialsListPage from "./StudentMaterialsListPage.jsx";
 import Layout from "../Layout.jsx";
+import { ensureMatricula, updateUltimoAcesso } from "../services/MatriculaService.js";
 
 /**
  * Componente que redireciona para a página correta baseado no tipo do usuário
@@ -16,6 +18,47 @@ import Layout from "../Layout.jsx";
 export default function MaterialsRoutePage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
+	const { idCurso } = useParams();
+
+	// Ao entrar na rota de materiais como colaborador, garante matrícula e atualiza o último acesso
+	useEffect(() => {
+		async function run() {
+			try {
+				if (!idCurso) return;
+				if (typeof userType !== 'number' || userType !== 2) return; // apenas colaborador
+
+				// Recupera o id do usuário do localStorage ou do token JWT
+				let uid = undefined;
+				try {
+					const raw = localStorage.getItem('usuarioId');
+					if (raw) uid = Number(String(raw).trim());
+				} catch (_) { /* noop */ }
+				if (!uid) {
+					try {
+						const token = localStorage.getItem('token');
+						if (token) {
+							const parts = token.split('.');
+							if (parts.length === 3) {
+								const payload = JSON.parse(atob(parts[1]));
+								const pId = payload.id || payload.userId || payload.user_id || payload.usuarioId || payload.usuario_id || payload.sub;
+								if (pId != null) uid = Number(pId);
+							}
+						}
+					} catch (_) { /* noop */ }
+				}
+				const courseId = Number(idCurso);
+				if (!uid || !courseId) return;
+
+				// Evita 404 garantindo matrícula; depois atualiza último acesso desta matrícula
+				try { await ensureMatricula(uid, courseId); } catch (_) { /* segue mesmo se falhar */ }
+				await updateUltimoAcesso(uid, courseId);
+			} catch (e) {
+				// Não bloqueia UX por isso
+				try { console.debug('[MaterialsRoutePage] último acesso não atualizado:', e?.response?.data || e?.message); } catch (_) {}
+			}
+		}
+		run();
+	}, [idCurso, userType]);
 
 	// Se não estiver logado, redireciona para login
 	if (!isLoggedIn()) {
