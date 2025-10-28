@@ -206,7 +206,8 @@ export default function MaterialsListPage() {
 											onClick={() => {
 												// Avaliação deve abrir a rota de avaliação (ExamRoutePage) para admin
 												if (material.type === 'avaliacao') {
-													return navigate(`/cursos/${idCurso}/material/avaliacao`);
+													// Passa o id da avaliação para a rota
+													return navigate(`/cursos/${idCurso}/material/avaliacao/${material.id}`);
 												}
 												// Materiais devem navegar com prefixo de tipo para garantir o alvo correto
 												const tipo = material.type === 'pdf' ? 'pdf' : 'video';
