@@ -119,37 +119,6 @@ export function LoginPage() {
                   {loading ? "Entrando..." : "LOGIN"}
                 </button>
               </div>
-
-              {/* Mock Login Buttons - REMOVER EM PRODUÇÃO */}
-              <div className="border-t border-gray-200 pt-6 mt-6">
-                <p className="text-sm text-gray-500 mb-4 text-center">🚧 Mock Login para Testes (REMOVER EM PRODUÇÃO)</p>
-                <div className="flex flex-col gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.setItem("token", "mock-token-funcionario");
-                      localStorage.setItem("userType", "1");
-                      console.log("Mock login como Funcionário (tipo 1)");
-                      navigate("/cursos");
-                    }}
-                    className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition"
-                  >
-                    🧑‍💼 Mock Login - Funcionário (Tipo 1)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      localStorage.setItem("token", "mock-token-colaborador");
-                      localStorage.setItem("userType", "2");
-                      console.log("Mock login como Colaborador (tipo 2)");
-                      navigate("/cursos");
-                    }}
-                    className="w-full py-2 px-4 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition"
-                  >
-                    👥 Mock Login - Colaborador (Tipo 2)
-                  </button>
-                </div>
-              </div>
             </form>
           </div>
         </div>
