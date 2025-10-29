@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import { Navigate } from "react-router-dom";
 import MaterialsListPage from "./MaterialsListPage.jsx";
@@ -19,6 +19,7 @@ export default function MaterialsRoutePage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
 	const { idCurso } = useParams();
+	const navigate = useNavigate();
 
 	// Ao entrar na rota de materiais como colaborador, garante matrícula e atualiza o último acesso
 	useEffect(() => {
@@ -74,6 +75,9 @@ export default function MaterialsRoutePage() {
 	if (userType === 1) {
 		return (
 			<Layout footerType="mini" headerType="default">
+				<div className="mb-4">
+					<button className="px-3 py-1 rounded bg-white border text-gray-700" onClick={() => navigate('/cursos')}>← Voltar para Cursos</button>
+				</div>
 				<MaterialsListPage />
 			</Layout>
 		);
@@ -82,6 +86,9 @@ export default function MaterialsRoutePage() {
 	// Se for tipo 2 (colaborador), mostra a página do aluno para visualizar materiais
 	return (
 		<Layout footerType="mini" headerType="student">
+			<div className="mb-4">
+				<button className="px-3 py-1 rounded bg-white border text-gray-700" onClick={() => navigate('/cursos')}>← Voltar para Cursos</button>
+			</div>
 			<StudentMaterialsListPage />
 		</Layout>
 	);

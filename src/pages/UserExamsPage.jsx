@@ -8,11 +8,13 @@ export function UserExamsPageComponent(props) {
 }
 
 export default function UserExamsPage({ courseId = 1 }) {
-  const { cursoId, participanteId } = useParams();
-  const effectiveCourseId = Number(cursoId || courseId || 1);
+  const routeParams = useParams();
+  const routeCourseId = routeParams.idCurso ?? routeParams.cursoId ?? null;
+  const routeParticipantId = routeParams.id ?? routeParams.idUsuario ?? routeParams.participanteId ?? null;
+  const effectiveCourseId = Number(routeCourseId || courseId || 1);
   const [loading, setLoading] = useState(true);
   const [tentativas, setTentativas] = useState([]);
-  const [participanteAtual, setParticipanteAtual] = useState(participanteId ? Number(participanteId) : null);
+  const [participanteAtual, setParticipanteAtual] = useState(routeParticipantId ? Number(routeParticipantId) : null);
   const navigate = useNavigate();
 
   // helper to set tentativas and log sample for debugging
@@ -30,7 +32,7 @@ export default function UserExamsPage({ courseId = 1 }) {
     async function load() {
       setLoading(true);
       try {
-        let pid = Number(participanteId);
+        let pid = routeParticipantId ? Number(routeParticipantId) : null;
         if (!pid || Number.isNaN(pid)) {
           // fallback: usar userId=1 para testes, igual ExamPage.jsx
           pid = 1;
@@ -58,7 +60,7 @@ export default function UserExamsPage({ courseId = 1 }) {
     }
     load();
     return () => { mounted = false };
-  }, [participanteId]);
+  }, [routeParticipantId]);
 
   function formatIsoDateTime(iso) {
     if (!iso) return '—';
@@ -207,7 +209,7 @@ export default function UserExamsPage({ courseId = 1 }) {
                   <tr 
                     key={`c${cursoId}-t${idTentativa ?? idx}`} 
                     className={`${bgColor} hover:bg-blue-100 hover:shadow-md hover:-translate-y-0.5 cursor-pointer transition-all duration-200 border-b border-gray-200`}
-                    onClick={() => navigate(`/participantes/${participanteAtual || participanteId || ''}/avaliacoes/${idTentativa}`)}
+                    onClick={() => navigate(`/participantes/${participanteAtual || routeParticipantId || ''}/avaliacoes/${idTentativa}`)}
                   >
                     <td className="py-5 px-6">
                       <div className="flex flex-col gap-1">

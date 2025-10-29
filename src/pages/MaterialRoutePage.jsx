@@ -1,9 +1,10 @@
 import React from "react";
 import { useAuth } from "../hooks/useAuth.js";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import MaterialPage from "./MaterialPage.jsx";
 import StudentMaterialPage from "./StudentMaterialPage.jsx";
 import Layout from "../Layout.jsx";
+import Button from "../components/Button.jsx";
 
 /**
  * Componente que redireciona para a página correta baseado no tipo do usuário
@@ -16,6 +17,7 @@ import Layout from "../Layout.jsx";
 export default function MaterialRoutePage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
 	const userType = getCurrentUserType();
+	const navigate = useNavigate();
 
 	// Se não estiver logado, redireciona para login
 	if (!isLoggedIn()) {
@@ -30,6 +32,9 @@ export default function MaterialRoutePage() {
 	if (userType === 1) {
 		return (
 			<Layout footerType="mini" headerType="default">
+				<div className="mb-4">
+					<Button variant="Ghost" label="← Voltar para Cursos" onClick={() => navigate('/cursos')} />
+				</div>
 				<MaterialPage />
 			</Layout>
 		);
@@ -37,6 +42,9 @@ export default function MaterialRoutePage() {
 
 	return (
 		<Layout footerType="mini" headerType="student">
+			<div className="mb-4">
+				<Button variant="Ghost" label="← Voltar para Cursos" onClick={() => navigate('/cursos')} />
+			</div>
 			<StudentMaterialPage />
 		</Layout>
 	);

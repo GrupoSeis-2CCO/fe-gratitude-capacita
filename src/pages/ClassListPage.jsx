@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
@@ -6,6 +6,7 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 import { getCourses, deleteCourse, toggleCourseHidden } from "../services/ClassListPageService.js";
+import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 // (duplicate import removed)
 
@@ -23,7 +24,30 @@ function normalizeCourses(data) {
         ? `${duration}h`
         : course.stats?.hours || course.hours || course.totalHoras || "00:00h";
 
+    // Prefer explicit material list from the course payload when available so we can count
+    // only non-evaluation materials (videos/pdf) and keep the counts consistent with
+    // the MaterialsListPage which may exclude or treat evaluations specially.
     const materialsRaw = course.stats?.materials ?? course.totalMateriais ?? course.materials ?? course.qtdMateriais;
+    // If `course.materials` is an array, compute a robust count of non-evaluation materials
+    let computedMaterialsCount = null;
+    if (Array.isArray(course.materials)) {
+      try {
+        computedMaterialsCount = course.materials.filter((m) => {
+          const tipoRaw = String(m.tipo || m.type || '').toLowerCase();
+          // treat anything including 'avaliacao' as evaluation
+          if (tipoRaw.includes('avaliacao')) return false;
+          // otherwise count as material (video/pdf). If type missing, try to infer from url/title
+          if (tipoRaw) return true;
+          const maybeUrl = String(m.url || m.urlVideo || m.urlArquivo || '').toLowerCase();
+          if (maybeUrl.includes('video') || maybeUrl.endsWith('.mp4') || maybeUrl.includes('youtu')) return true;
+          const maybeTitle = String(m.titulo || m.title || m.nomeApostila || '').toLowerCase();
+          if (maybeTitle.includes('avaliacao') || maybeTitle.includes('prova')) return false;
+          return true;
+        }).length;
+      } catch (e) {
+        computedMaterialsCount = null;
+      }
+    }
     const studentsRaw = course.stats?.students ?? course.totalAlunos ?? course.students ?? course.qtdAlunos;
 
     const toNumberOrZero = (value) => {
@@ -38,7 +62,7 @@ function normalizeCourses(data) {
       description: descricao,
       imageUrl: imagem,
       stats: {
-        materials: toNumberOrZero(materialsRaw),
+        materials: computedMaterialsCount != null ? computedMaterialsCount : toNumberOrZero(materialsRaw),
         students: toNumberOrZero(studentsRaw),
         hours: normalizedDuration,
       },
@@ -56,6 +80,47 @@ export default function ClassListPage() {
   const [editingCourse, setEditingCourse] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, course: null });
 
+  // Filtering / sorting UI state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortOption, setSortOption] = useState('recent'); // 'recent' | 'oldest' | 'alpha'
+
+  // debounce searchTerm to avoid expensive recalculations while typing
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch((searchTerm || '').trim().toLowerCase()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  // client-side filtered + sorted view derived from `courses`
+  const filteredCourses = useMemo(() => {
+    const s = debouncedSearch || '';
+    const arr = (courses || []).filter((c) => {
+      if (!s) return true;
+      const title = String(c.title || c.tituloCurso || '').toLowerCase();
+      const desc = String(c.description || c.descricao || '').toLowerCase();
+      return title.includes(s) || desc.includes(s);
+    });
+
+    // apply sorting
+    const copy = [...arr];
+    if (sortOption === 'recent') {
+      copy.sort((a, b) => {
+        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
+        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
+        return db - da; // most recent first
+      });
+    } else if (sortOption === 'oldest') {
+      copy.sort((a, b) => {
+        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
+        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
+        return da - db; // oldest first
+      });
+    } else if (sortOption === 'alpha') {
+      copy.sort((a, b) => String(a.title || a.tituloCurso || '').localeCompare(String(b.title || b.tituloCurso || '')));
+    }
+    return copy;
+  }, [courses, debouncedSearch, sortOption]);
+
   const userType = getCurrentUserType?.();
   const logged = isLoggedIn?.();
 
@@ -67,7 +132,62 @@ export default function ClassListPage() {
     try {
       const data = await getCourses();
       if (!isMountedRef.current) return;
-      setCourses(normalizeCourses(data));
+      const normalized = normalizeCourses(data);
+      setCourses(normalized);
+
+      // Background: fetch authoritative material counts for each course and update stats
+      // This ensures the course card counts match the Materials page which queries /cursos/{id}/materiais
+      (async () => {
+        try {
+          const promises = normalized.map(async (c) => {
+            const id = c.id ?? c.idCurso;
+            if (!id) return { id: id, count: null, hasEvaluation: false };
+            try {
+              const mats = await getMateriaisPorCurso(Number(id));
+              const arr = Array.isArray(mats?.content) ? mats.content : (Array.isArray(mats) ? mats : []);
+              // Detect if any material represents an evaluation
+              const hasEval = (arr || []).some((m) => {
+                const tipo = String(m?.tipo || m?.type || '').toLowerCase();
+                if (tipo.includes('avaliacao')) return true;
+                // fallback: check title/descricao hints
+                const title = String(m?.titulo || m?.title || m?.nomeApostila || m?.nomeVideo || '').toLowerCase();
+                if (title.includes('avaliacao') || title.includes('prova')) return true;
+                // some payloads may include explicit idAvaliacao
+                if (m?.idAvaliacao != null || m?.fkAvaliacao != null) return true;
+                return false;
+              });
+              // compute materials count excluding evaluation-type materials
+              const nonEvalCount = (arr || []).filter((m) => {
+                const tipo = String(m?.tipo || m?.type || '').toLowerCase();
+                if (tipo.includes('avaliacao')) return false;
+                const title = String(m?.titulo || m?.title || m?.nomeApostila || m?.nomeVideo || '').toLowerCase();
+                if (title.includes('avaliacao') || title.includes('prova')) return false;
+                if (m?.idAvaliacao != null || m?.fkAvaliacao != null) return false;
+                return true;
+              }).length;
+              return { id: id, count: nonEvalCount, hasEvaluation: hasEval };
+            } catch (e) {
+              return { id: id, count: null, hasEvaluation: false };
+            }
+          });
+          const results = await Promise.all(promises);
+          if (!isMountedRef.current) return;
+          // merge counts into courses state
+          setCourses((prev) => prev.map((pc) => {
+            const found = results.find(r => String(r.id) === String(pc.id ?? pc.idCurso));
+            if (found) {
+              const nextStats = { ...pc.stats };
+              if (found.count != null) nextStats.materials = found.count;
+              if (typeof found.hasEvaluation === 'boolean') nextStats.hasEvaluation = found.hasEvaluation;
+              return { ...pc, stats: nextStats };
+            }
+            return pc;
+          }));
+        } catch (err) {
+          // ignore background count errors
+          console.debug('Background material count fetch failed', err);
+        }
+      })();
     } catch (err) {
       if (!isMountedRef.current) return;
       console.error("Erro ao carregar cursos:", err);
@@ -135,10 +255,44 @@ export default function ClassListPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="text-center mb-10">
+        <div className="text-center mb-4">
           <TituloPrincipal>Cursos de Capacitação</TituloPrincipal>
         </div>
-  <AddCourseSection onCourseCreated={async () => { setEditingCourse(null); await handleRefresh(); }} editCourse={editingCourse} />
+
+        {/* Search + Sort toolbar */}
+        <div className="max-w-4xl mx-auto mb-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nome ou descrição..."
+              className="flex-1 border rounded px-3 py-2 text-sm shadow-sm"
+            />
+
+            <div className="flex items-center gap-2">
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="border rounded px-2 py-2 text-sm bg-white"
+              >
+                <option value="recent">Mais Recentes</option>
+                <option value="oldest">Mais Antigos</option>
+                <option value="alpha">Ordem Alfabética</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="px-3 py-2 bg-gray-100 rounded text-sm"
+              >
+                Limpar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <AddCourseSection onCourseCreated={async () => { setEditingCourse(null); await handleRefresh(); }} editCourse={editingCourse} />
 
         <div className="mt-8 w-full">
           {loading ? (
@@ -148,7 +302,7 @@ export default function ClassListPage() {
           ) : courses.length === 0 ? (
             <div className="text-gray-600">Nenhum curso cadastrado ainda.</div>
           ) : (
-            courses.map((course) => (
+            filteredCourses.map((course) => (
               <CourseCard
                 key={course.id ?? course.idCurso}
                 course={course}
