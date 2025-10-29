@@ -31,6 +31,7 @@ import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
 import FeedbacksDoCursoPage from "./pages/FeedbacksDoCursoPage.jsx";
 import StudentCourseFeedbacksPage from "./pages/StudentCourseFeedbacksPage.jsx";
 import StudentProfile from "./pages/StudentProfile.jsx";
+import MailhogTestPage from "./pages/MailhogTestPage.jsx";
 
 // 1 = funcionário
 // 2 = colaborador
@@ -104,6 +105,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
           <TestPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/mailhog-test",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout footerType="mini">
+          <MailhogTestPage />
         </Layout>
       </ProtectedRoute>
     ),

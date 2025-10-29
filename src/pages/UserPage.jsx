@@ -9,13 +9,17 @@ import ApexLineChart from "../components/ApexLineChart.jsx";
 import Chart from 'react-apexcharts';
 
 export function UserPage({ courseId = 1, days = 14 }) {
-  const { cursoId, participanteId } = useParams();
-  const effectiveCourseId = Number(cursoId || courseId || 1);
+  const routeParams = useParams();
+  // route may provide idCurso or cursoId; participant param may be named id, idUsuario or participanteId
+  const routeCourseId = routeParams.idCurso ?? routeParams.cursoId ?? routeParams.idCourse ?? null;
+  const routeParticipantId = routeParams.id ?? routeParams.idUsuario ?? routeParams.participanteId ?? null;
+  const effectiveCourseId = Number(routeCourseId || courseId || 1);
 
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
-  const [userCard, setUserCard] = useState({ email: "—", dataEntrada: null, ultimoAcesso: null, ultimoCurso: "—" });
-  const [selectedParticipantId, setSelectedParticipantId] = useState(participanteId ? Number(participanteId) : null);
+  // include name in userCard so header can show participant name
+  const [userCard, setUserCard] = useState({ name: 'Colaborador', email: "—", dataEntrada: null, ultimoAcesso: null, ultimoCurso: "—" });
+  const [selectedParticipantId, setSelectedParticipantId] = useState(routeParticipantId ? Number(routeParticipantId) : null);
   const [selectedMonth, setSelectedMonth] = useState(null); // format: '01'..'12' or null
   const [selectedYear, setSelectedYear] = useState(2025); // default to 2025
   const navigate = useNavigate();
@@ -50,8 +54,8 @@ export function UserPage({ courseId = 1, days = 14 }) {
         const formatted = (resp || []).map(r => ({ date: formatDateForLabel(r.date), value: r.value }));
         setChartData(formatted);
 
-        // carrega dados do usuario (se houver participanteId). Se não houver, tenta pegar o primeiro participante do curso e logar tudo para mapping
-        let pid = Number(participanteId);
+  // carrega dados do usuario (se houver participanteId na rota). Se não houver, tenta pegar o primeiro participante do curso e logar tudo para mapping
+  let pid = routeParticipantId ? Number(routeParticipantId) : null;
         if ((!pid || Number.isNaN(pid)) && effectiveCourseId) {
           try {
             const partResp = await api.get(`/matriculas/curso/${effectiveCourseId}/participantes`);
@@ -71,33 +75,43 @@ export function UserPage({ courseId = 1, days = 14 }) {
   // persist resolved participant id so other UI pieces can link to it
   if (pidNum && !Number.isNaN(pidNum)) setSelectedParticipantId(pidNum);
         if (pidNum && !Number.isNaN(pidNum)) {
+          // Build a resilient mapping: try /usuarios/:id first, then fallback to /matriculas/usuario/:id to extract missing fields
+          let mappedUser = {};
+          let matriculas = [];
+          let ultimoCurso = "—";
+          let lastAccessFromMatricula = null;
           try {
             const uResp = await api.get(`/usuarios/${pid}`);
-              const usuario = uResp.data;
-              // log bruto do usuário para mapeamento
-              console.debug('Raw usuario object for mapping:', usuario);
+            const usuario = uResp.data;
+            console.debug('Raw usuario object for mapping:', usuario);
+            mappedUser = {
+              name: usuario?.nome || usuario?.fullName || usuario?.name || usuario?.usuario || usuario?.login || null,
+              email: usuario?.email || usuario?.emailUsuario || usuario?.email_user || usuario?.mail || usuario?.emailAddress || null,
+              dataEntrada: usuario?.dataEntrada || usuario?.data_entrada || usuario?.createdAt || usuario?.created_at || usuario?.dataEntradaIso || null,
+              ultimoAcesso: usuario?.ultimoAcesso || usuario?.ultimo_acesso || usuario?.lastAccess || usuario?.last_access || usuario?.ultimoAcessoIso || null,
+            };
+          } catch (userErr) {
+            console.warn('Falha ao obter /usuarios/:id, tentarei extrair de /matriculas/usuario/:id', userErr?.message || userErr);
+          }
 
-              // Tentativa de mapear campos comuns (variações entre DTOs)
-              const mappedUser = {
-                email: usuario?.email || usuario?.emailUsuario || usuario?.email_user || usuario?.mail || usuario?.emailAddress || null,
-                dataEntrada: usuario?.dataEntrada || usuario?.data_entrada || usuario?.createdAt || usuario?.dataEntradaIso || null,
-                ultimoAcesso: usuario?.ultimoAcesso || usuario?.ultimo_acesso || usuario?.lastAccess || null,
-                nome: usuario?.nome || usuario?.fullName || usuario?.name || null
-              };
-              console.debug('Mapped user fields (to be used in card):', mappedUser);
-
-            // busca matriculas do usuario para descobrir ultimo curso acessado
+          try {
             const mResp = await api.get(`/matriculas/usuario/${pid}`);
             console.debug('Matriculas raw response for usuario:', mResp.status, mResp.data && mResp.data.slice ? mResp.data.slice(0,10) : mResp.data);
-            const matriculas = mResp.data || [];
-
-            // tenta achar a matrícula com ultimoAcesso mais recente
-            let ultimoCurso = "—";
+            matriculas = mResp.data || [];
             if (Array.isArray(matriculas) && matriculas.length > 0) {
-              // matriculas podem ter campo ultimo_senso ou fk_inicio; vamos usar ultimo_senso
+              // if /usuarios was missing some fields, try to extract from the first matricula's usuario/aluno payload
+              if (!mappedUser || !mappedUser.email) {
+                const maybe = matriculas[0].usuario || matriculas[0].aluno || matriculas[0];
+                mappedUser.email = mappedUser.email || maybe?.email || maybe?.emailUsuario || maybe?.mail || null;
+                mappedUser.name = mappedUser.name || maybe?.nome || maybe?.fullName || maybe?.name || null;
+                mappedUser.dataEntrada = mappedUser.dataEntrada || maybe?.dataEntrada || maybe?.createdAt || null;
+                mappedUser.ultimoAcesso = mappedUser.ultimoAcesso || maybe?.ultimoAcesso || maybe?.ultimo_senso || null;
+              }
+
+              // try to find the most recent matricula and its course title
               matriculas.sort((a,b) => {
-                const da = a.ultimoSenso ? new Date(a.ultimoSenso).getTime() : 0;
-                const db = b.ultimoSenso ? new Date(b.ultimoSenso).getTime() : 0;
+                const da = a.ultimoSenso ? new Date(a.ultimoSenso).getTime() : (a.ultimoAcesso ? new Date(a.ultimoAcesso).getTime() : 0);
+                const db = b.ultimoSenso ? new Date(b.ultimoSenso).getTime() : (b.ultimoAcesso ? new Date(b.ultimoAcesso).getTime() : 0);
                 return db - da;
               });
               const m = matriculas[0];
@@ -106,32 +120,40 @@ export function UserPage({ courseId = 1, days = 14 }) {
               } else if (m && m.fkCurso) {
                 ultimoCurso = `Curso ${m.fkCurso}`;
               }
+              lastAccessFromMatricula = m?.ultimoAcesso || m?.ultimo_senso || m?.ultimoSenso || m?.ultimoAcessoIso || m?.ultimo_senso_iso || null;
             }
-
-            // fallback: se usuario.ultimoAcesso não existir, tente extrair da matrícula mais recente
-            let lastAccessFromMatricula = null;
-            if (Array.isArray(matriculas) && matriculas.length > 0) {
-              const m0 = matriculas[0];
-              lastAccessFromMatricula = m0?.ultimoAcesso || m0?.ultimo_senso || m0?.ultimoSenso || m0?.ultimoAcessoIso || m0?.ultimo_senso_iso || null;
-            }
-
-            const userCardPayload = {
-              email: mappedUser.email || "—",
-              dataEntrada: mappedUser.dataEntrada || null,
-              // prioridade: mappedUser.ultimoAcesso -> lastAccessFromMatricula -> null
-              ultimoAcesso: mappedUser.ultimoAcesso || lastAccessFromMatricula || null,
-              ultimoCurso: ultimoCurso
-            };
-          console.debug('Final userCard set:', { email: mappedUser.email, dataEntrada: mappedUser.dataEntrada, ultimoAcesso: mappedUser.ultimoAcesso, ultimoCurso });
-            // Log payload in non-production environments for debugging
-            if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-              console.log('UserCard payload:', userCardPayload);
-            }
-            setUserCard(userCardPayload);
-          } catch (e) {
-            // ignora erro e mostra card com defaults
-            console.warn("Erro ao buscar dados do usuário/matrículas:", e);
+          } catch (matErr) {
+            console.warn('Falha ao obter /matriculas/usuario/:id', matErr?.message || matErr);
           }
+
+          let userCardPayload = {
+            name: mappedUser.name || `Colaborador ${pid}`,
+            email: mappedUser.email || "—",
+            dataEntrada: mappedUser.dataEntrada || null,
+            ultimoAcesso: mappedUser.ultimoAcesso || lastAccessFromMatricula || null,
+            ultimoCurso: ultimoCurso
+          };
+
+          // Development fallback: if backend returned nothing useful, provide a mocked example so UI isn't empty.
+          // This helps when the DB is not seeded or backend is not running locally.
+          const isDev = typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
+          const noRealData = (!userCardPayload.email || userCardPayload.email === '—') && (!userCardPayload.dataEntrada && !userCardPayload.ultimoAcesso && (userCardPayload.ultimoCurso === '—'));
+          if (isDev && noRealData) {
+            // Sample values taken from your supplied nodata.sql example (development-only)
+            userCardPayload = {
+              name: 'João Silva',
+              email: 'joao@email.com',
+              dataEntrada: '2025-10-29T05:10:00.000Z',
+              ultimoAcesso: '2025-01-22T06:00:00.000Z',
+              ultimoCurso: 'Regularização Fundiária: Fundamentos'
+            };
+            console.info('Using development fallback userCard (mocked data)');
+          }
+          console.debug('Final userCard set:', userCardPayload);
+          if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+            console.log('UserCard payload:', userCardPayload);
+          }
+          setUserCard(userCardPayload);
         }
       } catch (err) {
         console.error(err);
@@ -143,7 +165,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
 
     load();
     return () => { mounted = false };
-  }, [effectiveCourseId, days, selectedMonth, participanteId]);
+  }, [effectiveCourseId, days, selectedMonth, routeParticipantId]);
 
   const maxValue = chartData.length ? Math.max(...chartData.map(d => d.value)) : 0;
   const average = chartData.length ? chartData.reduce((s, d) => s + d.value, 0) / chartData.length : 0;
@@ -162,7 +184,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
   return (
     <div className="min-h-screen bg-gray-50 pt-28 p-8">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800">Colaborador y</h1>
+        <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">

@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
+import Button from "../components/Button";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
@@ -72,15 +73,13 @@ export default function MaterialsListPage() {
 				return weight(a.type) - weight(b.type);
 			});
 
-			// Atribuir displayOrder apenas para materiais (vídeo/pdf); avaliação não conta na numeração
-			let counter = 0;
-			const withDisplay = mapped.map((m) => {
-				if (m.type === 'video' || m.type === 'pdf') {
-					counter += 1;
-					return { ...m, displayOrder: counter };
-				}
-				return { ...m, displayOrder: null };
-			});
+						// Atribuir displayOrder sequencial a todos os itens (incluindo avaliações)
+						// assim as avaliações também recebem um número na listagem.
+						let counter = 0;
+						const withDisplay = mapped.map((m) => {
+							counter += 1;
+							return { ...m, displayOrder: counter };
+						});
 			setMaterials(withDisplay);
 			// pagination metadata
 			const total = Number(matsResp?.totalElements || withDisplay.length);
@@ -167,8 +166,16 @@ export default function MaterialsListPage() {
 			<GradientSideRail className="right-10" variant="inverted" />
 
 			<div className="w-full max-w-4xl mx-auto flex-grow">
-				<div className="text-center mb-10">
-					<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
+				<div className="max-w-4xl mx-auto">
+					<div className="flex items-center justify-between mb-6">
+						<div>
+							<Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+						</div>
+						<div className="text-center">
+							<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
+						</div>
+						<div className="w-24" />
+					</div>
 				</div>
 
 				<AddMaterialSection initialMaterial={editingMaterial} onAdded={() => { setEditingMaterial(null); loadMaterials(); }} onCancelEdit={() => setEditingMaterial(null)} />

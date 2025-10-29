@@ -5,12 +5,14 @@ import Header from '../components/Header';
 import GradientSideRail from '../components/GradientSideRail';
 import SmartImage from '../components/SmartImage.jsx';
 import ClassDetailsPageService from '../services/ClassDetailsPageService.js';
+import { getMateriaisPorCurso } from '../services/MaterialListPageService.js';
 
 function ClassDetailsPage() {
   const { idCurso } = useParams();
   const navigate = useNavigate();
 
   const [dados, setDados] = useState(null);
+  const [computedMaterials, setComputedMaterials] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,6 +23,25 @@ function ClassDetailsPage() {
       try {
         const info = await ClassDetailsPageService.getCursoDetalhes(idCurso);
         setDados(info);
+        // background: fetch authoritative materials and compute non-evaluation count
+        (async () => {
+          try {
+            const matsResp = await getMateriaisPorCurso(Number(idCurso));
+            const arr = Array.isArray(matsResp?.content) ? matsResp.content : (Array.isArray(matsResp) ? matsResp : []);
+            const nonEvalCount = (arr || []).filter((m) => {
+              const tipo = String(m?.tipo || m?.type || '').toLowerCase();
+              if (tipo.includes('avaliacao')) return false;
+              const title = String(m?.titulo || m?.title || m?.nomeApostila || m?.nomeVideo || '').toLowerCase();
+              if (title.includes('avaliacao') || title.includes('prova')) return false;
+              if (m?.idAvaliacao != null || m?.fkAvaliacao != null) return false;
+              return true;
+            }).length;
+            setComputedMaterials(nonEvalCount);
+          } catch (e) {
+            console.debug('Falha ao buscar materiais para contagem no detalhe do curso', e);
+            setComputedMaterials(null);
+          }
+        })();
       } catch (e) {
         setError(e.message || String(e));
       } finally {
@@ -32,7 +53,7 @@ function ClassDetailsPage() {
 
   const totalAlunos = dados?.totalAlunos ?? '-';
   const totalHoras = dados?.duracaoEstimada != null ? `${dados.duracaoEstimada}h` : '—';
-  const totalMateriais = dados?.totalMateriais ?? '-';
+  const totalMateriais = (computedMaterials != null) ? computedMaterials : (dados?.totalMateriais ?? '-');
 
   function formatTitle(raw) {
     if (!raw) return `Curso ${idCurso}`;

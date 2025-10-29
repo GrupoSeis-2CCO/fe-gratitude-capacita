@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
+import Button from "../components/Button";
 import { api } from "../services/api.js";
 import feedbackService from "../services/feedbackService.js";
 
@@ -10,6 +11,7 @@ export default function FeedbacksDoCursoPage() {
   const { getCurrentUserType, isLoggedIn } = useAuth();
   const userType = getCurrentUserType();
   const { idCurso } = useParams();
+  const navigate = useNavigate();
   const idCursoNum = useMemo(() => Number(idCurso), [idCurso]);
 
   // Permitir acesso para admins (1) e professores (3) também, ajuste conforme sua regra.
@@ -160,7 +162,15 @@ export default function FeedbacksDoCursoPage() {
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <TituloPrincipal>Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : ''}</TituloPrincipal>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+            </div>
+            <div className="text-center">
+              <TituloPrincipal>Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : ''}</TituloPrincipal>
+            </div>
+            <div className="w-24" />
+          </div>
         </div>
         <div className="mt-8 w-full">
           {userType === 2 && (

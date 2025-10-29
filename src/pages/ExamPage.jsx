@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Button from "../components/Button";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamTaker from "../components/ExamTaker.jsx";
@@ -6,6 +8,8 @@ import ExamPageService from "../services/ExamPageService.js";
 import Modal from "../components/Modal";
 
 export default function ExamPage({ examId = 1 }) {
+  const navigate = useNavigate();
+  const { idCurso } = useParams();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -68,7 +72,15 @@ export default function ExamPage({ examId = 1 }) {
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}/material`)} />
+            </div>
+            <div className="text-center">
+              <TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
+            </div>
+            <div className="w-24" />
+          </div>
         </div>
 
         <div className="mt-8 w-full">

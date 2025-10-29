@@ -54,7 +54,7 @@ export default function StudentClassListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const isMountedRef = useRef(true);
-  const [sortBy, setSortBy] = useState("");
+  
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -79,24 +79,7 @@ export default function StudentClassListPage() {
     };
   }, []);
 
-  function sortedCourses() {
-    if (!sortBy) return courses;
-    const copy = [...courses];
-    if (sortBy === "nome") {
-      return copy.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
-    }
-    if (sortBy === "progresso") {
-      return copy.sort((a, b) => (b.stats?.students || 0) - (a.stats?.students || 0));
-    }
-    if (sortBy === "data") {
-      return copy.sort((a, b) => {
-        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
-        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
-        return db - da;
-      });
-    }
-    return copy;
-  }
+  
 
   return (
     <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
@@ -109,21 +92,7 @@ export default function StudentClassListPage() {
           <TituloPrincipal>Participantes / Cursos</TituloPrincipal>
         </div>
 
-        {/* Dropdown para ordenação */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Ordenar por</span>
-            <select
-              className="border border-gray-300 rounded px-3 py-1 text-sm bg-white"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="" disabled>Selecione</option>
-              <option value="nome">Nome</option>
-              <option value="progresso">Progresso</option>
-            </select>
-          </div>
-        </div>
+        {/* removed ordering UI per request */}
 
         <div className="mt-8 w-full space-y-4">
           {loading ? (
@@ -133,7 +102,7 @@ export default function StudentClassListPage() {
           ) : courses.length === 0 ? (
             <div className="text-gray-600">Nenhum curso disponível.</div>
           ) : (
-            sortedCourses().map((course) => (
+            courses.map((course) => (
               <div key={course.id ?? course.idCurso} className="relative">
                 <CourseCard
                   course={course}

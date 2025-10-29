@@ -4,7 +4,8 @@ import { getCursosDoUsuario } from "../services/UserClassesPageService.js";
 import { useParams } from 'react-router-dom';
 
 export function UserClassesPage() {
-  const { participanteId } = useParams();
+  const routeParams = useParams();
+  const routeParticipantId = routeParams.id ?? routeParams.idUsuario ?? routeParams.participanteId ?? null;
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
 
@@ -24,7 +25,7 @@ export function UserClassesPage() {
         // 1) rota (participanteId)
         // 2) id presente no JWT armazenado no localStorage (tenta várias chaves comuns)
         // 3) fallback para 1 (somente se não houver outra opção)
-        const pidFromRoute = participanteId ? Number(participanteId) : null;
+  const pidFromRoute = routeParticipantId ? Number(routeParticipantId) : null;
         const pidFromToken = getUserIdFromJwt();
         const pid = pidFromRoute || pidFromToken || 1;
         if (!pid) {
@@ -50,7 +51,7 @@ export function UserClassesPage() {
 
     load();
     return () => { mounted = false };
-  }, [participanteId]);
+  }, [routeParticipantId]);
 
   return (
     <div className="min-h-screen bg-gray-50 pt-[200px] p-8">

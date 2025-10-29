@@ -81,7 +81,7 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
           </p>
         </div>
         <div className="border-l border-gray-200 pl-6 w-64">
-          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
             <div>
               <div className="text-sm text-gray-500">Materiais</div>
               <div className="mt-1">
@@ -100,6 +100,16 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
                 </span>
                 <span className="ml-3 text-sm text-gray-600">inscritos</span>
               </div>
+            </div>
+
+            {/* Badges row: shows contextual badges aligned under the counts */}
+            <div className="mt-3 flex items-center gap-2">
+              {course?.stats?.hasEvaluation && (
+                <span title="Possui avaliação" className="inline-flex items-center px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 text-xs font-semibold border border-orange-100">
+                  Avaliação
+                </span>
+              )}
+              {/* future badges can be added here and will align with this row */}
             </div>
           </div>
         </div>

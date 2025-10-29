@@ -96,19 +96,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
     return (
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-between items-center mb-8">
-
-        <select className="border border-gray-300 rounded-md p-2 text-sm">
-
-          <option>Ordenar por</option>
-
-          <option>Mais Recentes</option>
-
-          <option>Mais Antigos</option>
-
-          <option>Ordem Alfabética</option>
-
-        </select>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-end items-center mb-8">
 
         <Button variant="Confirm" label="Adicionar Curso" onClick={() => { setIsHidden(true); setIsEditing(true); }} />
 
