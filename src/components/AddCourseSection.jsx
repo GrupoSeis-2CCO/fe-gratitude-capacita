@@ -367,11 +367,11 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
         <div className="w-1/3">
 
-          <label className="block text-lg font-semibold mb-2">Conteúdo</label>
+          <label className="block text-lg font-semibold mb-2">Descrição</label>
 
           <textarea
 
-            placeholder="Adicionar Conteúdo..."
+            placeholder="Adicionar descrição..."
 
             value={content}
 
