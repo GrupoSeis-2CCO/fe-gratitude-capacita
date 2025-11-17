@@ -65,9 +65,9 @@ export const userService = {
   create: async (userData) => {
     const userDataForBackend = {
       nome: userData.nome,
-      cpf: userData.cpf.replace(/\D/g, ""),
       email: userData.email,
-      idCargo: parseInt(userData.cargo, 10),
+      cpf: userData.cpf.replace(/\D/g, ''), // remove máscara para enviar apenas dígitos
+      idCargo: userData.cargo ? parseInt(userData.cargo, 10) : undefined // backend ignorará se não existir no DTO
     };
 
     const response = await api.post("/usuarios", userDataForBackend);
