@@ -1,4 +1,5 @@
 import React from 'react';
+import { userService } from '../services/UserService';
 import { MoreHorizontal } from 'lucide-react';
 import SmartImage from './SmartImage.jsx';
 
@@ -6,7 +7,9 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
   const [menuOpen, setMenuOpen] = React.useState(false);
   const imageSrc = course.imageUrl || '/default-course-icon.svg';
   const isHidden = Boolean(course.ocultado);
-  const canManage = Boolean(onEdit || onDelete || onToggleHidden);
+  // Só permite ações se não for colaborador (userType !== 2)
+  const userType = userService?.getCurrentUserType?.() ?? null;
+  const canManage = (userType === 1) && Boolean(onEdit || onDelete || onToggleHidden);
 
   // Normalize hours display to "Xh" format with fallbacks
   const rawHours = (course && course.stats && course.stats.hours) ?? course?.duracaoEstimada ?? null;
@@ -36,10 +39,10 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
           )}
         </div>
         {canManage && (
-          <div className="relative">
+          <div className="relative z-20">
             <button
               className="text-gray-500 hover:text-gray-800 p-1 rounded-full focus:outline-none"
-              onClick={() => setMenuOpen((v) => !v)}
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
               tabIndex={0}
               aria-label="Ações do curso"
             >

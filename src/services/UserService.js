@@ -62,6 +62,13 @@ export const userService = {
     }
   },
 
+  // Remove um usuário pelo ID
+  delete: async (idUsuario) => {
+    if (idUsuario == null) throw new Error("idUsuario é obrigatório");
+    const response = await api.delete(`/usuarios/${idUsuario}`);
+    return response.data;
+  },
+
   create: async (userData) => {
     const userDataForBackend = {
       nome: userData.nome,

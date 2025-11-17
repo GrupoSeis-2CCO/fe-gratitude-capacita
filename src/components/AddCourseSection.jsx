@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import Button from './Button';
 
-import { createCourse, updateCourse } from '../services/ClassListPageService.js';
+import { createCourse, updateCourse, toggleCourseHidden } from '../services/ClassListPageService.js';
 
 import { uploadFileToS3 } from '../services/UploadService.js';
 
@@ -49,6 +49,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
   const [hours, setHours] = useState(""); // duracaoEstimada em horas (inteiro)
 
   const isUpdate = useMemo(() => Boolean(idCurso), [idCurso]);
+  const originalHiddenRef = useRef(null);
 
 
 
@@ -68,7 +69,9 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
       setImage(editCourse.imageUrl ?? editCourse.imagem ?? null);
 
-      setIsHidden(Boolean(editCourse.ocultado));
+      const initialHidden = Boolean(editCourse.ocultado);
+      setIsHidden(initialHidden);
+      originalHiddenRef.current = initialHidden;
 
       // tenta preencher horas a partir do campo duracaoEstimada ou de strings como "20h"
 
@@ -201,12 +204,12 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
 
               }
+                const payload = { tituloCurso: title.trim(), ocultado: isHidden };
 
 
 
 
-
-              const payload = { tituloCurso: title.trim() };
+              // const payload = { tituloCurso: title.trim() };
 
 
               if (content && content.trim()) payload.descricao = content.trim();
@@ -247,10 +250,15 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
 
               if (isUpdate && idCurso) {
-
                 await updateCourse(idCurso, payload);
-
-
+                // Se mudou o estado de oculto na edição, chama o endpoint específico para alternar
+                try {
+                  if (originalHiddenRef.current !== isHidden) {
+                    await toggleCourseHidden(idCurso);
+                  }
+                } catch (errToggle) {
+                  console.error('Erro ao aplicar ocultação do curso:', errToggle);
+                }
               } else {
 
                 await createCourse(payload);
@@ -290,10 +298,9 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
             }
 
           }}
-
         />
 
-  <Button variant="Exit" label="Sair" onClick={() => { setIsEditing(false); setTitle(''); setContent(''); }} />
+        <Button variant="Exit" label="Sair" onClick={() => { setIsEditing(false); setTitle(''); setContent(''); }} />
 
       </div>
 
