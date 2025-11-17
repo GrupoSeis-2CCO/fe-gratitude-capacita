@@ -66,7 +66,7 @@ export default function StudentCourseFeedbacksPage() {
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="text-gray-900 font-semibold">{meuFeedback.cursoTitulo ? `Curso: ${meuFeedback.cursoTitulo}` : `Curso ${idCursoNum}`}</div>
-                    <div className="text-yellow-500 font-bold">{meuFeedback.estrelas} / 10</div>
+                    <div className="text-yellow-500 font-bold">{meuFeedback.estrelas} / 5</div>
                   </div>
                   <div className="mt-2 text-sm text-gray-600">{meuFeedback.anonimo ? 'Enviado como Anônimo' : 'Enviado com identificação'}</div>
                   {meuFeedback.motivo ? (

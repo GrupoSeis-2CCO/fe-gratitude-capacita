@@ -7,6 +7,7 @@ import MonthFilter from "../components/MonthFilter.jsx";
 import YearFilter from "../components/YearFilter.jsx";
 import ApexLineChart from "../components/ApexLineChart.jsx";
 import Chart from 'react-apexcharts';
+import Button from "../components/Button";
 
 export function UserPage({ courseId = 1, days = 14 }) {
   const routeParams = useParams();
@@ -183,8 +184,14 @@ export function UserPage({ courseId = 1, days = 14 }) {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-28 p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
+      <div className="mb-8 flex items-center justify-between max-w-4xl mx-auto">
+        <div>
+          <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/acessos`)} />
+        </div>
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
+        </div>
+        <div className="w-24" />
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">
@@ -193,14 +200,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
           <div className="text-gray-700"><strong className="text-gray-900">Primeiro acesso:</strong> {userCard.dataEntrada ? formatIsoDateTime(userCard.dataEntrada) : '—'}</div>
           <div className="text-gray-700"><strong className="text-gray-900">Último acesso:</strong> {userCard.ultimoAcesso ? formatIsoDateTime(userCard.ultimoAcesso) : '—'}</div>
           <div className="text-gray-700"><strong className="text-gray-900">Último curso acessado:</strong> {userCard.ultimoCurso}</div>
-          {selectedParticipantId ? (
-            <div className="pt-2">
-              <button
-                onClick={() => navigate(`/cursos/${effectiveCourseId}/participantes/${selectedParticipantId}/provas`)}
-                className="mt-2 inline-flex items-center px-3 py-1 bg-orange-500 text-white rounded text-sm"
-              >Ver Provas</button>
-            </div>
-          ) : null}
+          {/* Botão 'Ver Provas' removido por solicitação */}
         </div>
       </div>
 
