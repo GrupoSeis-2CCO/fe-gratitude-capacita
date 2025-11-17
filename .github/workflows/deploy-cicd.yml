@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout do código
+      # 1. Checkout do códig
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 

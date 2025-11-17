@@ -192,7 +192,8 @@ export default function ClassListPage() {
     return () => {
       isMountedRef.current = false;
     };
-  }, [handleRefresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - handleRefresh is stable with useCallback
 
   if (logged === false || (typeof userType === "number" && userType !== 1)) {
     return <Navigate to="/login" replace />;
