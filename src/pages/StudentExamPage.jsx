@@ -31,7 +31,7 @@ export default function StudentExamPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showAllQuestionsModal, setShowAllQuestionsModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackStars, setFeedbackStars] = useState(0); // 0..10 (meia estrela = 1)
+  const [feedbackStars, setFeedbackStars] = useState(0); // 0..5 (seleção de 1 a 5)
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackAnonimo, setFeedbackAnonimo] = useState(false);
   const [feedbackError, setFeedbackError] = useState(null);
@@ -116,8 +116,8 @@ export default function StudentExamPage() {
         // Se 404/400, vamos tentar mesmo assim e deixar o backend responder (mas logamos)
         console.debug('Não foi possível marcar matrícula como completa antes do feedback:', e?.response?.data || e?.message);
       }
-  // feedbackStars é 1..10 -> usar diretamente como inteiro no backend
-  const estrelasInt = Math.max(1, Math.min(10, Math.round(feedbackStars || 0)));
+  // feedbackStars deve estar no intervalo 1..5
+  const estrelasInt = Math.max(1, Math.min(5, Math.round(feedbackStars || 0)));
 
       const payload = {
         idCurso: Number(idCurso),
@@ -136,7 +136,7 @@ export default function StudentExamPage() {
         try {
           const uid = getUserIdFromJwt();
           await completarMatricula(Number(uid), Number(idCurso));
-          const estrelasInt = Math.max(1, Math.min(10, Math.round(feedbackStars || 0)));
+          const estrelasInt = Math.max(1, Math.min(5, Math.round(feedbackStars || 0)));
           await api.post('/feedbacks', {
             idCurso: Number(idCurso),
             estrelas: estrelasInt,
@@ -151,26 +151,9 @@ export default function StudentExamPage() {
           setFeedbackError(retryErr?.response?.data?.message || retryErr?.message || 'Falha ao reenviar feedback.');
         }
       } else if (status === 400) {
-        // Ambiente legado pode aceitar apenas 1..5. Tenta reenvio com clamp 1..5 uma vez.
-        try {
-          const uid = getUserIdFromJwt();
-          const estrelas5 = Math.max(1, Math.min(5, Math.round(feedbackStars || 0)));
-          const fallbackPayload = {
-            idCurso: Number(idCurso),
-            estrelas: estrelas5,
-            motivo: feedbackComment || null,
-            fkUsuario: Number(uid),
-            anonimo: Boolean(feedbackAnonimo)
-          };
-          await api.post('/feedbacks', fallbackPayload);
-          // sucesso no fallback
-          setShowFeedbackModal(false);
-          if (idCurso) setTimeout(() => navigate(`/cursos/${idCurso}/material`), 200);
-        } catch (fallbackErr) {
-          console.error('Reenvio (1..5) falhou:', fallbackErr);
-          const msg = fallbackErr?.response?.data?.message || fallbackErr?.message || 'Erro ao enviar feedback.';
-          setFeedbackError(msg);
-        }
+        // Bad request - validação do backend (ex.: estrelas fora do intervalo)
+        setFeedbackError(e?.response?.data?.message || e?.message || 'Requisição inválida ao enviar feedback.');
+      
       } else {
         console.error('Erro ao enviar feedback:', e);
         setFeedbackError(e?.response?.data?.message || e?.message || 'Erro ao enviar feedback.');
@@ -228,7 +211,7 @@ export default function StudentExamPage() {
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
         <div className="bg-white rounded-2xl w-full max-w-2xl p-8 shadow-2xl border border-gray-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Deixe seu feedback do curso</h2>
-          <p className="text-base text-gray-700 mb-4">Qual nota você daria para a aula? (1 = Ruim e 10 = Excelente)</p>
+          <p className="text-base text-gray-700 mb-4">Qual nota você daria para a aula? (1 = Ruim e 5 = Excelente)</p>
           {feedbackError && (
             <div className="mb-4 rounded-md border border-red-300 bg-red-50 text-red-700 px-3 py-2 text-sm">
               {feedbackError}
@@ -240,17 +223,17 @@ export default function StudentExamPage() {
               <span>Ruim</span>
               <span>Excelente</span>
             </div>
-            <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-              {[...Array(10)].map((_, i) => {
+            <div className="grid grid-cols-5 gap-2">
+              {[...Array(5)].map((_, i) => {
                 const active = i < feedbackStars;
-                const value = i + 1; // 1..10
+                const value = i + 1; // 1..5
                 return (
                   <button
                     key={i}
                     type="button"
-                    className={`h-10 sm:h-11 rounded-md border text-sm font-semibold transition-colors ${active ? 'bg-yellow-400 border-yellow-500 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`h-10 rounded-md border text-sm font-semibold transition-colors ${active ? 'bg-yellow-400 border-yellow-500 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                     onClick={() => setFeedbackStars(value)}
-                    aria-label={`Selecionar ${value} de 10`}
+                    aria-label={`Selecionar ${value} de 5`}
                   >
                     {value}
                   </button>
@@ -258,8 +241,8 @@ export default function StudentExamPage() {
               })}
             </div>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-sm text-gray-600">Selecionado: {feedbackStars} / 10</span>
-              <span className="text-base sm:text-lg font-semibold text-gray-800">{feedbackStars} / 10</span>
+              <span className="text-sm text-gray-600">Selecionado: {feedbackStars} / 5</span>
+              <span className="text-base sm:text-lg font-semibold text-gray-800">{feedbackStars} / 5</span>
             </div>
           </div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Deixe um comentário sobre sua experiência:</label>

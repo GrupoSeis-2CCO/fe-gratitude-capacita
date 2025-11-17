@@ -31,7 +31,7 @@ export default function FeedbacksDoCursoPage() {
   const [totalElements, setTotalElements] = useState(0);
   // Estado do formulário "meu feedback"
   const uid = useMemo(() => getUserIdFromJwt(), []);
-  const [meuEstrelas, setMeuEstrelas] = useState(10);
+  const [meuEstrelas, setMeuEstrelas] = useState(5);
   const [meuMotivo, setMeuMotivo] = useState("");
   const [meuAnonimo, setMeuAnonimo] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -58,9 +58,9 @@ export default function FeedbacksDoCursoPage() {
       if (uid) {
         const myRow = list.find(f => Number(f?.usuarioId) === Number(uid));
         if (myRow) {
-          const estrelas = Number(myRow.estrelas) || 10;
-          // Clamp para 1..10
-          setMeuEstrelas(Math.max(1, Math.min(10, estrelas)));
+          const estrelas = Number(myRow.estrelas) || 5;
+          // Clamp para 1..5
+          setMeuEstrelas(Math.max(1, Math.min(5, estrelas)));
           setMeuMotivo(myRow.motivo || "");
           setMeuAnonimo(Boolean(myRow.anonimo));
         } else {
@@ -182,20 +182,20 @@ export default function FeedbacksDoCursoPage() {
 
               <form onSubmit={handleSubmitMeuFeedback} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estrelas (1 a 10)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Estrelas (1 a 5)</label>
                   <input
                     type="number"
                     min={1}
-                    max={10}
+                    max={5}
                     value={meuEstrelas}
                     onChange={e => {
                       const v = Number(e.target.value);
                       if (!Number.isFinite(v)) return;
-                      setMeuEstrelas(Math.max(1, Math.min(10, v)));
+                      setMeuEstrelas(Math.max(1, Math.min(5, v)));
                     }}
                     className="w-28 border rounded px-3 py-2"
                   />
-                  <span className="ml-2 text-yellow-600 font-semibold">{meuEstrelas} / 10</span>
+                  <span className="ml-2 text-yellow-600 font-semibold">{meuEstrelas} / 5</span>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Comentário (opcional)</label>
@@ -243,7 +243,7 @@ export default function FeedbacksDoCursoPage() {
                 <div key={idx} className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div className="text-gray-900 font-semibold">{f.anonimo ? 'Anônimo' : (f.aluno || 'Aluno')}</div>
-                    <div className="text-yellow-500 font-bold">{f.estrelas} / 10</div>
+                    <div className="text-yellow-500 font-bold">{f.estrelas} / 5</div>
                   </div>
                   {f.motivo ? (
                     <div className="mt-2 text-gray-700 whitespace-pre-wrap">{f.motivo}</div>

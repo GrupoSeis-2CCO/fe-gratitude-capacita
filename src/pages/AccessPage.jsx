@@ -55,9 +55,7 @@ export function AccessPage() {
 
         const lista = await AccessPageService.listarCursos();
         setCursos(lista);
-        if (lista && lista.length > 0) {
-          setCursoSelecionado(String(lista[0].idCurso));
-        }
+        // Não selecionar automaticamente; deixar placeholder "Selecione" ativo
       } catch (e) {
         setError(e?.message || "Erro ao carregar cursos");
       }
@@ -86,6 +84,7 @@ export function AccessPage() {
 
   const columns = useMemo(() => ([
     { header: "Nome do Colaborador", accessor: "nome" },
+    { header: "Status", accessor: "status" },
     { header: "Materiais Concluídos", accessor: "materiais" },
     { header: "Avaliação", accessor: "avaliacao" },
     { header: "Último acesso", accessor: "ultimoAcesso" }
@@ -104,9 +103,31 @@ export function AccessPage() {
         }
         const ultimo = p?.ultimoAcesso ? new Date(p.ultimoAcesso) : null;
         const ultimoFmt = ultimo ? ultimo.toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' }) : "-";
+
+        // Status: Ativo se acessou nos últimos 15 dias, caso contrário Inativo
+        const now = new Date();
+        let isActive = false;
+        if (ultimo && !Number.isNaN(ultimo.getTime())) {
+          const diffMs = now.getTime() - ultimo.getTime();
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          isActive = diffDays <= 15;
+        }
+
+        const statusTitle = isActive
+          ? 'Ativo — participante acessou nos últimos 15 dias (baseado no Último acesso)'
+          : 'Inativo — participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)';
+
+        const statusNode = (
+          <div className="flex items-center gap-2" title={statusTitle}>
+            <span className={`${isActive ? 'w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800' : 'w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800'}`} />
+            <span className="text-sm font-medium text-gray-800">{isActive ? 'Ativo' : 'Inativo'}</span>
+          </div>
+        );
+
         return {
           id: p?.idUsuario,
           nome: p?.nome || "-",
+          status: statusNode,
           materiais,
           avaliacao,
           ultimoAcesso: ultimoFmt,
@@ -116,7 +137,7 @@ export function AccessPage() {
     // preencher linhas vazias para manter espaçamento visual (opcional)
     const fillerCount = Math.max(0, 12 - rows.length);
     for (let i = 0; i < fillerCount; i++) {
-      rows.push({ id: null, nome: "-", materiais: "-", avaliacao: "-", ultimoAcesso: "-" });
+      rows.push({ id: null, nome: "-", status: '-', materiais: "-", avaliacao: "-", ultimoAcesso: "-" });
     }
     return rows;
   }, [participantes, buscaNome]);
@@ -202,10 +223,22 @@ export function AccessPage() {
                   value={cursoSelecionado}
                   onChange={(e) => setCursoSelecionado(e.target.value)}
                 >
+                  <option value="" disabled>Selecione</option>
                   {cursos.map(c => (
                     <option key={c.idCurso} value={c.idCurso}>{c.tituloCurso || `Curso ${c.idCurso}`}</option>
                   ))}
                 </select>
+                {/* Status legend with hover explanations */}
+                  <div className="ml-4 flex items-center gap-3 text-sm text-gray-700">
+                  <div className="flex items-center gap-1 cursor-default" title="Ativo: participante acessou nos últimos 15 dias (baseado no Último acesso)">
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800" />
+                    <span>Ativo</span>
+                  </div>
+                  <div className="flex items-center gap-1 cursor-default" title="Inativo: participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)">
+                    <span className="w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800" />
+                    <span>Inativo</span>
+                  </div>
+                </div>
               </div>
             </div>
 
