@@ -6,7 +6,6 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 import { getCourses, deleteCourse, toggleCourseHidden } from "../services/ClassListPageService.js";
-import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import ConfirmModal from "../components/ConfirmModal.jsx";
 // (duplicate import removed)
 
@@ -134,60 +133,6 @@ export default function ClassListPage() {
       if (!isMountedRef.current) return;
       const normalized = normalizeCourses(data);
       setCourses(normalized);
-
-      // Background: fetch authoritative material counts for each course and update stats
-      // This ensures the course card counts match the Materials page which queries /cursos/{id}/materiais
-      (async () => {
-        try {
-          const promises = normalized.map(async (c) => {
-            const id = c.id ?? c.idCurso;
-            if (!id) return { id: id, count: null, hasEvaluation: false };
-            try {
-              const mats = await getMateriaisPorCurso(Number(id));
-              const arr = Array.isArray(mats?.content) ? mats.content : (Array.isArray(mats) ? mats : []);
-              // Detect if any material represents an evaluation
-              const hasEval = (arr || []).some((m) => {
-                const tipo = String(m?.tipo || m?.type || '').toLowerCase();
-                if (tipo.includes('avaliacao')) return true;
-                // fallback: check title/descricao hints
-                const title = String(m?.titulo || m?.title || m?.nomeApostila || m?.nomeVideo || '').toLowerCase();
-                if (title.includes('avaliacao') || title.includes('prova')) return true;
-                // some payloads may include explicit idAvaliacao
-                if (m?.idAvaliacao != null || m?.fkAvaliacao != null) return true;
-                return false;
-              });
-              // compute materials count excluding evaluation-type materials
-              const nonEvalCount = (arr || []).filter((m) => {
-                const tipo = String(m?.tipo || m?.type || '').toLowerCase();
-                if (tipo.includes('avaliacao')) return false;
-                const title = String(m?.titulo || m?.title || m?.nomeApostila || m?.nomeVideo || '').toLowerCase();
-                if (title.includes('avaliacao') || title.includes('prova')) return false;
-                if (m?.idAvaliacao != null || m?.fkAvaliacao != null) return false;
-                return true;
-              }).length;
-              return { id: id, count: nonEvalCount, hasEvaluation: hasEval };
-            } catch (e) {
-              return { id: id, count: null, hasEvaluation: false };
-            }
-          });
-          const results = await Promise.all(promises);
-          if (!isMountedRef.current) return;
-          // merge counts into courses state
-          setCourses((prev) => prev.map((pc) => {
-            const found = results.find(r => String(r.id) === String(pc.id ?? pc.idCurso));
-            if (found) {
-              const nextStats = { ...pc.stats };
-              if (found.count != null) nextStats.materials = found.count;
-              if (typeof found.hasEvaluation === 'boolean') nextStats.hasEvaluation = found.hasEvaluation;
-              return { ...pc, stats: nextStats };
-            }
-            return pc;
-          }));
-        } catch (err) {
-          // ignore background count errors
-          console.debug('Background material count fetch failed', err);
-        }
-      })();
     } catch (err) {
       if (!isMountedRef.current) return;
       console.error("Erro ao carregar cursos:", err);
@@ -243,7 +188,8 @@ export default function ClassListPage() {
     return () => {
       isMountedRef.current = false;
     };
-  }, [handleRefresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount - handleRefresh is stable with useCallback
 
   if (logged === false || (typeof userType === "number" && userType !== 1)) {
     return <Navigate to="/login" replace />;
