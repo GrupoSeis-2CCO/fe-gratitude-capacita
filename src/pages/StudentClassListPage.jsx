@@ -64,7 +64,11 @@ export default function StudentClassListPage() {
       try {
         const data = await getCourses();
         if (!isMountedRef.current) return;
-        setCourses(normalizeCourses(data));
+        // Filtra cursos ocultos para colaboradores
+        const filtered = Array.isArray(data)
+          ? data.filter((c) => !c.ocultado)
+          : [];
+        setCourses(normalizeCourses(filtered));
       } catch (err) {
         if (!isMountedRef.current) return;
         console.error("Erro ao carregar cursos:", err);
