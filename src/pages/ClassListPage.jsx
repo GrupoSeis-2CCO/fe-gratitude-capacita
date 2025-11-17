@@ -6,6 +6,7 @@ import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 import { getCourses, deleteCourse, toggleCourseHidden } from "../services/ClassListPageService.js";
+// Removido fetch detalhado por curso (materiais) para evitar N chamadas adicionais na página /cursos
 import ConfirmModal from "../components/ConfirmModal.jsx";
 // (duplicate import removed)
 
@@ -133,6 +134,9 @@ export default function ClassListPage() {
       if (!isMountedRef.current) return;
       const normalized = normalizeCourses(data);
       setCourses(normalized);
+
+      // OBS: Consulta de materiais por curso desativada para reduzir requisições na listagem.
+      // Caso seja necessário reativar no futuro, considerar um toggle ou pré-carregar em outra tela.
     } catch (err) {
       if (!isMountedRef.current) return;
       console.error("Erro ao carregar cursos:", err);

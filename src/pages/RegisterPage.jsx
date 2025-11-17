@@ -12,12 +12,48 @@ export function RegisterPage() {
     email: '',
     role: ''
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Máscaras -------------------------------------------------
+  const maskCPF = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    let out = digits;
+    if (digits.length > 3) out = digits.slice(0,3) + '.' + digits.slice(3);
+    if (digits.length > 6) out = out.slice(0,7) + '.' + out.slice(7);
+    if (digits.length > 9) out = out.slice(0,11) + '-' + out.slice(11);
+    return out;
+  };
+
+  // Validação ------------------------------------------------
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.fullName || formData.fullName.trim().length < 3) {
+      newErrors.fullName = 'Nome deve ter ao menos 3 caracteres';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    if (!cpfRegex.test(formData.cpf)) {
+      newErrors.cpf = 'CPF inválido (use ###.###.###-##)';
+    }
+    if (!formData.role) {
+      newErrors.role = 'Selecione um cargo';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+    if (!validate()) {
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Dados inválidos', message: 'Corrija os campos destacados.' } }));
+      return;
+    }
     setLoading(true);
     // Mapear role para idCargo: 1 = funcionário, 2 = colaborador
     let idCargo = null;
@@ -31,6 +67,8 @@ export function RegisterPage() {
         cargo: idCargo
       });
   window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Cadastro realizado' } }));
+      // Opcional: navegar para login
+      // navigate('/login');
     } catch (error) {
   window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao cadastrar', message: 'Verifique os dados e tente novamente' } }));
     }
@@ -39,9 +77,11 @@ export function RegisterPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
+    if (name === 'cpf') newValue = maskCPF(value);
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: newValue
     }));
   };
 
@@ -57,7 +97,7 @@ export function RegisterPage() {
             </p>
           </div>
 
-          <div className="flex h-150 w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden  max-w-6xl mx-auto">
+          <div className="flex min-h-[600px] w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden max-w-6xl mx-auto">
             {/* Lado esquerdo - Branding */}
             <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
               <div className="text-center text-white">
@@ -85,7 +125,7 @@ export function RegisterPage() {
             </div>
 
             {/* Lado direito - Formulário */}
-            <div className="flex-[1.2] p-12 flex items-center">
+            <div className="flex-[1.2] p-12 flex items-center overflow-y-auto">
               <form onSubmit={handleSubmit} className="w-full flex flex-col gap-6">
                 <div className="flex flex-col">
                   <label htmlFor="fullName" className="text-lg text-gray-700 mb-2 font-semibold">
@@ -99,30 +139,28 @@ export function RegisterPage() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
+                    className={`w-full py-3 px-4 border ${errors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition`}
                   />
+                  {errors.fullName && <div className="h-5 mt-1"><span className="text-sm text-red-600">{errors.fullName}</span></div>}
                 </div>
 
                 <div className="flex flex-col">
-                  <label htmlFor="cpf" className="text-lg text-gray-700 mb-2 font-semibold">
-                    CPF
-                  </label>
+                  <label htmlFor="cpf" className="text-lg text-gray-700 mb-2 font-semibold">CPF</label>
                   <input
                     type="text"
                     id="cpf"
                     name="cpf"
-                    placeholder="Ex: 12345678900"
+                    placeholder="000.000.000-00"
                     value={formData.cpf}
                     onChange={handleInputChange}
                     required
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
+                    className={`w-full py-3 px-4 border ${errors.cpf ? 'border-red-500' : 'border-gray-300'} rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition`}
                   />
+                  {errors.cpf && <div className="h-5 mt-1"><span className="text-sm text-red-600">{errors.cpf}</span></div>}
                 </div>
 
                 <div className="flex flex-col">
-                  <label htmlFor="email" className="text-lg text-gray-700 mb-2 font-semibold">
-                    Email
-                  </label>
+                  <label htmlFor="email" className="text-lg text-gray-700 mb-2 font-semibold">Email</label>
                   <input
                     type="email"
                     id="email"
@@ -131,8 +169,9 @@ export function RegisterPage() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
+                    className={`w-full py-3 px-4 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-lg text-lg bg-gray-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition`}
                   />
+                  {errors.email && <div className="h-5 mt-1"><span className="text-sm text-red-600">{errors.email}</span></div>}
                 </div>
 
                 <div className="flex flex-col">
@@ -145,12 +184,13 @@ export function RegisterPage() {
                     value={formData.role}
                     onChange={handleInputChange}
                     required
-                    className="w-full py-3 px-4 border border-gray-300 rounded-lg text-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
+                    className={`w-full py-3 px-4 border ${errors.role ? 'border-red-500' : 'border-gray-300'} rounded-lg text-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition`}
                   >
                     <option disabled value="">Selecionar cargo</option>
                     <option value="colaborador">Colaborador</option>
                     <option value="funcionario">Funcionário</option>
                   </select>
+                  {errors.role && <div className="h-5 mt-1"><span className="text-sm text-red-600">{errors.role}</span></div>}
                 </div>
 
                 <div className="flex justify-center mt-6">
