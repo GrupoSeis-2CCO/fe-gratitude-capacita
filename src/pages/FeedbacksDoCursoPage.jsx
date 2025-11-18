@@ -156,7 +156,7 @@ export default function FeedbacksDoCursoPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -223,7 +223,7 @@ export default function FeedbacksDoCursoPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className={`px-4 py-2 rounded text-white ${saving ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+                    className={`px-4 py-2 rounded text-white ${saving ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 cursor-pointer'}`}
                   >
                     {saving ? 'Salvando...' : 'Salvar meu feedback'}
                   </button>
@@ -254,11 +254,11 @@ export default function FeedbacksDoCursoPage() {
                 <div className="flex items-center justify-between pt-2">
                   <div className="text-sm text-gray-600">Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens</div>
                   <div className="flex items-center gap-2">
-                    <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
+                    <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
                     <select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
                       {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
                     </select>
-                    <button className={`px-3 py-1 border rounded ${(totalPages ? (page+1)<totalPages : feedbacks.length===size) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={ totalPages ? (page+1)>=totalPages : (feedbacks.length<size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
+                    <button className={`px-3 py-1 border rounded ${(totalPages ? (page+1)<totalPages : feedbacks.length===size) ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={ totalPages ? (page+1)>=totalPages : (feedbacks.length<size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
                   </div>
                 </div>
               )}

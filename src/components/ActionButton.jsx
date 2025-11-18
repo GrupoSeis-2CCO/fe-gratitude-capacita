@@ -1,4 +1,4 @@
-export default function ActionButton({ icon, text, variant = "default", onClick, size = 'normal' }) {
+export default function ActionButton({ icon, text, variant = "default", onClick, size = 'normal', disabled = false }) {
   // size: 'compact' | 'normal' | 'large'
   const sizeMap = {
     compact: { btn: 'p-2', icon: 'text-lg', text: 'text-sm' },
@@ -22,8 +22,9 @@ export default function ActionButton({ icon, text, variant = "default", onClick,
 
   return (
     <button 
-      className={`${baseClasses} ${variants[variant]}`}
-      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variants[variant]} ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+      onClick={disabled ? undefined : onClick}
     >
       <span className={`${chosen.icon}`}>{icon}</span>
       <span className={`${textVariants[variant]} ${chosen.text} font-medium`}>{text}</span>

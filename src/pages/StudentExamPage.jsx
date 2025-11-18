@@ -139,7 +139,6 @@ export default function StudentExamPage() {
           const estrelasInt = Math.max(1, Math.min(5, Math.round(feedbackStars || 0)));
           await api.post('/feedbacks', {
             idCurso: Number(idCurso),
-            estrelas: estrelasInt,
             motivo: feedbackComment || null,
             fkUsuario: Number(uid),
             anonimo: Boolean(feedbackAnonimo)
@@ -164,7 +163,7 @@ export default function StudentExamPage() {
 
   return (
     <>
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       {/* Decorative rails left and right */}
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
@@ -231,7 +230,7 @@ export default function StudentExamPage() {
                   <button
                     key={i}
                     type="button"
-                    className={`h-10 rounded-md border text-sm font-semibold transition-colors ${active ? 'bg-yellow-400 border-yellow-500 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`h-10 rounded-md border text-sm font-semibold transition-colors ${active ? 'bg-yellow-400 border-yellow-500 text-gray-900' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'} cursor-pointer`}
                     onClick={() => setFeedbackStars(value)}
                     aria-label={`Selecionar ${value} de 5`}
                   >
@@ -269,8 +268,8 @@ export default function StudentExamPage() {
             </div>
           </div>
           <div className="flex justify-end gap-3">
-            <button className="px-5 py-2.5 rounded-md border text-gray-700" onClick={() => { setShowFeedbackModal(false); if (idCurso) navigate(`/cursos/${idCurso}/material`); }}>Pular</button>
-            <button className="px-5 py-2.5 rounded-md bg-blue-600 text-white" onClick={submitFeedback}>Enviar</button>
+            <button className="px-5 py-2.5 rounded-md border text-gray-700 cursor-pointer" onClick={() => { setShowFeedbackModal(false); if (idCurso) navigate(`/cursos/${idCurso}/material`); }}>Pular</button>
+            <button className="px-5 py-2.5 rounded-md bg-blue-600 text-white cursor-pointer" onClick={submitFeedback}>Enviar</button>
           </div>
         </div>
       </div>

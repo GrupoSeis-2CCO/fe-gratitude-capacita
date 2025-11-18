@@ -408,7 +408,7 @@ export default function MaterialPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -482,33 +482,12 @@ export default function MaterialPage() {
                   disabled={material && material.id <= 1}
                 />
 
-                <div className="flex items-center gap-4">
-                  {material && material.finalizado ? (
-                    <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Concluído</span>
-                  ) : (
-                    <span className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">Em progresso</span>
-                  )}
-
-                  <Button
-                    variant="Confirm"
-                    label="Próximo Material"
-                    onClick={handleNextMaterial}
-                  />
-                </div>
+                <Button
+                  variant="Confirm"
+                  label="Próximo Material"
+                  onClick={handleNextMaterial}
+                />
               </div>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600">Progresso no curso</span>
-             <span className="text-sm text-gray-600">{(() => { const { index, total } = getDisplayPosition(); return `Material ${index >= 0 ? index + 1 : (parsedParam.idNum ?? 1)} de ${total || 1}`; })()}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-          className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${(() => { const { index, total } = getDisplayPosition(); const n = (index >= 0 ? index + 1 : (parsedParam.idNum ?? 1)); return total > 0 ? (n / total) * 100 : 0; })()}%` }}
-            ></div>
           </div>
         </div>
       </div>

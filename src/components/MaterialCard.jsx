@@ -115,14 +115,17 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
 
   const isAvaliacao = (material?.type === 'avaliacao' || material?.tipo === 'avaliacao');
 
+  // alternating background for subtle contrast between list items
+  const bgClass = isAvaliacao ? 'bg-orange-50 border-orange-300' : (index % 2 === 1 ? 'bg-[#FAFAFA] border-gray-200' : 'bg-white border-gray-200');
+
   return (
     <div
-      className={`border rounded-lg shadow-md p-4 flex gap-6 mb-6 ${isAvaliacao ? 'bg-orange-50 border-orange-300' : 'bg-white border-gray-200'} ${onClick ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}
+      className={`${bgClass} border rounded-lg shadow-lg p-4 flex gap-6 mb-6 transition transform hover:-translate-y-1 hover:shadow-2xl ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+      <div className="w-48 h-32 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
         {isAvaliacao ? (
           <div className="flex flex-col items-center justify-center">
             <ClipboardList size={44} className="text-orange-600" />
@@ -138,9 +141,9 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
           )
         )}
       </div>
-      <div className="flex-1">
+        <div className="flex-1">
         <div className="flex justify-between items-start">
-          <h3 className={`text-xl font-bold mb-2 ${isAvaliacao ? 'text-orange-800' : 'text-gray-800'}`}>
+          <h3 className={`text-xl font-bold mb-2 ${isAvaliacao ? 'text-orange-800' : 'text-gray-900'}`}>
             {isAvaliacao ? `Avaliação - ${material.title || 'Avaliação'}` : `Material ${material?.displayOrder ?? material?.order ?? (index + 1)} - ${material.title}`}
           </h3>
           {!isAvaliacao && (

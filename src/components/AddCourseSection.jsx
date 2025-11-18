@@ -16,9 +16,9 @@ import SmartImage from './SmartImage.jsx';
 
 export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
-  const TITLE_MAX = 50;
+  const TITLE_MAX = 100;
 
-  const DESC_MAX = 100;
+  const DESC_MAX = 255;
 
   const IMAGE_MAX = 255;
 
@@ -75,16 +75,13 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
       // tenta preencher horas a partir do campo duracaoEstimada ou de strings como "20h"
 
+
       const parseHours = (val) => {
-
         if (val == null) return "";
-
         if (typeof val === 'number' && Number.isFinite(val)) return String(val);
-
-        const m = String(val).match(/(\d+)/);
-
-        return m ? m[1] : "";
-
+        // extract all digit groups and join them to form a consistent integer string
+        const groups = String(val).match(/\d+/g);
+        return groups ? groups.join('') : "";
       };
 
       setHours(parseHours(editCourse.duracaoEstimada ?? editCourse.stats?.hours));
@@ -99,7 +96,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
     return (
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-end items-center mb-8">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-center items-center mb-8">
 
         <Button variant="Confirm" label="Adicionar Curso" onClick={() => { setIsHidden(true); setIsEditing(true); }} />
 
@@ -136,13 +133,9 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
         {/* Hidden toggle - use shared Button for consistent sizing */}
 
         <Button
-
           variant={isHidden ? 'Ghost' : 'Default'}
-
           label={isHidden ? '🔒 Oculto' : '🔓 Visível'}
-
           onClick={() => setIsHidden(!isHidden)}
-
         />
 
 
@@ -223,25 +216,16 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
               if (hours !== "") {
 
+                const hoursTrim = String(hours).trim();
 
-                const hNum = parseInt(String(hours).trim(), 10);
-
-
-                if (!Number.isFinite(hNum) || hNum < 0) {
-
-
-                  setError('Total de horas inválido: informe um número inteiro maior ou igual a 0.');
-
-
+                // Accept only non-negative integers (no decimals, no signs)
+                if (!/^[0-9]+$/.test(hoursTrim)) {
+                  setError('Total de horas inválido: informe um número inteiro não-negativo.');
                   setLoading(false);
-
-
                   return;
-
-
                 }
 
-
+                const hNum = parseInt(hoursTrim, 10);
                 payload.duracaoEstimada = hNum;
 
               }
@@ -359,11 +343,8 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
             </label>
 
             <button
-
-              className="ml-2 px-3 py-2 border border-gray-300 rounded text-sm"
-
+              className="ml-2 px-3 py-2 border border-gray-300 rounded text-sm cursor-pointer"
               onClick={() => setUrlModalOpen(true)}
-
             >Usar URL</button>
 
           </div>
@@ -401,21 +382,24 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
             <label className="block text-lg font-semibold">Total de Horas (inteiro)</label>
 
             <input
-
-              type="number"
-
-              min="0"
-
-              step="1"
-
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="Ex.: 20"
-
               value={hours}
-
-              onChange={(e) => setHours(e.target.value)}
-
+              onChange={(e) => {
+                const v = e.target.value || '';
+                // Remove any non-digit characters so only integers remain
+                const digitsOnly = String(v).replace(/\D/g, '');
+                // If user attempted to type non-digits, show brief validation message
+                if (v && /\D/.test(v)) {
+                  setError('Informe apenas números inteiros para Total de Horas.');
+                } else {
+                  setError(null);
+                }
+                setHours(digitsOnly);
+              }}
               className="w-full p-3 border border-gray-300 rounded-lg"
-
             />
 
             {loading && <div className="text-sm text-gray-300">Salvando...</div>}

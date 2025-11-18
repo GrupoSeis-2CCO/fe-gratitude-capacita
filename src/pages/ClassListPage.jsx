@@ -83,7 +83,7 @@ export default function ClassListPage() {
   // Filtering / sorting UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortOption, setSortOption] = useState('recent'); // 'recent' | 'oldest' | 'alpha'
+  const [sortOption, setSortOption] = useState(''); // '' = none selected; 'recent' | 'oldest' | 'alpha'
 
   // debounce searchTerm to avoid expensive recalculations while typing
   useEffect(() => {
@@ -101,23 +101,51 @@ export default function ClassListPage() {
       return title.includes(s) || desc.includes(s);
     });
 
-    // apply sorting
+    // apply sorting only when an option is selected
     const copy = [...arr];
+
+    const getTimestamp = (item) => {
+      if (!item) return 0;
+      const candidates = [
+        item.createdAt,
+        item.criadoEm,
+        item.dataCriacao,
+        item.data_criacao,
+        item.created_at,
+        item.criado_em,
+        item.dataCadastro,
+        item.data_cadastro,
+        item.created,
+        item.updatedAt,
+        item.updated_at,
+      ];
+      for (const c of candidates) {
+        if (!c && c !== 0) continue;
+        const d = new Date(c);
+        if (!Number.isNaN(d.getTime())) return d.getTime();
+      }
+      // fallback: if item has id-like fields, use them as proxy for recency
+      const maybeId = item.id ?? item.idCurso ?? item.codigo ?? item.codigoCurso ?? item.courseId;
+      if (maybeId != null && !Number.isNaN(Number(maybeId))) return Number(maybeId);
+      return 0;
+    };
+
     if (sortOption === 'recent') {
       copy.sort((a, b) => {
-        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
-        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
+        const da = getTimestamp(a);
+        const db = getTimestamp(b);
         return db - da; // most recent first
       });
     } else if (sortOption === 'oldest') {
       copy.sort((a, b) => {
-        const da = new Date(a.createdAt || a.criadoEm || 0).getTime() || 0;
-        const db = new Date(b.createdAt || b.criadoEm || 0).getTime() || 0;
+        const da = getTimestamp(a);
+        const db = getTimestamp(b);
         return da - db; // oldest first
       });
     } else if (sortOption === 'alpha') {
       copy.sort((a, b) => String(a.title || a.tituloCurso || '').localeCompare(String(b.title || b.tituloCurso || '')));
     }
+
     return copy;
   }, [courses, debouncedSearch, sortOption]);
 
@@ -199,13 +227,13 @@ export default function ClassListPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="text-center mb-4">
-          <TituloPrincipal>Cursos de Capacitação</TituloPrincipal>
+        <div className="mb-6">
+          <h1 className="text-4xl font-bold text-center text-black">Cursos de Capacitação</h1>
         </div>
 
         {/* Search + Sort toolbar */}
@@ -216,15 +244,16 @@ export default function ClassListPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por nome ou descrição..."
-              className="flex-1 border rounded px-3 py-2 text-sm shadow-sm"
+              className="flex-1 border rounded px-3 py-2 text-sm shadow-sm bg-white"
             />
 
             <div className="flex items-center gap-2">
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="border rounded px-2 py-2 text-sm bg-white"
+                className="border rounded px-3 py-2 text-sm shadow-sm bg-white cursor-pointer"
               >
+                <option value="" disabled>Selecione</option>
                 <option value="recent">Mais Recentes</option>
                 <option value="oldest">Mais Antigos</option>
                 <option value="alpha">Ordem Alfabética</option>
@@ -233,7 +262,7 @@ export default function ClassListPage() {
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="px-3 py-2 bg-gray-100 rounded text-sm"
+                className="px-3 py-2 rounded text-sm border shadow-sm bg-white cursor-pointer"
               >
                 Limpar
               </button>
@@ -251,9 +280,10 @@ export default function ClassListPage() {
           ) : courses.length === 0 ? (
             <div className="text-gray-600">Nenhum curso cadastrado ainda.</div>
           ) : (
-            filteredCourses.map((course) => (
+            filteredCourses.map((course, idx) => (
               <CourseCard
                 key={course.id ?? course.idCurso}
+                index={idx}
                 course={course}
                 onClick={(selected) =>
                   navigate(`/cursos/${selected?.id ?? selected?.idCurso ?? course.id ?? course.idCurso}`)
