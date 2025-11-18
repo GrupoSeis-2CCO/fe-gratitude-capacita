@@ -433,7 +433,7 @@ export default function StudentMaterialsListPage() {
   );
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -483,7 +483,7 @@ export default function StudentMaterialsListPage() {
               <button
                 type="button"
                 onClick={() => { setSearchText(""); setStatusFilter(""); }}
-                className="px-4 py-2 border border-gray-300 rounded text-sm"
+                className="px-4 py-2 border border-gray-300 rounded text-sm cursor-pointer"
               >
                 Limpar filtros
               </button>
@@ -513,11 +513,11 @@ export default function StudentMaterialsListPage() {
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-gray-600">Página {page + 1} de {Math.max(1, Math.ceil(filteredMaterials.length / size))} • {filteredMaterials.length} itens</div>
             <div className="flex items-center gap-2">
-              <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
+              <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
               <select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
                 {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
               </select>
-              <button className={`px-3 py-1 border rounded ${(page+1) < Math.ceil(filteredMaterials.length / size) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={(page+1) >= Math.ceil(filteredMaterials.length / size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
+              <button className={`px-3 py-1 border rounded ${(page+1) < Math.ceil(filteredMaterials.length / size) ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={(page+1) >= Math.ceil(filteredMaterials.length / size)} onClick={()=>setPage(p=>p+1)}>Próxima</button>
             </div>
           </div>
         )}
@@ -537,7 +537,7 @@ export default function StudentMaterialsListPage() {
                 </div>
               </div>
               <div>
-                <button onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)} className="px-4 py-2 bg-black text-white rounded">Iniciar Avaliação</button>
+                <button onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)} className="px-4 py-2 bg-black text-white rounded cursor-pointer">Iniciar Avaliação</button>
               </div>
             </div>
           </div>

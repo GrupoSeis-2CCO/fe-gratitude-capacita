@@ -135,12 +135,14 @@ export function AccessPage() {
       });
 
     // preencher linhas vazias para manter espaçamento visual (opcional)
-    const fillerCount = Math.max(0, 12 - rows.length);
+    // usar o `size` da paginação para garantir exatamente `size` linhas por página
+    const desiredRows = Number(size) || 10;
+    const fillerCount = Math.max(0, desiredRows - rows.length);
     for (let i = 0; i < fillerCount; i++) {
       rows.push({ id: null, nome: "-", status: '-', materiais: "-", avaliacao: "-", ultimoAcesso: "-" });
     }
     return rows;
-  }, [participantes, buscaNome]);
+  }, [participantes, buscaNome, size]);
 
   const cursoSelecionadoObj = useMemo(() => {
     const idNum = Number(cursoSelecionado);
@@ -157,7 +159,7 @@ export function AccessPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`}
+            className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
             disabled={!canPrev}
             onClick={() => setPage(p => Math.max(0, p - 1))}
           >
@@ -171,7 +173,7 @@ export function AccessPage() {
             {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
           </select>
           <button
-            className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`}
+            className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
             disabled={!canNext}
             onClick={() => setPage(p => p + 1)}
           >
@@ -183,7 +185,7 @@ export function AccessPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -197,7 +199,7 @@ export function AccessPage() {
         <div className="mt-8 w-full flex justify-center">
           <div className="w-[65rem]">
             {/* Search and Filter Section */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6 flex items-center gap-4">
+            <div className="bg-[#FFF3ED] rounded-lg shadow-md p-4 mb-6 flex items-center gap-4 border border-[#FFD6BC]">
               {/* Search Input */}
               <div className="flex items-center gap-2 flex-1">
                 <div className="relative flex-1 max-w-80">
@@ -216,6 +218,12 @@ export function AccessPage() {
                 </div>
               </div>
 
+              {/* Label with total participants between name filter and course filter */}
+              <div className="text-sm text-gray-700 font-medium">
+                {`Total de participantes: `}
+                <span className="font-semibold">{Number(totalElements) || (participantes || []).length || 0}</span>
+              </div>
+
               {/* Course Filter Dropdown */}
               <div className="flex items-center gap-2">
                 <select
@@ -229,24 +237,27 @@ export function AccessPage() {
                   ))}
                 </select>
                 {/* Status legend with hover explanations */}
-                  <div className="ml-4 flex items-center gap-3 text-sm text-gray-700">
-                  <div className="flex items-center gap-1 cursor-default" title="Ativo: participante acessou nos últimos 15 dias (baseado no Último acesso)">
-                    <span className="w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800" />
-                    <span>Ativo</span>
+                    <div className="ml-4 flex items-center gap-3 text-sm text-gray-700">
+                    <div className="flex items-center gap-1 cursor-default" title="Ativo: participante acessou nos últimos 15 dias (baseado no Último acesso)">
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800" />
+                      <span>Ativo</span>
+                    </div>
+                    <div className="flex items-center gap-1 cursor-default" title="Inativo: participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)">
+                      <span className="w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800" />
+                      <span>Inativo</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 cursor-default" title="Inativo: participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)">
-                    <span className="w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800" />
-                    <span>Inativo</span>
-                  </div>
-                </div>
+
+                {/* Total count badge (compact) placed to the right of the filter controls */}
+                {/* compact badge removed — number is shown inline to the left */}
               </div>
             </div>
 
-            <div className="rounded-lg border-[0.1875rem] border-[#1D262D] bg-[#0F1418] p-4 shadow-[0_0_0_0.1875rem_#1D262D]">
+            <div className="rounded-lg border border-[#FFD6BC] bg-[#FFF0E6] p-4 shadow-md">
               {loading ? (
-                <div className="text-white px-2 py-3">Carregando...</div>
+                <div className="text-gray-700 px-2 py-3">Carregando...</div>
               ) : error ? (
-                <div className="text-red-300 px-2 py-3">{error}</div>
+                <div className="text-red-600 px-2 py-3">{error}</div>
               ) : (
                 <>
                 <Table

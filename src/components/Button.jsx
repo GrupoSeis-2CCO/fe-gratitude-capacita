@@ -9,7 +9,7 @@ function Button(props){
             case 'Exit':
                 return 'bg-red-500 hover:bg-red-600 text-white';
             case 'Confirm':
-                return 'bg-green-500 hover:bg-green-600 text-white';
+                return 'bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-md hover:shadow-lg';
             case 'Cancel':
                 return 'bg-gray-500 hover:bg-gray-600 text-white';
             case 'Ghost':
@@ -21,10 +21,13 @@ function Button(props){
 
     const borderRadius = props.rounded ? 'rounded-full' : 'rounded-lg';
 
+    const isDisabled = Boolean(props.disabled);
+
     return (
         <button 
-            className={`px-6 py-3 font-semibold transition-all duration-200 border-none cursor-pointer ${getVariantClasses()} ${borderRadius}`}
-            onClick={props.onClick}
+            disabled={isDisabled}
+            className={`px-6 py-3 font-semibold transition-all duration-200 border-none ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${getVariantClasses()} ${borderRadius}`}
+            onClick={isDisabled ? undefined : props.onClick}
         >
             {props.label}
         </button>

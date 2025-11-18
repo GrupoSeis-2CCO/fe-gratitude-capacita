@@ -140,7 +140,7 @@ export default function StudentProfile() {
   if (loading) return <div className="min-h-screen pt-28 p-8">Carregando...</div>;
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 

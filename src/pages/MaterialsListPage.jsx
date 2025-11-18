@@ -160,7 +160,7 @@ export default function MaterialsListPage() {
 	}
 
 	return (
-		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+		<div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
 			{/* Decorative rails left and right */}
 			<GradientSideRail className="left-10" />
 			<GradientSideRail className="right-10" variant="inverted" />
@@ -186,7 +186,10 @@ export default function MaterialsListPage() {
 					{/* Reorder toggle / instructions */}
 					<div className="flex items-center justify-between mb-4">
 						<div>
-							<button className={`px-3 py-1 text-sm border rounded ${isReordering ? 'bg-yellow-100' : 'bg-white'}`} onClick={() => setIsReordering(r => !r)}>
+							<button
+								className={`px-3 py-1 text-sm rounded ${isReordering ? 'bg-yellow-100 text-gray-900 shadow-md' : 'bg-[#22C55E] text-white shadow-md hover:shadow-lg'} cursor-pointer`}
+								onClick={() => setIsReordering(r => !r)}
+							>
 								{isReordering ? 'Sair de reordenação' : 'Reordenar materiais'}
 							</button>
 							{isReordering && <span className="ml-3 text-sm text-gray-600">Arraste e solte os materiais na posição desejada. Solte para salvar.</span>}
@@ -241,11 +244,19 @@ export default function MaterialsListPage() {
 															<div className="flex items-center justify-between mt-4">
 																<div className="text-sm text-gray-600">Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens</div>
 																<div className="flex items-center gap-2">
-																	<button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={() => setPage(p => Math.max(0, p-1))}>Anterior</button>
+																	<button
+																		className={`px-3 py-1 rounded border ${page>0 ? 'text-gray-800 hover:bg-gray-100 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+																		disabled={page<=0}
+																		onClick={() => setPage(p => Math.max(0, p-1))}
+																	>Anterior</button>
 																	<select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
 																		{[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
 																	</select>
-																	<button className={`px-3 py-1 border rounded ${ (totalPages ? (page+1)<totalPages : (listToRender.length===size)) ? 'text-gray-800' : 'text-gray-400 cursor-not-allowed'}`} disabled={ totalPages ? (page+1)>=totalPages : (listToRender.length<size)} onClick={() => setPage(p => p+1)}>Próxima</button>
+																	<button
+																		className={`px-3 py-1 rounded border ${ (totalPages ? (page+1)<totalPages : (listToRender.length===size)) ? 'text-gray-800 hover:bg-gray-100 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+																		disabled={ totalPages ? (page+1)>=totalPages : (listToRender.length<size)}
+																		onClick={() => setPage(p => p+1)}
+																	>Próxima</button>
 																</div>
 															</div>
 														)}
