@@ -70,7 +70,12 @@ export function AccessPage() {
       setError(null);
       try {
         const resp = await AccessPageService.listarParticipantesPorCurso(Number(cursoSelecionado), { page, size });
-        setParticipantes(resp.content || []);
+        // Ordena alfabeticamente por nome por padrão (pt-BR, sensibilidade base)
+        const received = resp.content || [];
+        const participantesOrdenados = (received || []).slice().sort((a, b) =>
+          String(a?.nome || "").localeCompare(String(b?.nome || ""), 'pt-BR', { sensitivity: 'base' })
+        );
+        setParticipantes(participantesOrdenados);
         setTotalPages(Number(resp.totalPages || 0));
         setTotalElements(Number(resp.totalElements || (resp.content || []).length));
       } catch (e) {
