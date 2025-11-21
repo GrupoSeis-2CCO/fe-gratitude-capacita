@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
-import { FileText, Youtube, ArrowLeft } from 'lucide-react';
+import { FileText, Youtube } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
 import SmartImage from "../components/SmartImage.jsx";
@@ -237,9 +237,6 @@ export default function MaterialPage() {
     };
   }, [videoLoaded, material]);
 
-  const handleGoBack = () => {
-    navigate(`/cursos/${idCurso}/material`);
-  };
   // helper to match a material record by various possible id fields
   const matchesMaterialId = (m, num) => {
     if (m == null || num == null) return false;
@@ -423,15 +420,7 @@ export default function MaterialPage() {
             })()}</TituloPrincipal>
           </div>
 
-        <div className="mb-6">
-          <button
-            onClick={handleGoBack}
-            className="flex items-center text-orange-600 hover:text-orange-700 transition-colors"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Voltar aos materiais
-          </button>
-        </div>
+        {/* Back button removido; agora padronizado via BackButton no nível de rota */}
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Table from "../components/Table";
+import BackButton from "../components/BackButton.jsx";
 import { getCursosDoUsuario } from "../services/UserClassesPageService.js";
 import { useParams } from 'react-router-dom';
 
@@ -55,6 +56,7 @@ export function UserClassesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-[200px] p-8">
+      <BackButton to={routeParticipantId ? `/participante/${routeParticipantId}` : '/participantes'} />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Cursos do Participante</h1>
         {loading ? (
