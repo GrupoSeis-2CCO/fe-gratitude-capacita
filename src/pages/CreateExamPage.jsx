@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
+import BackButton from "../components/BackButton.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamBuilder from "../components/ExamBuilder.jsx";
 import CreateExamPageService from "../services/CreateExamPageService.js";
@@ -44,12 +45,9 @@ export default function CreateExamPage() {
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <button
-            onClick={() => window.location.href = `/cursos/${cursoId}/material/`}
-            className="mb-4 px-4 py-2 rounded bg-gray-200 text-gray-800 font-semibold hover:bg-gray-300 transition"
-          >
-            ← Voltar
-          </button>
+          <div className="mb-4">
+            <BackButton to={`/cursos/${cursoId}/material/`} />
+          </div>
           <TituloPrincipal>Criar Avaliação - Curso {cursoId}</TituloPrincipal>
         </div>
 

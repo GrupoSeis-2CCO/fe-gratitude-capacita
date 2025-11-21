@@ -7,7 +7,8 @@ import MonthFilter from "../components/MonthFilter.jsx";
 import YearFilter from "../components/YearFilter.jsx";
 import ApexLineChart from "../components/ApexLineChart.jsx";
 import Chart from 'react-apexcharts';
-import Button from "../components/Button";
+import Button from "../components/Button"; // other actions if needed
+import BackButton from "../components/BackButton.jsx";
 
 export function UserPage({ courseId = 1, days = 14 }) {
   const routeParams = useParams();
@@ -183,15 +184,10 @@ export function UserPage({ courseId = 1, days = 14 }) {
   // chart rendering handled by ApexLineChart
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 p-8">
-      <div className="mb-8 flex items-center justify-between max-w-4xl mx-auto">
-        <div>
-          <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/acessos`)} />
-        </div>
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
-        </div>
-        <div className="w-24" />
+    <div className="relative min-h-screen bg-gray-50 pt-28 p-8">
+      <BackButton to={routeCourseId ? `/cursos/${effectiveCourseId}/participantes` : (selectedParticipantId ? `/participantes/${selectedParticipantId}/cursos` : '/acessos')} />
+      <div className="mb-8 flex items-center justify-center max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">

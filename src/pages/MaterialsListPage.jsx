@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
-import Button from "../components/Button";
+import BackButton from "../components/BackButton.jsx";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
@@ -169,7 +169,7 @@ export default function MaterialsListPage() {
 				<div className="max-w-4xl mx-auto">
 					<div className="flex items-center justify-between mb-6">
 						<div>
-							<Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
+							<BackButton to={`/cursos/${idCurso}`} />
 						</div>
 						<div className="text-center">
 							<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>

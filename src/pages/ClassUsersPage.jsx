@@ -4,7 +4,8 @@ import { useAuth } from "../hooks/useAuth.js";
 import { getParticipantesByCurso } from "../services/classUsersPageService.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
-import Button from "../components/Button.jsx";
+import Button from "../components/Button.jsx"; // still used for other buttons if any
+import BackButton from "../components/BackButton.jsx";
 
 export function ClassUsersPage() {
   const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -135,17 +136,16 @@ export function ClassUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28 pb-12">
+    <div className="relative min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28 pb-12">
       <GradientSideRail className="left-10" />
       <GradientSideRail variant="inverted" className="right-10" />
 
+      <BackButton to={`/cursos/${idCurso}`} />
+
       <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-        <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
-            <h1 className="text-3xl font-extrabold text-gray-900">Participantes do Curso</h1>
-          <span className="ml-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">{totalElements} participantes</span>
-          </div>
+        <div className="flex items-center justify-center mb-6">
+          <h1 className="text-3xl font-extrabold text-gray-900">Participantes do Curso</h1>
+          <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">{totalElements} participantes</span>
         </div>
 
         {/* Card wrapper */}

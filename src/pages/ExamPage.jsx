@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Button from "../components/Button";
+import Button from "../components/Button"; // still used potentially elsewhere
+import BackButton from "../components/BackButton.jsx";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamTaker from "../components/ExamTaker.jsx";
@@ -70,16 +71,12 @@ export default function ExamPage({ examId = 1 }) {
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
+      <BackButton to={`/cursos/${idCurso}/material`} />
+
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}/material`)} />
-            </div>
-            <div className="text-center">
-              <TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
-            </div>
-            <div className="w-24" />
+          <div className="flex items-center justify-center mb-6">
+            <TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
           </div>
         </div>
 

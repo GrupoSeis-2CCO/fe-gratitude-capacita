@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
+import BackButton from '../components/BackButton.jsx';
 import Header from '../components/Header';
 import GradientSideRail from '../components/GradientSideRail';
 import SmartImage from '../components/SmartImage.jsx';
@@ -77,16 +78,14 @@ function ClassDetailsPage() {
         <GradientSideRail className="right-10" variant="inverted" />
         <Header />
 
+        <BackButton to={'/cursos'} />
+
         <div className="max-w-4xl mx-auto px-4 py-8 pt-28">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <Button variant="Ghost" label="← Voltar" onClick={() => navigate('/cursos')} />
-            </div>
+          <div className="flex items-center justify-center mb-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-800">Cursos de Capacitação</h2>
               <div className="w-24 h-1 bg-gradient-to-r from-indigo-500 via-pink-500 to-orange-400 mx-auto mt-2 rounded-md"></div>
             </div>
-            <div className="w-24" />
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">

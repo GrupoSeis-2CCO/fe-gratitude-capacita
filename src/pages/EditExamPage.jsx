@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Button from "../components/Button";
+import BackButton from "../components/BackButton.jsx";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamBuilder from "../components/ExamBuilder.jsx";
@@ -65,11 +65,7 @@ export default function EditExamPage() {
         </div>
         <div className="mt-8 w-full flex flex-col items-center justify-center">
           <div className="w-full flex justify-start mb-4">
-            <Button
-              variant="Ghost"
-              label="← Voltar para Material"
-              onClick={() => navigate(`/cursos/${idCurso}/material`)}
-            />
+            <BackButton to={`/cursos/${idCurso}/material`} />
           </div>
           {loading ? (
             <div>Carregando...</div>

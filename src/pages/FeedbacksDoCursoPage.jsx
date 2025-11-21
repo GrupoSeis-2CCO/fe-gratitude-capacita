@@ -3,7 +3,8 @@ import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
-import Button from "../components/Button";
+import Button from "../components/Button"; // keep for other actions
+import BackButton from "../components/BackButton.jsx";
 import { api } from "../services/api.js";
 import feedbackService from "../services/feedbackService.js";
 
@@ -160,16 +161,12 @@ export default function FeedbacksDoCursoPage() {
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
+      <BackButton to={`/cursos/${idCurso}`} />
+
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <Button variant="Ghost" label="← Voltar" onClick={() => navigate(`/cursos/${idCurso}`)} />
-            </div>
-            <div className="text-center">
-              <TituloPrincipal>Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : ''}</TituloPrincipal>
-            </div>
-            <div className="w-24" />
+          <div className="flex items-center justify-center mb-6">
+            <TituloPrincipal>Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : ''}</TituloPrincipal>
           </div>
         </div>
         <div className="mt-8 w-full">
