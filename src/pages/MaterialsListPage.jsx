@@ -8,6 +8,7 @@ import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
 import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
+import { getCursoDetalhes } from "../services/ClassDetailsPageService.js";
 import { updateVideo, updateApostila } from "../services/UploadService.js";
 
 export default function MaterialsListPage() {
@@ -22,6 +23,7 @@ export default function MaterialsListPage() {
 	}
 
 	const [materials, setMaterials] = useState([]);
+	const [courseName, setCourseName] = useState('');
 	const [page, setPage] = useState(0);
 	const [size, setSize] = useState(10);
 	const [totalPages, setTotalPages] = useState(0);
@@ -95,6 +97,35 @@ export default function MaterialsListPage() {
 	}
 
 		useEffect(() => { loadMaterials(); }, [idCurso, page, size, isReordering]);
+
+		useEffect(() => {
+			async function fetchCourse() {
+				if (!idCurso) return;
+				try {
+					const detalhes = await getCursoDetalhes(Number(idCurso));
+					if (detalhes) {
+						// apenas campos que realmente representam nome do curso (evitar pegar titulo da avaliacao)
+						const nome = detalhes.tituloCurso || detalhes.nomeCurso || detalhes.nome || detalhes.nomeDoCurso || `Curso ${idCurso}`;
+						setCourseName(nome);
+					}
+				} catch (e) {
+					console.warn('Falha ao obter nome do curso, usando padrão.', e);
+					setCourseName(`Curso ${idCurso}`);
+				}
+			}
+			fetchCourse();
+		}, [idCurso]);
+
+		// Ajusta título da avaliação para usar nome do curso
+		useEffect(() => {
+			if (!courseName) return;
+			setMaterials(prev => prev.map(m => {
+				if (m.type === 'avaliacao') {
+					return { ...m, title: courseName };
+				}
+				return m;
+			}));
+		}, [courseName]);
 
 	// When in reordering mode we render and operate directly on `materials` (which are ordered by their saved order)
 	const listToRender = materials;
@@ -172,7 +203,7 @@ export default function MaterialsListPage() {
 							<BackButton to={`/cursos/${idCurso}`} />
 						</div>
 						<div className="text-center">
-							<TituloPrincipal>Materiais do Curso de Regularização Fundiária</TituloPrincipal>
+							<TituloPrincipal>{courseName || '...'}</TituloPrincipal>
 						</div>
 						<div className="w-24" />
 					</div>
@@ -264,7 +295,7 @@ export default function MaterialsListPage() {
 					)}
 				</div>
 
-        		<AddEvaluationSection />
+				<AddEvaluationSection onDeleted={() => loadMaterials()} />
 			</div>
 
 		</div>

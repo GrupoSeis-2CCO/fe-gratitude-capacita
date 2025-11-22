@@ -45,6 +45,13 @@ function normalizeMaterial(m, idx) {
   // description fallback
   const description = m.descricao ?? m.descricaoApostila ?? m.descricaoVideo ?? m.description ?? '';
 
+  // hidden flag (ocultar retira da barra de progresso)
+  const hidden = (typeof m.isApostilaOculto !== 'undefined')
+    ? (m.isApostilaOculto === 1 || m.isApostilaOculto === true)
+    : ((typeof m.isVideoOculto !== 'undefined')
+      ? (m.isVideoOculto === 1 || m.isVideoOculto === true)
+      : (m.hidden === true));
+
   // determine status: prefer explicit fields, else infer from boolean flags or progress
   let status = null;
   if (typeof m.status !== 'undefined' && m.status !== null) {
@@ -74,6 +81,7 @@ function normalizeMaterial(m, idx) {
     title: type === 'pdf' && typeof title === 'string' ? title.replace(/\.pdf$/i, '') : title,
     type,
     description,
+    hidden,
     status,
   };
 }
@@ -363,7 +371,8 @@ export default function StudentMaterialsListPage() {
   // Remover avaliação da lista base (acesso à avaliação via banner/botão dedicado)
   // keep a single combined, ordered list (videos + apostilas) — exclude only 'avaliacao'
   const baseMaterials = useMemo(() => {
-    const arr = (materials || []).filter(m => (m?.type || m?.tipo) !== 'avaliacao');
+    // Excluir avaliação e também materiais ocultos
+    const arr = (materials || []).filter(m => (m?.type || m?.tipo) !== 'avaliacao' && !m.hidden);
     // prefer displayOrder (assigned after normalization), fall back to order
     return arr.slice().sort((a, b) => (Number(a.displayOrder ?? a.order ?? 0) - Number(b.displayOrder ?? b.order ?? 0)));
   }, [materials]);

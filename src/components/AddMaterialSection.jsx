@@ -157,7 +157,11 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
               value={titulo}
               onChange={e => setTitulo(e.target.value)}
             />
-            <Button variant="Confirm" label={loading ? 'Salvando...' : 'Concluir'} onClick={handleConcluir} />
+            <Button 
+              variant={initialMaterial ? 'Primary' : 'Confirm'}
+              label={loading ? 'Salvando...' : (initialMaterial ? 'Atualizar' : 'Concluir')}
+              onClick={handleConcluir}
+            />
             <Button variant="Exit" label="Cancelar" onClick={() => {
               setIsEditing(false);
               if (initialMaterial && onCancelEdit) onCancelEdit();

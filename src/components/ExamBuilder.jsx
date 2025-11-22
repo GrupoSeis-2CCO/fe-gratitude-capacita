@@ -63,21 +63,19 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
   };
 
   const addAlternative = (questionId) => {
-    setQuestions(prev => prev.map(q => 
-      q.id === questionId 
-        ? {
-            ...q,
-            alternatives: [
-              ...q.alternatives,
-              { 
-                id: Math.max(...q.alternatives.map(a => a.id)) + 1, 
-                text: '', 
-                isCorrect: false 
-              }
-            ]
-          }
-        : q
-    ));
+    setQuestions(prev => prev.map(q => {
+      if (q.id !== questionId) return q;
+      const existingIds = q.alternatives.map(a => a.id).filter(id => typeof id === 'number');
+      const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      return {
+        ...q,
+        // Garantir imutabilidade profunda criando novos objetos
+        alternatives: [
+          ...q.alternatives.map(a => ({ ...a })),
+          { id: nextId, text: '', isCorrect: false }
+        ]
+      };
+    }));
   };
 
   const addQuestion = () => {
@@ -114,37 +112,40 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         throw new Error(editMode ? 'Adicione pelo menos uma questão antes de atualizar' : 'Adicione pelo menos uma questão antes de concluir');
       }
       
-      if (!minScore || minScore === '' || Number(minScore) < 0 || Number(minScore) > 10) {
-        throw new Error(editMode ? 'Defina uma nota mínima válida (0-10) antes de atualizar' : 'Defina uma nota mínima válida (0-10) antes de concluir');
+      if (!minScore || minScore === '' || Number(minScore) < 0) {
+        throw new Error(editMode ? 'Defina uma nota mínima válida (>=0) antes de atualizar' : 'Defina uma nota mínima válida (>=0) antes de concluir');
+      }
+      // Nova validação: nota mínima não pode exceder número de questões (cada questão vale 1 ponto)
+      if (Number(minScore) > questions.length) {
+        throw new Error(`Nota mínima (${minScore}) não pode ser maior que a quantidade de questões (${questions.length}).`);
       }
       
       // Transformar dados do frontend para formato do backend
       const examData = {
-        fkCurso: cursoId, // Backend espera fkCurso
+        fkCurso: cursoId,
         notaMinima: Number(minScore),
         questoes: questions.map((q, qIdx) => {
           const correctAlt = q.alternatives.find(alt => alt.isCorrect);
-          if (!correctAlt) {
-            throw new Error(`Questão ${qIdx + 1}: marque a alternativa correta`);
-          }
-          // Encontrar o índice (ordemAlternativa) da alternativa correta
+          if (!correctAlt) throw new Error(`Questão ${qIdx + 1}: marque a alternativa correta`);
           const correctAltIndex = q.alternatives.findIndex(alt => alt.isCorrect);
-          if (correctAltIndex === -1) {
-            throw new Error(`Questão ${qIdx + 1}: erro ao identificar alternativa correta`);
-          }
+          if (correctAltIndex === -1) throw new Error(`Questão ${qIdx + 1}: erro ao identificar alternativa correta`);
           return {
+            // Em modo edição preserve ids para atualização parcial
+            ...(editMode && q.id ? { idQuestao: q.id } : {}),
             enunciado: q.text.trim(),
             numeroQuestao: qIdx + 1,
             alternativas: q.alternatives.map((alt, altIdx) => ({
+              ...(editMode && alt.id ? { idAlternativa: alt.id } : {}),
               texto: alt.text.trim(),
               ordemAlternativa: altIdx
             })),
-            fkAlternativaCorreta: correctAltIndex // Enviar o índice da alternativa correta
+            fkAlternativaCorreta: editMode && correctAlt.id ? correctAlt.id : correctAltIndex
           };
         })
       };
       console.log('[ExamBuilder] Dados enviados ao backend:', JSON.stringify(examData, null, 2));
       if (editMode && onExamSaved) {
+        // Em edição enviamos examData com ids para permitir PATCH
         await onExamSaved(examData);
         window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Avaliação atualizada' } }));
       } else {
@@ -225,7 +226,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
             <input
               type="number"
               min="0"
-              max="10"
+              // Removido max fixo 10 para permitir cursos com mais questões; validação dinâmica no salvar
               step="0.5"
               value={minScore}
               onChange={(e) => setMinScore(e.target.value)}
@@ -242,10 +243,14 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                 variant="Confirm"
                 label="Confirmar"
                 onClick={() => {
-                  if (minScore && Number(minScore) >= 0 && Number(minScore) <= 10) {
+                  if (minScore && Number(minScore) >= 0) {
+                    if (Number(minScore) > questions.length) {
+                      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Valor inválido', message: `Nota mínima não pode ser maior que número de questões (${questions.length}).` } }));
+                      return;
+                    }
                     setShowMinScoreModal(false);
                   } else {
-                    window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Valor inválido', message: 'Digite uma nota entre 0 e 10' } }));
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Valor inválido', message: 'Digite uma nota maior ou igual a 0' } }));
                   }
                 }}
               />

@@ -76,7 +76,7 @@ export default function ExamPage({ examId = 1 }) {
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-center mb-6">
-            <TituloPrincipal>Avaliação Curso 1 - Introdução</TituloPrincipal>
+            <TituloPrincipal>Avaliação</TituloPrincipal>
           </div>
         </div>
 
