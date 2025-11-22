@@ -10,6 +10,7 @@ export default function ConfirmModal({
   cancelLabel = 'Cancelar',
   hideCancel = false,
   tone = 'orange', // 'orange' | 'blue'
+  confirmDisabled = false,
 }) {
   const [show, setShow] = useState(open);
   useEffect(() => {
@@ -37,20 +38,22 @@ export default function ConfirmModal({
         <h3 className={`text-lg font-bold mb-2 text-${accent}-700`}>{title}</h3>
         <p className="text-sm text-gray-700 mb-5 whitespace-pre-line">{message}</p>
         <div className="flex justify-end gap-3">
-          {!hideCancel && (
+            {!hideCancel && (
+              <button
+                className={`px-4 py-2 rounded-md border border-gray-300 text-gray-700 transition ${confirmDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                onClick={confirmDisabled ? undefined : onCancel}
+                disabled={confirmDisabled}
+              >
+                {cancelLabel}
+              </button>
+            )}
             <button
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
-              onClick={onCancel}
+              className={`px-4 py-2 rounded-md bg-${accent}-600 text-white font-semibold transition ${confirmDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+              onClick={confirmDisabled ? undefined : onConfirm}
+              disabled={confirmDisabled}
             >
-              {cancelLabel}
+              {confirmDisabled ? 'Processando...' : confirmLabel}
             </button>
-          )}
-          <button
-            className={`px-4 py-2 rounded-md bg-${accent}-600 text-white font-semibold hover:bg-${accent}-700 transition`}
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </button>
         </div>
       </div>
     </div>

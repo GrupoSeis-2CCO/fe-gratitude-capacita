@@ -90,23 +90,7 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
     }
   }
 
-  async function handleToggleHidden() {
-    setLoading(true);
-    try {
-      if (material.type === 'pdf') {
-        await MaterialService.toggleApostilaHidden(material.id);
-      } else if (material.type === 'video') {
-        await MaterialService.toggleVideoHidden(material.id);
-      }
-      if (onActionComplete) onActionComplete();
-    } catch (err) {
-      console.error('Erro ao alternar visibilidade', err);
-      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Erro ao alternar visibilidade', message: String(err?.response?.data || err?.message || err) } }));
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
-  }
+  // ocultar/toggle removido conforme solicitação
 
   function handleEdit() {
     setOpen(false);
@@ -118,10 +102,19 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
   // alternating background for subtle contrast between list items
   const bgClass = isAvaliacao ? 'bg-orange-50 border-orange-300' : (index % 2 === 1 ? 'bg-[#FAFAFA] border-gray-200' : 'bg-white border-gray-200');
 
+  function handleRootClick(e) {
+    // Se o menu está aberto ou o modal de confirmação ativo, não navegar.
+    if (open || confirmOpen || loading) {
+      e.stopPropagation();
+      return;
+    }
+    if (onClick) onClick();
+  }
+
   return (
     <div
       className={`${bgClass} border rounded-lg shadow-lg p-4 flex gap-6 mb-6 transition transform hover:-translate-y-1 hover:shadow-2xl ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
+      onClick={handleRootClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
@@ -152,10 +145,9 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
                 <MoreHorizontal size={24} />
               </button>
               {open && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-50">
-                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleEdit} disabled={loading}>Editar</button>
-                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={() => setConfirmOpen(true)} disabled={loading}>Excluir</button>
-                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={handleToggleHidden} disabled={loading}>{material.hidden ? 'Tornar visível' : 'Ocultar'}</button>
+                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md z-50" onClick={(e) => e.stopPropagation()}>
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={(e) => { e.stopPropagation(); handleEdit(); }} disabled={loading}>Editar</button>
+                  <button className="w-full text-left px-3 py-2 hover:bg-gray-100" onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }} disabled={loading}>Excluir</button>
                 </div>
               )}
               <ConfirmModal open={confirmOpen} title="Excluir material" message={`Deseja realmente excluir \"${material.title}\"? Esta ação não pode ser desfeita.`} onCancel={() => setConfirmOpen(false)} onConfirm={handleDeleteConfirmed} confirmLabel="Excluir" cancelLabel="Cancelar" />

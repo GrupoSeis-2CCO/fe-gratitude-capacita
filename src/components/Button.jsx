@@ -14,6 +14,8 @@ function Button(props){
                 return 'bg-gray-500 hover:bg-gray-600 text-white';
             case 'Ghost':
                 return 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-300';
+            case 'Primary':
+                return 'bg-blue-600 hover:bg-blue-700 text-white';
             default:
                 return 'bg-blue-500 hover:bg-blue-600 text-white';
         }

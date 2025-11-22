@@ -91,26 +91,32 @@ export async function getExamByCourseId(idCurso) {
 export async function updateExam(idCurso, updatedExam) {
   if (!idCurso || !updatedExam) throw new Error("Parâmetros obrigatórios ausentes");
   try {
-    // Busca avaliação para pegar idAvaliacao
     const avaliacao = await getExamByCourseId(idCurso);
     if (!avaliacao || !avaliacao.idAvaliacao) throw new Error("Avaliação não encontrada para atualização");
 
-    // Monta payload para o novo endpoint
+    // Payload preservando IDs quando existentes para atualização parcial
     const payload = {
       acertosMinimos: updatedExam.notaMinima,
       questoes: (updatedExam.questoes || []).map(q => ({
-        idQuestao: q.idQuestao,
+        ...(q.idQuestao ? { idQuestao: q.idQuestao } : {}),
         enunciado: q.enunciado,
         numeroQuestao: q.numeroQuestao,
         fkAlternativaCorreta: q.fkAlternativaCorreta,
         alternativas: (q.alternativas || []).map(a => ({
-          idAlternativa: a.idAlternativa,
+          ...(a.idAlternativa ? { idAlternativa: a.idAlternativa } : {}),
           texto: a.texto,
           ordemAlternativa: a.ordemAlternativa
         }))
       }))
     };
-    await api.put(`/avaliacoes/${avaliacao.idAvaliacao}`, payload);
+
+    // Tenta PATCH (parcial); se backend não suportar, faz PUT completo
+    try {
+      await api.patch(`/avaliacoes/${avaliacao.idAvaliacao}`, payload);
+    } catch (e) {
+      // Fallback para PUT se PATCH não for implementado
+      await api.put(`/avaliacoes/${avaliacao.idAvaliacao}`, payload);
+    }
     return { success: true };
   } catch (err) {
     console.error('[ExamPageService] Erro ao atualizar avaliação:', err);
@@ -118,11 +124,43 @@ export async function updateExam(idCurso, updatedExam) {
   }
 }
 
+/**
+ * Exclui avaliação do curso (se possível) após verificar id da avaliação.
+ * Retorna { success: true } ou lança erro do backend.
+ */
+export async function deleteExamByCourseId(idCurso, force = false) {
+  if (!idCurso) throw new Error("Parâmetro idCurso obrigatório");
+  try {
+    const avaliacao = await getExamByCourseId(idCurso);
+    if (!avaliacao || !avaliacao.idAvaliacao) throw new Error("Avaliação não encontrada para exclusão");
+    const resp = await api.delete(`/avaliacoes/${avaliacao.idAvaliacao}`, { params: { force } });
+    return resp.data || { success: true };
+  } catch (err) {
+    console.error('[ExamPageService] Erro ao deletar avaliação:', err);
+    throw err;
+  }
+}
+
+export async function hasResponsesForExamId(idAvaliacao) {
+  if (!idAvaliacao) return false;
+  try {
+    const resp = await api.get(`/avaliacoes/${idAvaliacao}/respostas/existe`);
+    // Retorna o objeto completo { hasResponses, respostasCount } para permitir UI mais rica
+    return resp.data;
+  } catch (err) {
+    // Fallback: if endpoint not available, assume true to be safe
+    console.warn('[ExamPageService] Falha ao checar respostas da avaliação:', err);
+    return { hasResponses: true, respostasCount: null };
+  }
+}
+
 const ExamPageService = {
   getExamData,
   submitExam,
   getExamByCourseId,
-  updateExam
+  updateExam,
+  deleteExamByCourseId,
+  hasResponsesForExamId
 };
 
 export default ExamPageService;
