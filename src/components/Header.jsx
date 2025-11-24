@@ -3,8 +3,11 @@ import Link from '../components/Link.jsx';
 import Button from '../components/Button.jsx';
 import { userService } from '../services/UserService.js';
 
-function Header(){
-
+function Header() {
+  if (!userService.isLoggedIn()) {
+    return null;
+  }
+  
   return (
     <header className="absolute gap-4 w-full h-24 bg-gray-800 flex items-center justify-between px-8 z-10">
       {/* Logo à esquerda */}
