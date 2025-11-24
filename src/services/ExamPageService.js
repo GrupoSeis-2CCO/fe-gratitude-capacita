@@ -24,14 +24,54 @@ export async function getExamData(examId) {
     // Mapeamento para o formato esperado pelo ExamTaker
     // Backend: { idAvaliacao, nomeCurso, questoes: [ { idQuestao, enunciado, alternativas: [ { idAlternativa, texto } ] } ] }
     // ExamTaker: [ { id, text, alternatives: [ { id, text } ] } ]
-    const questions = (raw.questoes || []).map(q => ({
-      id: q.idQuestao,
-      text: q.enunciado,
-      alternatives: (q.alternativas || []).map(alt => ({
-        id: alt.idAlternativa,
-        text: alt.texto
-      }))
-    }));
+    const questions = (raw.questoes || []).map(q => {
+      // Algumas respostas de backend antigos podem trazer 'alternativa' singular ou outro campo
+      const rawAlternatives = q.alternativas || q.alternativa || [];
+      const mapped = Array.isArray(rawAlternatives)
+        ? rawAlternatives.map(alt => ({
+            id: alt.idAlternativa ?? alt.id ?? alt.ordemAlternativa ?? null,
+            text: alt.texto ?? alt.text ?? ''
+          }))
+        : [];
+      return {
+        id: q.idQuestao ?? q.id ?? null,
+        text: q.enunciado ?? q.text ?? '',
+        alternatives: mapped
+      };
+    });
+
+    // Log detalhado para diagnosticar questões sem alternativas (caso do "ficar em branco")
+    const emptyAlts = questions.filter(q => !q.alternatives || q.alternatives.length === 0);
+    if (emptyAlts.length > 0) {
+      console.warn('[ExamPageService] Detectadas questões sem alternativas após mapeamento:', emptyAlts.map(q => q.id));
+      console.warn('[ExamPageService] Raw questoes correspondente:', (raw.questoes || []).filter(rq => emptyAlts.some(e => e.id === (rq.idQuestao ?? rq.id))));
+      // Fallback: cria placeholders para não quebrar UI (mantém visível que está incompleto)
+      emptyAlts.forEach(q => {
+        q.alternatives = [
+          { id: `${q.id}-ph1`, text: '(alternativa ausente 1)' },
+          { id: `${q.id}-ph2`, text: '(alternativa ausente 2)' }
+        ];
+      });
+      // Tentativa adicional: se vieram questões sem alternativas, tentar endpoint alternativo (/avaliacoes/{examId}) para complementar
+      try {
+        const altResp = await api.get(`/avaliacoes/${examId}`);
+        const altRaw = altResp.data;
+        if (altRaw && Array.isArray(altRaw.questoes)) {
+          questions.forEach(q => {
+            if (q.alternatives && q.alternatives.length > 0) return; // já possui (mesmo que placeholders)
+            const match = altRaw.questoes.find(rq => (rq.idQuestao ?? rq.id) === q.id);
+            if (match && Array.isArray(match.alternativas) && match.alternativas.length > 0) {
+              q.alternatives = match.alternativas.map(a => ({
+                id: a.idAlternativa ?? a.id ?? a.ordemAlternativa ?? a.ordem ?? null,
+                text: a.texto ?? a.text ?? ''
+              }));
+            }
+          });
+        }
+      } catch (e) {
+        console.debug('[ExamPageService] Fallback /avaliacoes/{id} falhou:', e?.response?.data || e?.message);
+      }
+    }
     return questions;
   } catch (err) {
     console.error('[ExamPageService] Erro ao buscar prova:', err);
@@ -54,11 +94,14 @@ export async function submitExam(examId, userId, answers) {
       userId,
       answers
     };
+    // Log payload para debugging (verifique console do browser)
+    console.debug('[ExamPageService] submitExam payload:', payload);
     // POST para /exam/{examId}/submit
     const resp = await api.post(`/exam/${examId}/submit`, payload);
     return resp.data;
   } catch (err) {
-    console.error('[ExamPageService] Erro ao submeter prova:', err);
+    // Log do body de resposta do backend (quando disponível)
+    console.error('[ExamPageService] Erro ao submeter prova:', err?.response?.data || err.message, err);
     throw err;
   }
 }

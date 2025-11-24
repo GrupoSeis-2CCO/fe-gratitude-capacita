@@ -19,8 +19,6 @@ export default function StudentProfile() {
     email: "",
     cpf: "",
     telefone: "",
-    cargo: "",
-    departamento: "",
     fotoUrl: null,
   });
   const [stats, setStats] = useState({ cursosConcluidos: 0, cursosFaltantes: 0, horasEstudo: 0, ultimaAtividade: null });
@@ -92,7 +90,7 @@ export default function StudentProfile() {
         nome: formData.nome,
         email: formData.email,
         telefone: formData.telefone,
-        departamento: formData.departamento,
+        // departamento and cargo removed from profile UI
       };
       const resp = await updateProfile(payload);
       setIsEditing(false);
@@ -242,20 +240,7 @@ export default function StudentProfile() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Cargo</label>
-                  <p className="text-gray-600 p-3 bg-gray-100 rounded-lg">{formData.cargo || 'Colaborador'}</p>
-                  <span className="text-xs text-gray-500">Alterado apenas pelo administrador</span>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Departamento</label>
-                  {isEditing ? (
-                    <input type="text" value={formData.departamento || ''} onChange={(e) => handleInputChange('departamento', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" />
-                  ) : (
-                    <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.departamento || '—'}</p>
-                  )}
-                </div>
+                {/* Cargo and Departamento fields removed from profile */}
               </div>
             </div>
 

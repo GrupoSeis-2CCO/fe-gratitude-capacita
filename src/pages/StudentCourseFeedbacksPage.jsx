@@ -3,6 +3,7 @@ import { useParams, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
+import BackButton from "../components/BackButton.jsx";
 import { api } from "../services/api.js";
 
 export default function StudentCourseFeedbacksPage() {
@@ -54,7 +55,12 @@ export default function StudentCourseFeedbacksPage() {
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
-          <TituloPrincipal>Meu Feedback do Curso</TituloPrincipal>
+          <div className="relative py-2">
+            <BackButton to={`/cursos/${idCurso}/material`} className="fixed" />
+            <div className="text-center">
+              <TituloPrincipal>Meu Feedback do Curso</TituloPrincipal>
+            </div>
+          </div>
         </div>
         <div className="mt-8 w-full max-w-3xl mx-auto">
           {loading && <div>Carregando...</div>}

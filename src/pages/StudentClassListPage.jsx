@@ -5,6 +5,7 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import CourseCard from "../components/CourseCard.jsx";
 import { getCourses } from "../services/ClassListPageService.js";
+import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 
 function normalizeCourses(data) {
   if (!Array.isArray(data)) return [];
@@ -83,6 +84,39 @@ export default function StudentClassListPage() {
     };
   }, []);
 
+  // Após carregar cursos, reforça contagem de materiais contando apenas vídeos/apostilas não ocultos (exclui avaliações).
+  useEffect(() => {
+    async function augmentMaterialCounts() {
+      if (!Array.isArray(courses) || courses.length === 0) return;
+      const needsAugment = courses.some(c => !c.__realMaterials);
+      if (!needsAugment) return;
+      try {
+        const updated = await Promise.all(courses.map(async (c) => {
+          if (c.__realMaterials) return c;
+          const cid = c.id ?? c.idCurso;
+          if (!cid) return { ...c, __realMaterials: true };
+          try {
+            const raw = await getMateriaisPorCurso(cid);
+            const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.content) ? raw.content : []);
+            const mapped = arr.map((m) => {
+              const tipo = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
+              const hiddenFlag = (typeof m.isApostilaOculto !== 'undefined') ? (Number(m.isApostilaOculto) === 1) : (typeof m.isVideoOculto !== 'undefined' ? (Number(m.isVideoOculto) === 1) : false);
+              return { tipo, hidden: hiddenFlag };
+            });
+            const count = mapped.filter(m => !m.hidden && (m.tipo === 'video' || m.tipo === 'pdf')).length;
+            return { ...c, stats: { ...(c.stats || {}), materials: count }, __realMaterials: true };
+          } catch (e) {
+            return { ...c, __realMaterials: true };
+          }
+        }));
+        setCourses(updated);
+      } catch (_) {
+        // silently ignore
+      }
+    }
+    augmentMaterialCounts();
+  }, [courses]);
+
   
 
   return (
@@ -93,7 +127,7 @@ export default function StudentClassListPage() {
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
         <div className="text-center mb-10">
-          <TituloPrincipal>Participantes / Cursos</TituloPrincipal>
+          <TituloPrincipal>Cursos</TituloPrincipal>
         </div>
 
         {/* removed ordering UI per request */}

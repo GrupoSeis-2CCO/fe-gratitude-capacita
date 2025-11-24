@@ -53,13 +53,19 @@ export default function ExamPage({ examId = 1 }) {
       });
       return;
     }
+    // Log payload before sending to backend for easier debugging
+    console.debug('[ExamPage] Enviando payload:', { examId, userId, answers });
     setSubmitting(true);
     setSubmitResult(null);
     try {
       const result = await ExamPageService.submitExam(examId, userId, answers);
+      console.debug('[ExamPage] Resultado do submit:', result);
       setSubmitResult(result);
     } catch (err) {
-      setSubmitResult({ error: 'Erro ao enviar respostas' });
+      // Mostra mais detalhes vindo do backend quando disponível
+      const backendMsg = err?.response?.data || err?.message || 'Erro desconhecido';
+      console.error('[ExamPage] Erro ao submeter exame (detalhe):', backendMsg, err);
+      setSubmitResult({ error: typeof backendMsg === 'string' ? backendMsg : JSON.stringify(backendMsg) });
     } finally {
       setSubmitting(false);
     }

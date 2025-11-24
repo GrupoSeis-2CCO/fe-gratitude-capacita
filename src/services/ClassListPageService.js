@@ -108,10 +108,24 @@ export async function toggleCourseHidden(idCurso) {
   }
 }
 
+export async function reorderCourses(list) {
+  if (!Array.isArray(list)) throw new Error('Lista inválida para reordenar.');
+  const payload = list.map(item => ({ idCurso: item.idCurso || item.id, ordemCurso: item.ordemCurso || item.ordem || item.order }));
+  try {
+    const resp = await api.put('/cursos/reordenar', payload);
+    return resp.data;
+  } catch (err) {
+    const message = normalizeError(err, 'Erro ao reordenar cursos.');
+    console.error('❌ Erro ao reordenar cursos:', message, err);
+    throw new Error(message);
+  }
+}
+
 export default {
   getCourses,
   createCourse,
   updateCourse,
   deleteCourse,
   toggleCourseHidden,
+  reorderCourses,
 };

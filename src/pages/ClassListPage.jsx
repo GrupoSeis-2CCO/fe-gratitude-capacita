@@ -5,7 +5,8 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
-import { getCourses, deleteCourse, toggleCourseHidden } from "../services/ClassListPageService.js";
+import { getCourses, deleteCourse, toggleCourseHidden, reorderCourses } from "../services/ClassListPageService.js";
+import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 // Removido fetch detalhado por curso (materiais) para evitar N chamadas adicionais na página /cursos
 import ConfirmModal from "../components/ConfirmModal.jsx";
 // (duplicate import removed)
@@ -79,6 +80,11 @@ export default function ClassListPage() {
   const isMountedRef = useRef(true);
   const [editingCourse, setEditingCourse] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, course: null });
+  // Reordenação (drag & drop)
+  const [isReordering, setIsReordering] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   // Filtering / sorting UI state
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,6 +155,9 @@ export default function ClassListPage() {
     return copy;
   }, [courses, debouncedSearch, sortOption]);
 
+  // Lista utilizada para renderizar quando em modo de reordenação (ignora filtros/sort para estabilidade)
+  const listToRender = isReordering ? courses.slice().sort((a,b) => (Number(a.order||a.ordemCurso||0) - Number(b.order||b.ordemCurso||0))) : filteredCourses;
+
   const userType = getCurrentUserType?.();
   const logged = isLoggedIn?.();
 
@@ -160,7 +169,10 @@ export default function ClassListPage() {
     try {
       const data = await getCourses();
       if (!isMountedRef.current) return;
-      const normalized = normalizeCourses(data);
+      const normalized = normalizeCourses(data).map((c, idx) => ({
+        ...c,
+        order: c.ordemCurso || c.order || (idx + 1)
+      }));
       setCourses(normalized);
 
       // OBS: Consulta de materiais por curso desativada para reduzir requisições na listagem.
@@ -175,6 +187,79 @@ export default function ClassListPage() {
       setLoading(false);
     }
   }, []);
+
+  // Após carregar cursos, reforça contagem de materiais contando apenas vídeos/apostilas não ocultos (exclui avaliações).
+  useEffect(() => {
+    async function augmentMaterialCounts() {
+      if (!Array.isArray(courses) || courses.length === 0) return;
+      // Evita loop infinito: só processa cursos que ainda não foram ajustados.
+      const needsAugment = courses.some(c => !c.__realMaterials);
+      if (!needsAugment) return;
+      try {
+        const updated = await Promise.all(courses.map(async (c) => {
+          if (c.__realMaterials) return c; // já ajustado
+          const cid = c.id ?? c.idCurso;
+          if (!cid) return { ...c, __realMaterials: true };
+          try {
+            const raw = await getMateriaisPorCurso(cid); // lista completa ou objeto paginado
+            const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.content) ? raw.content : []);
+            // Mapear igual MaterialsListPage
+            const mapped = arr.map((m, idx) => {
+              const tipo = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
+              const hiddenFlag = (typeof m.isApostilaOculto !== 'undefined') ? (Number(m.isApostilaOculto) === 1) : (typeof m.isVideoOculto !== 'undefined' ? (Number(m.isVideoOculto) === 1) : false);
+              return { tipo, hidden: hiddenFlag };
+            });
+            const count = mapped.filter(m => !m.hidden && (m.tipo === 'video' || m.tipo === 'pdf')).length;
+            return {
+              ...c,
+              stats: { ...(c.stats || {}), materials: count },
+              __realMaterials: true,
+            };
+          } catch (e) {
+            // Se falhar, marca como ajustado para não tentar em loop
+            return { ...c, __realMaterials: true };
+          }
+        }));
+        setCourses(updated.map((c,i)=>({ ...c, order: c.order || c.ordemCurso || (i+1) })));
+      } catch (_) {
+        // silencioso
+      }
+    }
+    augmentMaterialCounts();
+  }, [courses]);
+
+  // Drag & drop handlers
+  function handleDragStart(e, index) {
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', String(index)); } catch (_) {}
+    setDraggingIndex(index);
+  }
+  function handleDragOver(e, index) {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }
+  function handleDragEnd() {
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  }
+  async function handleDrop(e, index) {
+    e.preventDefault();
+    const fromData = e.dataTransfer.getData('text/plain');
+    const from = fromData ? parseInt(fromData, 10) : draggingIndex;
+    if (from == null || Number.isNaN(from)) return handleDragEnd();
+    const to = index;
+    if (from === to) return handleDragEnd();
+
+    const base = courses.slice().sort((a,b) => (Number(a.order||a.ordemCurso||0) - Number(b.order||b.ordemCurso||0)));
+    const copy = [...base];
+    const [moved] = copy.splice(from,1);
+    copy.splice(to,0,moved);
+    copy.forEach((c,i)=>{ c.order = i+1; c.ordemCurso = c.order; });
+    setCourses(copy);
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+    // Persistência adiada para quando sair do modo de reordenação
+  }
 
   const handleDelete = useCallback((selected) => {
     if (!selected) return;
@@ -274,6 +359,39 @@ export default function ClassListPage() {
         <AddCourseSection onCourseCreated={async () => { setEditingCourse(null); await handleRefresh(); }} editCourse={editingCourse} />
 
         <div className="mt-8 w-full">
+          {/* Toggle reordenação */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <button
+                className={`px-4 py-2 text-base font-medium rounded transition-colors duration-150 ${isReordering ? 'bg-orange-100 border border-orange-400 text-orange-900 shadow-md' : 'bg-orange-500 text-white shadow-md hover:bg-orange-600'} cursor-pointer`}
+                onClick={async () => {
+                  if (isReordering) {
+                    // Ao sair, persiste ordem atual
+                    try {
+                      setSavingOrder(true);
+                      const ordered = courses.slice().sort((a,b)=>Number((a.order||a.ordemCurso||0)) - Number((b.order||b.ordemCurso||0)));
+                      await reorderCourses(ordered.map(c => ({ idCurso: c.idCurso || c.id, ordemCurso: c.order || c.ordemCurso })));
+                      await handleRefresh();
+                      // Toast de sucesso semelhante ao de materiais
+                      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Ordem salva', message: 'Nova ordem de cursos persistida.' } }));
+                    } catch (err) {
+                      console.error('Erro ao persistir ordem de cursos:', err);
+                      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao salvar ordem', message: String(err?.message || err) } }));
+                    } finally {
+                      setSavingOrder(false);
+                      setIsReordering(false);
+                    }
+                  } else {
+                    setIsReordering(true);
+                  }
+                }}
+              >
+                {isReordering ? 'Salvar ordem e sair' : 'Reordenar cursos'}
+              </button>
+              {isReordering && <span className="ml-3 text-sm text-gray-600">Arraste e solte para definir a nova ordem.</span>}
+            </div>
+            <div>{savingOrder && <span className="text-sm text-gray-600">Salvando ordem...</span>}</div>
+          </div>
           {loading ? (
             <div>Carregando...</div>
           ) : error ? (
@@ -281,22 +399,35 @@ export default function ClassListPage() {
           ) : courses.length === 0 ? (
             <div className="text-gray-600">Nenhum curso cadastrado ainda.</div>
           ) : (
-            filteredCourses.map((course, idx) => (
-              <CourseCard
-                key={course.id ?? course.idCurso}
-                index={idx}
-                course={course}
-                onClick={(selected) =>
-                  navigate(`/cursos/${selected?.id ?? selected?.idCurso ?? course.id ?? course.idCurso}`)
-                }
-                onEdit={(selected) => {
-                  // usa o AddCourseSection em modo edição com preenchimento atual
-                  setEditingCourse(selected);
-                }}
-                onDelete={handleDelete}
-                onToggleHidden={handleToggleHidden}
-              />
-            ))
+            listToRender.map((course, idx) => {
+              const card = (
+                <CourseCard
+                  key={course.id ?? course.idCurso}
+                  index={idx}
+                  course={course}
+                  onClick={(selected) =>
+                    navigate(`/cursos/${selected?.id ?? selected?.idCurso ?? course.id ?? course.idCurso}`)
+                  }
+                  onEdit={(selected) => { setEditingCourse(selected); }}
+                  onDelete={handleDelete}
+                  onToggleHidden={handleToggleHidden}
+                />
+              );
+              if (!isReordering) return card;
+              return (
+                <div
+                  key={`drag-${course.id ?? course.idCurso}`}
+                  draggable
+                  onDragStart={(e)=>handleDragStart(e, idx)}
+                  onDragOver={(e)=>handleDragOver(e, idx)}
+                  onDrop={(e)=>handleDrop(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  className={`cursor-move ${dragOverIndex===idx ? 'bg-yellow-50' : ''}`}
+                >
+                  {card}
+                </div>
+              );
+            })
           )}
         </div>
         <ConfirmModal

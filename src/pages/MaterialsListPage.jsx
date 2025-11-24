@@ -37,10 +37,47 @@ export default function MaterialsListPage() {
 	const [dragOverIndex, setDragOverIndex] = useState(null);
 	const [savingOrder, setSavingOrder] = useState(false);
 
+	// Salva a nova ordem apenas quando o usuário sai do modo de reordenação
+	async function persistMaterialOrder(currentMaterials) {
+		setSavingOrder(true);
+		try {
+			for (let i = 0; i < currentMaterials.length; i++) {
+				const mat = currentMaterials[i];
+				const ordem = i + 1;
+				if (mat.type === 'video') {
+					await updateVideo(mat.id, { nomeVideo: mat.title, descricaoVideo: mat.description || null, urlVideo: mat.url || null, ordemVideo: ordem });
+				} else if (mat.type === 'pdf') {
+					await updateApostila(mat.id, { nomeApostila: mat.title, descricaoApostila: mat.description || null, ordem: ordem });
+				} else {
+					// avaliacao ou outros tipos não participam da ordenação
+				}
+			}
+			window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Ordem salva', message: 'Nova ordem de materiais persistida.' } }));
+			await loadMaterials();
+		} catch (err) {
+			console.error('Erro ao salvar nova ordem (saída):', err);
+			window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao salvar ordem', message: String(err?.response?.data || err?.message || err) } }));
+		} finally {
+			setSavingOrder(false);
+		}
+	}
+
+	function toggleReordering() {
+		// Saindo do modo: persistir
+		if (isReordering) {
+			persistMaterialOrder(materials);
+			setIsReordering(false);
+		} else {
+			setIsReordering(true);
+		}
+	}
+
 	async function loadMaterials() {
+		// Evita chamadas iniciais com fallback incorreto (curso 1) quando idCurso ainda não está resolvido
+		if (!idCurso) return;
 		setLoading(true);
 			try {
-				const cursoId = Number(idCurso || 1); // prefer route param
+				const cursoId = Number(idCurso); // usar apenas o param real
 				let matsResp;
 				if (isReordering) {
 					// reordering needs full list to avoid cross-page reorder confusion
@@ -166,28 +203,7 @@ export default function MaterialsListPage() {
 		setDraggingIndex(null);
 		setDragOverIndex(null);
 
-		// persist new order to backend
-		setSavingOrder(true);
-		try {
-			for (let i = 0; i < copy.length; i++) {
-				const mat = copy[i];
-				const ordem = i + 1;
-				if (mat.type === 'video') {
-					await updateVideo(mat.id, { nomeVideo: mat.title, descricaoVideo: mat.description || null, urlVideo: mat.url || null, ordemVideo: ordem });
-				} else if (mat.type === 'pdf') {
-					await updateApostila(mat.id, { nomeApostila: mat.title, descricaoApostila: mat.description || null, ordem: ordem });
-				} else {
-					// skip other types (avaliacao) or implement later
-				}
-			}
-			// reload to ensure server truth
-			await loadMaterials();
-		} catch (err) {
-			console.error('Erro salvando nova ordem:', err);
-			alert('Erro ao salvar nova ordem: ' + (err?.response?.data || err?.message || err));
-		} finally {
-			setSavingOrder(false);
-		}
+		// Persistência diferida: não salva em cada drop, apenas ao sair do modo.
 	}
 
 	return (
@@ -218,10 +234,10 @@ export default function MaterialsListPage() {
 					<div className="flex items-center justify-between mb-4">
 						<div>
 							<button
-								className={`px-3 py-1 text-sm rounded ${isReordering ? 'bg-yellow-100 text-gray-900 shadow-md' : 'bg-[#22C55E] text-white shadow-md hover:shadow-lg'} cursor-pointer`}
-								onClick={() => setIsReordering(r => !r)}
+								className={`px-4 py-2 text-base font-medium rounded transition-colors duration-150 ${isReordering ? 'bg-orange-100 border border-orange-400 text-orange-900 shadow-md' : 'bg-orange-500 text-white shadow-md hover:bg-orange-600'} cursor-pointer`}
+								onClick={toggleReordering}
 							>
-								{isReordering ? 'Sair de reordenação' : 'Reordenar materiais'}
+								{isReordering ? 'Sair de reordenação (salvar)' : 'Reordenar materiais'}
 							</button>
 							{isReordering && <span className="ml-3 text-sm text-gray-600">Arraste e solte os materiais na posição desejada. Solte para salvar.</span>}
 						</div>
