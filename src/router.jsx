@@ -25,6 +25,7 @@ import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
 // import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import EditExamPage from "./pages/EditExamPage.jsx";
+import AdminDashboardPage from "./pages/AdminDashboard.jsx";
 
 // Novos: páginas que criamos
 import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
@@ -115,6 +116,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
           <MailhogTestPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout footerType="mini">
+          <AdminDashboardPage />
         </Layout>
       </ProtectedRoute>
     ),
