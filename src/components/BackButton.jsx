@@ -17,12 +17,12 @@ export default function BackButton({ to = null, onClick = null, className = "" }
     navigate(-1);
   };
   return (
-    <div className={`absolute top-4 left-4 z-30 ${className}`}> 
+    <div className={`sticky top-0 left-0 z-30 mt-2 mb-4 ${className}`}> 
       <Button 
         variant="Ghost" 
         label="← Voltar" 
         onClick={handleClick}
-        className="px-8 py-4 text-lg shadow-lg"
+        className="px-6 py-3 text-sm shadow"
       />
     </div>
   );

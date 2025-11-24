@@ -128,6 +128,16 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/admin/dashboard",
+    element: (
+      <ProtectedRoute allowedUserTypes={[1]}>
+        <Layout footerType="mini">
+          <AdminDashboardPage />
+        </Layout>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/cursos",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
