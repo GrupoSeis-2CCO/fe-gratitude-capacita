@@ -13,8 +13,6 @@ export function ProfilePage() {
 		email: "joao.silva@gratitudeservicos.com.br",
 		cpf: "123.456.789-00",
 		phone: "(11) 98765-4321",
-		role: "Colaborador",
-		department: "Projetos Sociais",
 		password: "••••••••"
 	});
 
@@ -136,21 +134,7 @@ export function ProfilePage() {
 									)}
 								</div>
 
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 mb-2">
-										Cargo
-									</label>
-									<p className="text-gray-600 p-3 bg-gray-100 rounded-lg">{formData.role}</p>
-									<span className="text-xs text-gray-500">Alterado apenas pelo administrador</span>
-								</div>
-
-								<div>
-									<label className="block text-sm font-semibold text-gray-700 mb-2">
-										Departamento
-									</label>
-									<p className="text-gray-600 p-3 bg-gray-100 rounded-lg">{formData.department}</p>
-									<span className="text-xs text-gray-500">Alterado apenas pelo administrador</span>
-								</div>
+								{/* Cargo and Departamento removed from profile view */}
 							</div>
 						</div>
 

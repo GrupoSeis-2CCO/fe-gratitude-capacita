@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import { getParticipantesByCurso } from "../services/classUsersPageService.js";
+import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import Button from "../components/Button.jsx"; // still used for other buttons if any
@@ -12,6 +13,12 @@ export function ClassUsersPage() {
   const userType = getCurrentUserType();
   const navigate = useNavigate();
   const { idCurso } = useParams();
+  // Determine effective course id: prefer route param, then sessionStorage last_course_id
+  let storedCourseId = null;
+  try {
+    storedCourseId = (typeof window !== 'undefined') ? sessionStorage.getItem('last_course_id') : null;
+  } catch (e) { storedCourseId = null; }
+  const effectiveCursoId = idCurso || storedCourseId;
   const [participantes, setParticipantes] = useState([]);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -36,10 +43,31 @@ export function ClassUsersPage() {
         console.log("🟢 [FRONT] Dados recebidos do backend:", data);
   const list = data?.content ?? (Array.isArray(data) ? data : []);
 
-  const participantesMapeados = (list || []).map(p => {
+        // Recalcula o total de materiais do curso (exclui avaliações e materiais ocultos)
+        let totalMaterialsForCourse = null;
+        try {
+          const matsResp = await getMateriaisPorCurso(idCurso);
+          let matsArr = [];
+          if (Array.isArray(matsResp)) matsArr = matsResp;
+          else if (matsResp?.materiais) matsArr = matsResp.materiais;
+          else if (matsResp?.data && Array.isArray(matsResp.data)) matsArr = matsResp.data;
+          else if (matsResp?.materials) matsArr = matsResp.materials;
+          else if (matsResp) matsArr = Array.isArray(matsResp) ? matsResp : [matsResp];
+          const filteredMats = (matsArr || []).map(m => {
+            const tipo = (m.tipo || m.type || '').toString().toLowerCase();
+            const hidden = (typeof m.isApostilaOculto !== 'undefined') ? (Number(m.isApostilaOculto) === 1) : ((typeof m.isVideoOculto !== 'undefined') ? (Number(m.isVideoOculto) === 1) : !!m.hidden);
+            const isEval = tipo.includes('avaliacao') || (m.avaliacao === true);
+            return { isMaterial: !isEval && !hidden };
+          }).filter(Boolean);
+          totalMaterialsForCourse = filteredMats.filter(x => x.isMaterial).length;
+        } catch (e) {
+          console.debug('Falha ao buscar materiais para recalcular total (classe participantes):', e?.message || e);
+        }
+
+        const participantesMapeados = (list || []).map(p => {
           // Materiais: usa os campos que o backend agora fornece
           const materiaisConcluidos = Number(p.materiaisConcluidos) || 0;
-          const materiaisTotais = Number(p.materiaisTotais) || 0;
+          const materiaisTotais = totalMaterialsForCourse != null ? totalMaterialsForCourse : (Number(p.materiaisTotais) || 0);
           const materiaisDisplay = `${materiaisConcluidos}/${materiaisTotais}`;
 
           // Avaliação: converte para escala 0..10 e formata "X de 10"
@@ -103,8 +131,8 @@ export function ClassUsersPage() {
       }
     };
 
-    console.log("🟡 [FRONT] useEffect disparado, idCurso:", idCurso);
-    if (idCurso) {
+    console.log("🟡 [FRONT] useEffect disparado, idCurso:", idCurso, 'effectiveCursoId:', effectiveCursoId);
+    if (effectiveCursoId) {
       fetchParticipantes();
     }
   }, [idCurso, page, size]);
@@ -140,7 +168,7 @@ export function ClassUsersPage() {
       <GradientSideRail className="left-10" />
       <GradientSideRail variant="inverted" className="right-10" />
 
-      <BackButton to={`/cursos/${idCurso}`} />
+      <BackButton to={`/cursos/${effectiveCursoId}`} />
 
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex items-center justify-center mb-6">

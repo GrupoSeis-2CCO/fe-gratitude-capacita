@@ -3,35 +3,25 @@ import React from 'react';
 function ExamViewer({ questions = [], userAnswers = {}, correctAnswers = {} }) {
   const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-  const getAlternativeClass = (questionId, alternativeId) => {
-    const ua = String(userAnswers[questionId] || '');
-    const ca = String(correctAnswers[questionId] || '');
-    const altId = String(alternativeId);
-    
-    const isUserAnswer = ua === altId;
-    const isCorrect = ca === altId;
+  const getAlternativeClass = (ua, ca, alternative) => {
+    const altId = String(alternative.id);
+    const isUserAnswer = String(ua || '') === altId;
+    const isCorrect = String(ca || '') === altId || Boolean(alternative.isCorreta || alternative.isCorrect || alternative.correta || alternative.correct);
 
-    // SEMPRE destaque a alternativa correta em verde (mudança principal)
-    if (isCorrect) {
-      return 'bg-green-100 border-green-400';
-    }
+    // Se o usuário acertou: verde com destaque
+    if (isUserAnswer && isCorrect) return 'bg-green-100 border-green-400';
 
-    // Vermelho quando o usuário marcou esta alternativa E ela está errada
-    if (isUserAnswer && !isCorrect) {
-      return 'bg-red-100 border-red-400';
-    }
+    if (isCorrect) return 'bg-green-50 border-green-300';
 
-    // Demais ficam neutras
+    if (isUserAnswer && !isCorrect) return 'bg-red-100 border-red-400';
+
     return 'bg-gray-100 border-gray-300';
   };
 
-  const getAlternativeLabel = (questionId, alternativeId) => {
-    const ua = String(userAnswers[questionId] || '');
-    const ca = String(correctAnswers[questionId] || '');
-    const altId = String(alternativeId);
-    
-    const isUserAnswer = ua === altId;
-    const isCorrect = ca === altId;
+  const getAlternativeLabel = (ua, ca, alternative) => {
+    const altId = String(alternative.id);
+    const isUserAnswer = String(ua || '') === altId;
+    const isCorrect = String(ca || '') === altId || Boolean(alternative.isCorreta || alternative.isCorrect || alternative.correta || alternative.correct);
 
     if (isCorrect) {
       return (
@@ -83,9 +73,14 @@ function ExamViewer({ questions = [], userAnswers = {}, correctAnswers = {} }) {
               {/* Alternatives */}
               <div className="space-y-3">
                 {(question.alternativas || question.alternatives || []).map((alternative, altIndex) => {
-                  const altClass = getAlternativeClass(question.id, alternative.id);
-                  const altLabel = getAlternativeLabel(question.id, alternative.id);
-                  
+                  // Tentar resolver userAnswers/correctAnswers por várias chaves
+                  const qIdStr = String(question.id || question.numeroQuestao || question.number || question.numero || '');
+                  const ua = userAnswers[qIdStr] ?? userAnswers[String(question.numeroQuestao)] ?? userAnswers[String(question.number)] ?? userAnswers[String(question.numero)] ?? userAnswers[String(question.id)];
+                  const ca = correctAnswers[qIdStr] ?? correctAnswers[String(question.numeroQuestao)] ?? correctAnswers[String(question.number)] ?? correctAnswers[String(question.numero)] ?? correctAnswers[String(question.id)];
+
+                  const altClass = getAlternativeClass(ua, ca, alternative);
+                  const altLabel = getAlternativeLabel(ua, ca, alternative);
+
                   return (
                     <div
                       key={alternative.id}

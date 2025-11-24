@@ -11,8 +11,16 @@ export function UserExamsPageComponent(props) {
 export default function UserExamsPage({ courseId = 1 }) {
   const routeParams = useParams();
   const routeCourseId = routeParams.idCurso ?? routeParams.cursoId ?? null;
+  // fallback to last visited course stored in sessionStorage
+  let storedCourseId = null;
+  try { storedCourseId = (typeof window !== 'undefined') ? sessionStorage.getItem('last_course_id') : null; } catch (e) { storedCourseId = null; }
   const routeParticipantId = routeParams.id ?? routeParams.idUsuario ?? routeParams.participanteId ?? null;
-  const effectiveCourseId = Number(routeCourseId || courseId || 1);
+  const effectiveCourseId = Number(routeCourseId || storedCourseId || courseId || 1);
+
+  // keep session storage up to date when explicit course param present
+  if (routeCourseId) {
+    try { sessionStorage.setItem('last_course_id', String(routeCourseId)); } catch (e) { /* noop */ }
+  }
   const [loading, setLoading] = useState(true);
   const [tentativas, setTentativas] = useState([]);
   const [participanteAtual, setParticipanteAtual] = useState(routeParticipantId ? Number(routeParticipantId) : null);
@@ -111,13 +119,24 @@ export default function UserExamsPage({ courseId = 1 }) {
     const acertos = tentativa.notaAcertos ?? tentativa?.nota_acertos ?? tentativa?.acertos ?? tentativa?.resultado?.acertos;
     let total = tentativa.notaTotal ?? tentativa?.nota_total ?? tentativa?.totalQuestoes ?? tentativa?.total ?? tentativa?.resultado?.total;
 
+    // Alguns backends retornam quantidade de erros em vez de acertos. Se houver 'erros', calcular acertos = total - erros.
+    const erros = tentativa.erros ?? tentativa?.numErros ?? tentativa?.errosCount ?? tentativa?.notaErros ?? tentativa?.resultado?.erros;
+    if ((acertos == null || acertos === '') && (erros != null) && (total != null)) {
+      const parsedErros = Number(erros);
+      const parsedTotal = Number(total);
+      if (!Number.isNaN(parsedErros) && !Number.isNaN(parsedTotal)) {
+        const computedAcertos = Math.max(0, parsedTotal - parsedErros);
+        return `${computedAcertos}/${parsedTotal}`;
+      }
+    }
+
     // try to read total from avaliacao if not present
     if (total == null) {
       total = tentativa?.avaliacao?.totalQuestoes ?? tentativa?.avaliacao?.qtdQuestoes ?? tentativa?.avaliacao?.numeroQuestoes ?? tentativa?.avaliacao?.total;
     }
 
     // if both are present but both are 0, it means no answers were recorded
-    if (acertos === 0 && total === 0) return 'Sem respostas';
+    if ((acertos === 0 || acertos === '0') && (total === 0 || total === '0')) return 'Sem respostas';
 
     if (acertos != null && total != null) return `${acertos}/${total}`;
 
@@ -167,9 +186,15 @@ export default function UserExamsPage({ courseId = 1 }) {
     return totalTentativasDoCurso - posicaoAtual;
   }
 
+  // Prefer a course-scoped participant route when the course id is present in the route
+  const buildParticipantPath = (pid) => {
+    if (!pid) return '/participantes';
+    return routeCourseId ? `/cursos/${routeCourseId}/participante/${pid}` : `/participante/${pid}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pt-28 p-8">
-      <BackButton to={participanteAtual ? `/participante/${participanteAtual}` : (routeParticipantId ? `/participante/${routeParticipantId}` : '/participantes')} />
+      <BackButton to={participanteAtual ? buildParticipantPath(participanteAtual) : (routeParticipantId ? buildParticipantPath(routeParticipantId) : '/participantes')} />
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Provas do Colaborador y</h1>
       </div>

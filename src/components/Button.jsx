@@ -25,15 +25,16 @@ function Button(props){
 
     const isDisabled = Boolean(props.disabled);
 
+    const extra = props.className ? props.className : '';
     return (
-        <button 
+        <button
             disabled={isDisabled}
-            className={`px-6 py-3 font-semibold transition-all duration-200 border-none ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${getVariantClasses()} ${borderRadius}`}
+            className={`px-6 py-3 font-semibold transition-all duration-200 border-none ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${getVariantClasses()} ${borderRadius} ${extra}`}
             onClick={isDisabled ? undefined : props.onClick}
         >
             {props.label}
         </button>
-    )
+    );
 }
 
 export default Button;

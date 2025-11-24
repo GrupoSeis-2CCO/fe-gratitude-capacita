@@ -7,6 +7,7 @@ import { FileText, Play } from 'lucide-react';
 import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import { api } from "../services/api.js";
 import { ensureMatricula, updateUltimoAcesso, getMatriculasPorUsuario } from "../services/MatriculaService.js";
+import ConfirmModal from "../components/ConfirmModal.jsx";
 
 function getStatusColor(status) {
   switch (status) {
@@ -399,6 +400,22 @@ export default function StudentMaterialsListPage() {
     return { total, completed, percent };
   }, [baseMaterials]);
 
+  // only allow evaluation when all non-hidden materials are concluded
+  const canStartEvaluation = total > 0 && completed === total;
+
+  // modal control: show popup when we detect the transition to all materials completed
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const prevCompletedRef = React.useRef(completed);
+
+  useEffect(() => {
+    // when completed changes from a smaller value to equal total, show modal
+    const prev = prevCompletedRef.current || 0;
+    if (total > 0 && prev < total && completed === total) {
+      setShowEvalModal(true);
+    }
+    prevCompletedRef.current = completed;
+  }, [completed, total]);
+
   // Client-side pagination for student list (keeps merge correctness)
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
@@ -492,7 +509,7 @@ export default function StudentMaterialsListPage() {
               <button
                 type="button"
                 onClick={() => { setSearchText(""); setStatusFilter(""); }}
-                className="px-4 py-2 border border-gray-300 rounded text-sm cursor-pointer"
+                className="px-4 py-2 border border-gray-300 rounded text-sm cursor-pointer bg-white"
               >
                 Limpar filtros
               </button>
@@ -545,9 +562,22 @@ export default function StudentMaterialsListPage() {
                   <p className="text-sm text-gray-600">Nota mínima: 6/10</p>
                 </div>
               </div>
-              <div>
-                <button onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)} className="px-4 py-2 bg-black text-white rounded cursor-pointer">Iniciar Avaliação</button>
-              </div>
+                <div>
+                  <button
+                    onClick={() => {
+                      if (!canStartEvaluation) {
+                        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Avaliação bloqueada', message: 'Conclua todos os materiais antes de iniciar a avaliação.' } }));
+                        return;
+                      }
+                      navigate(`/cursos/${idCurso}/material/avaliacao`);
+                    }}
+                    disabled={!canStartEvaluation}
+                    title={canStartEvaluation ? 'Iniciar avaliação' : 'Conclua todos os materiais antes de iniciar a avaliação'}
+                    className={`px-4 py-2 rounded ${canStartEvaluation ? 'bg-black text-white cursor-pointer' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
+                  >
+                    Iniciar Avaliação
+                  </button>
+                </div>
             </div>
           </div>
 
@@ -568,6 +598,18 @@ export default function StudentMaterialsListPage() {
         </div>
 
       </div>
+
+      {/* Modal offering to start evaluation when last material is finished */}
+      <ConfirmModal
+        open={showEvalModal}
+        title="Avaliação disponível"
+        message="Você concluiu todos os materiais do curso. Deseja iniciar a avaliação agora?"
+        confirmLabel="Iniciar Avaliação"
+        cancelLabel="Depois"
+        onCancel={() => setShowEvalModal(false)}
+        onConfirm={() => { setShowEvalModal(false); navigate(`/cursos/${idCurso}/material/avaliacao`); }}
+        tone="blue"
+      />
     </div>
   );
 }

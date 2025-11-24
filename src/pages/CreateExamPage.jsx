@@ -53,9 +53,21 @@ export default function CreateExamPage() {
 
         <div className="mt-8 w-full flex justify-center">
           <ExamBuilder 
-            cursoId={cursoId} 
-            onExamCreated={handleExamCreated}
-          />
+              cursoId={cursoId} 
+              onExamCreated={handleExamCreated}
+              onSaveExam={async (examData) => {
+                try {
+                  console.log('[CreateExamPage] Payload enviado:', JSON.stringify(examData, null, 2));
+                  const created = await CreateExamPageService.createExam(examData);
+                  console.log('[CreateExamPage] Resposta criação:', created);
+                  handleExamCreated(created);
+                  return created;
+                } catch (e) {
+                  console.error('[CreateExamPage] Erro ao criar avaliação:', e);
+                  throw e;
+                }
+              }}
+            />
         </div>
 
         {/* Lista de avaliações existentes (opcional) */}

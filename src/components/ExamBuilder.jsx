@@ -3,7 +3,7 @@ import ConfirmModal from './ConfirmModal.jsx';
 import Button from './Button';
 import { createExam } from '../services/CreateExamPageService.js';
 
-function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, onExamSaved = null, editMode = false }) {
+function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, onExamSaved = null, onSaveExam = null, editMode = false }) {
   const [questions, setQuestions] = useState([]);
   const [minScore, setMinScore] = useState('');
   // Preencher dados iniciais para edição
@@ -80,21 +80,55 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
 
   const addQuestion = () => {
     if (questions.length >= MAX_QUESTIONS) return;
-    
-    const newId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) + 1 : 1;
-    setQuestions(prev => [
-      ...prev,
-      {
-        id: newId,
-        text: '',
-        alternatives: [
-          { id: 1, text: '', isCorrect: false },
-          { id: 2, text: '', isCorrect: false },
-          { id: 3, text: '', isCorrect: false }
-        ]
-      }
-    ]);
+    // gerar id estável único (timestamp + contador simples)
+    const baseId = Date.now();
+    const randomFragment = Math.floor(Math.random() * 1000);
+    const newId = questions.length > 0
+      ? Math.max(...questions.map(q => typeof q.id === 'number' ? q.id : 0)) + 1
+      : 1;
+    // Deep clone explícito do estado anterior para evitar qualquer referência compartilhada
+    setQuestions(prev => {
+      const clonedPrev = prev.map(q => ({
+        ...q,
+        alternatives: q.alternatives.map(a => ({ ...a }))
+      }));
+      return [
+        ...clonedPrev,
+        {
+          id: newId, // Mantém sequência simples para exibição
+          internalKey: `${baseId}-${randomFragment}-${newId}`, // chave oculta caso seja necessário debug
+          text: '',
+          alternatives: [
+            { id: 1, text: '', isCorrect: false },
+            { id: 2, text: '', isCorrect: false },
+            { id: 3, text: '', isCorrect: false }
+          ]
+        }
+      ];
+    });
   };
+
+  // Sanitizar: garantir que nenhuma questão fique sem alternativas (corrige problema de "ficar em branco")
+  useEffect(() => {
+    let needsFix = false;
+    const fixed = questions.map(q => {
+      if (!q.alternatives || q.alternatives.length === 0) {
+        needsFix = true;
+        return {
+          ...q,
+            alternatives: [
+              { id: 1, text: '', isCorrect: false },
+              { id: 2, text: '', isCorrect: false },
+              { id: 3, text: '', isCorrect: false }
+            ]
+        };
+      }
+      return q;
+    });
+    if (needsFix) {
+      setQuestions(fixed);
+    }
+  }, [questions]);
 
   const removeQuestion = (questionId) => {
     setQuestions(prev => prev.filter(q => q.id !== questionId));
@@ -107,6 +141,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
     setLoading(true);
     
     try {
+      console.log('[ExamBuilder] handleSaveExam START');
       // Validações
       if (questions.length === 0) {
         throw new Error(editMode ? 'Adicione pelo menos uma questão antes de atualizar' : 'Adicione pelo menos uma questão antes de concluir');
@@ -144,12 +179,25 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         })
       };
       console.log('[ExamBuilder] Dados enviados ao backend:', JSON.stringify(examData, null, 2));
-      if (editMode && onExamSaved) {
+      // If parent provided an onSaveExam handler, delegate the actual POST to the parent
+      if (onSaveExam) {
+        await onSaveExam(examData);
+        console.log('[ExamBuilder] Delegated onSaveExam finished');
+        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: editMode ? 'Avaliação atualizada' : 'Avaliação criada' } }));
+        // Reset form when created (not necessarily when editing)
+        if (!editMode) {
+          setQuestions([]);
+          setMinScore('');
+        }
+        if (onExamCreated && !editMode) onExamCreated(null);
+        if (onExamSaved && editMode) onExamSaved(null);
+      } else if (editMode && onExamSaved) {
         // Em edição enviamos examData com ids para permitir PATCH
         await onExamSaved(examData);
         window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Avaliação atualizada' } }));
       } else {
         const createdExam = await createExam(examData);
+        console.log('[ExamBuilder] createExam returned:', createdExam);
         window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Avaliação criada' } }));
         // Reset form
         setQuestions([]);
@@ -168,6 +216,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
       setError(msg);
       console.error('Erro ao salvar avaliação:', err);
     } finally {
+      console.log('[ExamBuilder] handleSaveExam FINISH');
       setLoading(false);
     }
   };

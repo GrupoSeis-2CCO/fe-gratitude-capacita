@@ -80,7 +80,7 @@
     }
 
     return (
-        <div className="relative min-h-screen flex bg-white px-8 pt-30 pb-20">
+        <div className="relative min-h-screen flex bg-[#F2F2F2] px-8 pt-30 pb-20">
         {/* Decorative rails left and right */}
         <GradientSideRail className="left-10" />
         <GradientSideRail className="right-10" variant="inverted" />
@@ -88,14 +88,19 @@
         <div className="max-w-6xl mx-auto w-full">
             <TituloPrincipal>Minhas Avaliações</TituloPrincipal>
 
-            <div className="mt-10 w-[65rem] min-h-[20rem] justify-center rounded-lg border-[0.1875rem] border-[#1D262D] bg-[#0F1418] p-4 shadow-[0_0_0_0.1875rem_#1D262D]">
-            {loading && <div className="p-6 text-center text-white">Carregando...</div>}
-            {error && <div className="p-6 text-center text-red-200">{error}</div>}
-            {!loading && !error && (
-                <div className="bg-white rounded overflow-hidden">
-                <SimpleTable columns={columns} data={rows} />
+            <div className="mt-10 w-full max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+                <div className="mb-4">
+                <p className="text-sm text-gray-500">Minhas avaliações registradas</p>
                 </div>
-            )}
+                {loading && <div className="p-6 text-center text-gray-600">Carregando...</div>}
+                {error && <div className="p-6 text-center text-red-600">{error}</div>}
+                {!loading && !error && (
+                <div className="overflow-x-auto rounded">
+                    <SimpleTable columns={columns} data={rows} />
+                </div>
+                )}
+            </div>
             </div>
         </div>
         </div>

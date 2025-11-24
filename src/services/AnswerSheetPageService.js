@@ -110,13 +110,72 @@ export async function getAnswerSheetData(userId, examId) {
       userAnswersEmpty: Object.keys(userAnswers).length === 0
     });
 
+    // Normalização adicional e marcação de alternativas corretas:
+    // - Garantir que chaves de correctAnswers sejam strings
+    // - Se backend marcou alternativas corretas dentro das próprias alternativas,
+    //   refletir isso em `correctAnswers` e em cada alternativa.isCorreta
+    // - Suportar formatos onde correctAnswers pode vir com chaves alternativas
+    const normalizedCorrect = {};
+    Object.keys(correctAnswers).forEach((k) => {
+      normalizedCorrect[String(k)] = String(correctAnswers[k]);
+    });
+
+    // Se correctAnswers estiver vazio, tentamos detectar pela flag nas alternativas
+    questions.forEach((q) => {
+      const qIdStr = String(q.id);
+
+      // Caso já exista mapping para a questão, mantenha
+      if (normalizedCorrect[qIdStr]) {
+        // nothing
+      } else {
+        // Procurar alternativa marcada como correta dentro do objeto da alternativa
+        const alt = (q.alternativas || []).find((a) => {
+          // aceitar várias propriedades possíveis que indiquem correção
+          return Boolean(a.isCorreta || a.isCorrect || a.correta || a.correct);
+        });
+
+        if (alt && alt.id != null) {
+          normalizedCorrect[qIdStr] = String(alt.id);
+        }
+      }
+
+      // Marcar isCorreta em alternativas com base no mapping final
+      (q.alternativas || []).forEach((a) => {
+        a.isCorreta = normalizedCorrect[qIdStr] && String(a.id) === String(normalizedCorrect[qIdStr]);
+      });
+    });
+
+    // Substitui correctAnswers pelo normalizedCorrect para uso pelo viewer
+    correctAnswers = {};
+    Object.keys(normalizedCorrect).forEach(k => {
+      correctAnswers[String(k)] = String(normalizedCorrect[k]);
+    });
+
+    // Construir mapeamento detalhado por questão para debugging
+    const perQuestionMapping = questions.map((q) => {
+      const qIdStr = String(q.id);
+      const ua = userAnswers[qIdStr] || userAnswers[String(q.numeroQuestao)] || userAnswers[String(q.number)] || userAnswers[String(q.numero)] || userAnswers[String(q.id)];
+      const ca = correctAnswers[qIdStr] || correctAnswers[String(q.numeroQuestao)] || correctAnswers[String(q.number)] || correctAnswers[String(q.numero)] || correctAnswers[String(q.id)];
+      return {
+        questionId: q.id,
+        numeroQuestao: q.numeroQuestao || q.number || q.numero || null,
+        ua: ua ? String(ua) : null,
+        ca: ca ? String(ca) : null,
+        detectedCorrectAlt: normalizedCorrect[qIdStr] || null,
+        alternatives: (q.alternativas || q.alternatives || []).map(a => ({ id: a.id, isCorreta: Boolean(a.isCorreta) }))
+      };
+    });
+
+    console.log('[AnswerSheetPageService] Per-question mapping:', JSON.stringify(perQuestionMapping, null, 2));
+
     return {
       questions,
       userAnswers,
       correctAnswers,
       meta: {
         avaliacao: raw.avaliacao,
-        tentativa: raw.tentativa
+        tentativa: raw.tentativa,
+        perQuestionMapping
       }
     };
   } catch (err) {

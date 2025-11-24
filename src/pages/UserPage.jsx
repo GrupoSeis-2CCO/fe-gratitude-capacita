@@ -15,7 +15,19 @@ export function UserPage({ courseId = 1, days = 14 }) {
   // route may provide idCurso or cursoId; participant param may be named id, idUsuario or participanteId
   const routeCourseId = routeParams.idCurso ?? routeParams.cursoId ?? routeParams.idCourse ?? null;
   const routeParticipantId = routeParams.id ?? routeParams.idUsuario ?? routeParams.participanteId ?? null;
-  const effectiveCourseId = Number(routeCourseId || courseId || 1);
+  // Prefer explicit route param -> sessionStorage last_course_id -> prop default -> final fallback 1
+  let storedCourseId = null;
+  try {
+    storedCourseId = (typeof window !== 'undefined') ? sessionStorage.getItem('last_course_id') : null;
+  } catch (e) {
+    storedCourseId = null;
+  }
+  const effectiveCourseId = Number(routeCourseId || storedCourseId || courseId || 1);
+
+  // Keep sessionStorage updated when explicit route param is present
+  if (routeCourseId) {
+    try { sessionStorage.setItem('last_course_id', String(routeCourseId)); } catch (e) { /* noop */ }
+  }
 
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState([]);
@@ -183,9 +195,21 @@ export function UserPage({ courseId = 1, days = 14 }) {
 
   // chart rendering handled by ApexLineChart
 
+  // Decide para onde o BackButton deve apontar com base na origem mais recente
+  let backTarget = `/cursos/${effectiveCourseId}/participantes`;
+  try {
+    const src = (typeof window !== 'undefined') ? sessionStorage.getItem('last_userpage_source') : null;
+    const srcCourse = (typeof window !== 'undefined') ? sessionStorage.getItem('last_userpage_source_course') : null;
+    if (src === 'classUsers' && srcCourse) {
+      backTarget = `/cursos/${srcCourse}/participantes`;
+    } else if (src === 'accessPage') {
+      backTarget = '/acessos';
+    }
+  } catch (e) { /* noop */ }
+
   return (
     <div className="relative min-h-screen bg-gray-50 pt-28 p-8">
-      <BackButton to={routeCourseId ? `/cursos/${effectiveCourseId}/participantes` : (selectedParticipantId ? `/participantes/${selectedParticipantId}/cursos` : '/acessos')} />
+      <BackButton to={backTarget} />
       <div className="mb-8 flex items-center justify-center max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>
