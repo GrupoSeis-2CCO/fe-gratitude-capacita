@@ -62,6 +62,11 @@ export const userService = {
     }
   },
 
+  isLoggedIn: () => {
+    const token = localStorage.getItem("token");
+    return !!token;
+  },
+
   // Remove um usuário pelo ID
   delete: async (idUsuario) => {
     if (idUsuario == null) throw new Error("idUsuario é obrigatório");
