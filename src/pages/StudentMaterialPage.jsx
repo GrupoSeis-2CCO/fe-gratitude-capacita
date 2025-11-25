@@ -413,9 +413,15 @@ export default function StudentMaterialPage() {
   function getPdfUrl(m) {
     if (!m) return '';
     let candidate = m.url || m.urlArquivo || m.url_arquivo || m.arquivoUrl || m.link;
-    if (candidate && typeof candidate === 'string') return candidate;
+    if (candidate && typeof candidate === 'string') {
+      // Se já for uma URL completa (S3 ou outro), retorna diretamente
+      if (/^https?:\/\//i.test(candidate)) return candidate;
+      return candidate;
+    }
     const storageName = m.nomeApostilaArmazenamento || m.nome_apostila_armazenamento;
     if (storageName && typeof storageName === 'string') {
+      // Se já for uma URL completa (S3), retorna diretamente
+      if (/^https?:\/\//i.test(storageName)) return storageName;
       let clean = storageName.startsWith('/') ? storageName.slice(1) : storageName;
       // Avoid duplicates if value already contains 'uploads/'
       if (/^uploads\//i.test(clean)) {

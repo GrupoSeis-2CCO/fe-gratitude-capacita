@@ -1,21 +1,21 @@
 import { api } from './api.js';
 
 export async function uploadFileToS3(file, tipoBucket = 'bronze') {
-  // Envia o arquivo para o endpoint backend que salva arquivos em /uploads
+  // Envia o arquivo para o endpoint backend que faz upload para o S3
   const form = new FormData();
   form.append('file', file);
   form.append('tipoBucket', tipoBucket);
   try {
-    console.log('[UploadService] Enviando arquivo para /arquivos/upload:', file, 'tipoBucket:', tipoBucket);
+    console.log('[UploadService] Enviando arquivo para S3 via /arquivos/upload:', file.name, 'tipoBucket:', tipoBucket);
     const resp = await api.post('/arquivos/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
-    console.log('[UploadService] Resposta recebida do backend:', resp.data);
-    return resp.data; // espera algo como '/uploads/<filename>'
+    console.log('[UploadService] Resposta recebida do backend (URL S3):', resp.data);
+    return resp.data; // retorna URL completa do S3 (ex: https://bucket.s3.region.amazonaws.com/apostilas/uuid_file.pdf)
   } catch (err) {
     // Mensagens mais amigáveis para 413 (payload too large)
     const status = err?.response?.status;
     if (status === 413) {
       console.error('[UploadService] Arquivo muito grande:', file);
-      throw new Error('Arquivo muito grande. Tente uma imagem menor ou comprima antes de enviar.');
+      throw new Error('Arquivo muito grande. Tente um arquivo menor ou comprima antes de enviar.');
     }
     // rethrow with server message if available
     if (err?.response?.data) {
