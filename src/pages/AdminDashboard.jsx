@@ -3,7 +3,7 @@ import { api } from '../services/api.js';
 import ApexBarChart from '../components/ApexBarChart.jsx';
 
 // Página inicial de dashboard administrativo (funcionário)
-export default function AdminDashboardPage() {
+function AdminDashboardPage() {
   const [cursoId, setCursoId] = useState(null);
   const [cursoValido, setCursoValido] = useState(false);
   const [validandoCurso, setValidandoCurso] = useState(false);
@@ -346,3 +346,5 @@ function MetricCard({ title, value, secondaryValue, textColor = "text-zinc-800",
     </div>
   );
 }
+
+export default AdminDashboardPage;
