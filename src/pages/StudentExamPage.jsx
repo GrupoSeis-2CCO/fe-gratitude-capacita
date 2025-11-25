@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
-import BackButton from "../components/BackButton.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
@@ -171,13 +170,9 @@ export default function StudentExamPage() {
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <div>
-              <BackButton to={`/cursos/${idCurso}/material`} />
-            </div>
-            <div className="text-center">
+            <div className="text-center w-full">
               <TituloPrincipal>{title}</TituloPrincipal>
             </div>
-            <div className="w-24" />
           </div>
         </div>
 

@@ -8,7 +8,6 @@ import YearFilter from "../components/YearFilter.jsx";
 import ApexLineChart from "../components/ApexLineChart.jsx";
 import Chart from 'react-apexcharts';
 import Button from "../components/Button"; // other actions if needed
-import BackButton from "../components/BackButton.jsx";
 
 export function UserPage({ courseId = 1, days = 14 }) {
   const routeParams = useParams();
@@ -208,8 +207,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
   } catch (e) { /* noop */ }
 
   return (
-    <div className="relative min-h-screen bg-gray-50 pt-28 p-8">
-      <BackButton to={backTarget} />
+    <div className="relative min-h-screen bg-white pt-28 p-8">
       <div className="mb-8 flex items-center justify-center max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>

@@ -3,7 +3,6 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
 import ExamViewer from "../components/ExamViewer.jsx";
 import AnswerSheetPageService from "../services/AnswerSheetPageService.js";
-import BackButton from "../components/BackButton.jsx";
 import { useParams } from "react-router-dom";
 import { api } from "../services/api.js";
 
@@ -86,7 +85,6 @@ export default function AnswerSheetPage() {
 
   return (
     <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
-      <BackButton to={idUsuarioNum ? `/participantes/${idUsuarioNum}/avaliacoes` : null} />
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
       <div className="w-full max-w-none mx-auto flex-grow">

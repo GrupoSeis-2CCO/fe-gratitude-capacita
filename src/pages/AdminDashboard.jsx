@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api.js';
-import BackButton from '../components/BackButton.jsx';
 import ApexBarChart from '../components/ApexBarChart.jsx';
 
 // Página inicial de dashboard administrativo (funcionário)
@@ -32,6 +31,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState(null);
   const [showInactiveModal, setShowInactiveModal] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Helper para calcular datas
   const getDateRange = (year, month, week) => {
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
         setErro('Erro ao carregar métricas');
       })
       .finally(() => setLoading(false));
-  }, [cursoId, cursoValido, selectedMonth, selectedWeek]);
+  }, [cursoId, cursoValido, selectedMonth, selectedWeek, refreshTrigger]);
 
   const months = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -108,44 +108,102 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex w-full h-screen bg-zinc-50 overflow-hidden">
+    <div className="flex w-full h-screen bg-white overflow-hidden">
       <div className="flex-1 relative pl-6 md:pl-12 lg:pl-16">
-        <div className="px-4 pt-20 pb-4 max-w-7xl mx-auto h-full overflow-y-auto">
-          <BackButton className="" />
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 mt-2 gap-4">
-            <h1 className="text-xl md:text-2xl font-semibold">Dashboard Administrativo</h1>
-          </div>
-
-          <div className="mb-6 flex items-center gap-4 flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">Curso</label>
-              <select
-                className={`border rounded px-3 py-2 min-w-[240px] text-sm ${cursoId && !cursoValido ? 'border-red-500 bg-red-50' : 'border-zinc-300'}`}
-                value={cursoId ?? ''}
-                onChange={e => {
-                  const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                  setCursoId(val);
-                }}
-              >
-                <option value="" disabled>Selecione</option>
-                {listaCursos.map(c => (
-                  <option key={c.id} value={c.id}>{c.id} - {c.nome}</option>
-                ))}
-              </select>
+        <div className="px-4 pt-24 pb-4 max-w-7xl mx-auto h-full overflow-y-auto">
+          {!cursoId ? (
+            <div className="flex flex-col items-center justify-center h-full pb-20 animate-fade-in">
+              <h1 className="text-4xl md:text-5xl font-bold text-zinc-800 mb-8 text-center">Dashboards Cursos</h1>
+              <div className="w-full max-w-md">
+                <label className="block text-sm font-medium text-zinc-600 mb-2 text-center">Selecione um Curso para começar</label>
+                <select
+                  className="w-full border border-zinc-300 rounded-lg px-4 py-3 text-lg bg-white shadow-lg cursor-pointer hover:border-zinc-400 transition-colors focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  value=""
+                  onChange={e => {
+                    const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                    setCursoId(val);
+                  }}
+                >
+                  <option value="" disabled>Selecione um curso...</option>
+                  {listaCursos.map(c => (
+                    <option key={c.id} value={c.id}>{c.id} - {c.nome}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div className="text-base text-zinc-600 min-h-[24px] flex items-center">
-              {validandoCurso ? 'Validando...' : (!cursoId ? 'Selecione um curso.' : cursoValido ? 'Curso válido.' : 'Curso não encontrado.')}
-            </div>
-          </div>
+          ) : (
+            <>
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 mt-2 gap-4">
+                <h1 className="text-xl md:text-2xl font-semibold">Dashboards Cursos</h1>
+              </div>
 
-          {loading && <p className="text-base text-zinc-500 mb-4">Carregando métricas...</p>}
+              <div className="mb-6 flex items-center gap-4 flex-wrap">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-zinc-600">Curso</label>
+                  <select
+                    className={`border rounded px-3 py-2 min-w-[240px] text-sm cursor-pointer ${cursoId && !cursoValido ? 'border-red-500 bg-red-50' : 'border-zinc-300 bg-zinc-100'}`}
+                    value={cursoId ?? ''}
+                    onChange={e => {
+                      const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                      setCursoId(val);
+                    }}
+                  >
+                    <option value="" disabled>Selecione</option>
+                    {listaCursos.map(c => (
+                      <option key={c.id} value={c.id} className="cursor-pointer">{c.id} - {c.nome}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="text-base text-zinc-600 min-h-[24px] flex items-center">
+                  {validandoCurso ? 'Validando...' : (!cursoId ? 'Selecione um curso.' : !cursoValido ? 'Curso não encontrado.' : null)}
+                </div>
+
+                {cursoId && cursoValido && (
+                  <button 
+                    onClick={() => setRefreshTrigger(prev => prev + 1)}
+                    disabled={loading}
+                    className={`ml-auto px-4 py-2 border border-zinc-300 text-zinc-700 rounded transition-colors text-sm font-medium flex items-center gap-2 shadow-md ${loading ? 'bg-zinc-200 cursor-not-allowed opacity-70' : 'bg-zinc-100 hover:bg-zinc-200 cursor-pointer'}`}
+                    title="Atualizar dados"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={loading ? 'animate-spin' : ''}>
+                      {loading ? (
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                      ) : (
+                        <>
+                          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/>
+                        </>
+                      )}
+                    </svg>
+                    {loading ? 'Atualizando...' : 'Atualizar'}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
           {erro && <p className="text-base text-red-600 mb-4">{erro}</p>}
 
-          {kpis && cursoValido && !loading && (
-            <section className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-6">
-              <MetricCard title="% Colaboradores Ativos (7 dias)" value={kpis.ativosSemanaPct.toFixed(1) + '%'} />
-              <MetricCard title="% Ativos 3x ou mais (7 dias)" value={kpis.ativos3xSemanaPct.toFixed(1) + '%'} />
-              <MetricCard title="% Concluindo +1 Curso (7 dias)" value={kpis.concluindoMais1CursoPct.toFixed(1) + '%'} />
+          {kpis && (
+            <>
+              <p className="text-xs text-zinc-500 mb-2 italic text-right">
+                * Clique nas métricas para ver o número de participantes
+              </p>
+              <section className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-4">
+              <MetricCard 
+                title="% Colaboradores Ativos (7 dias)" 
+                value={kpis.ativosSemanaPct.toFixed(1) + '%'} 
+                secondaryValue={kpis.ativosSemanaCount + ' usuários'}
+              />
+              <MetricCard 
+                title="% Ativos 3x ou mais (7 dias)" 
+                value={kpis.ativos3xSemanaPct.toFixed(1) + '%'} 
+                secondaryValue={kpis.ativos3xSemanaCount + ' usuários'}
+              />
+              <MetricCard 
+                title="% Concluindo +1 Curso (7 dias)" 
+                value={kpis.concluindoMais1CursoPct.toFixed(1) + '%'} 
+                secondaryValue={kpis.concluindoMais1CursoCount + ' usuários'}
+              />
               <MetricCard 
                 title="Participantes Inativos (>15 dias)" 
                 value={kpis.inativosCount} 
@@ -154,36 +212,37 @@ export default function AdminDashboardPage() {
                 onClick={() => setShowInactiveModal(true)}
               />
             </section>
+            </>
           )}
 
           {cursoId && cursoValido && (
-            <div className="bg-white rounded-lg shadow px-4 py-4 mb-6 border border-zinc-100 relative">
+            <div className="bg-zinc-100 rounded-lg shadow-md px-4 py-3 mb-4 border border-zinc-200 relative">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-zinc-800">Engajamento Diário</h2>
                 {/* Filtros de Mês e Semana */}
                 <div className="flex gap-3">
                   <select 
-                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-white min-w-[120px]"
+                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-zinc-100 min-w-[120px] cursor-pointer"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                   >
                     {months.map((m, idx) => (
-                      <option key={idx} value={idx}>{m}</option>
+                      <option key={idx} value={idx} className="cursor-pointer">{m}</option>
                     ))}
                   </select>
                   
                   <select 
-                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-white min-w-[180px]"
+                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-zinc-100 min-w-[180px] cursor-pointer"
                     value={selectedWeek}
                     onChange={(e) => setSelectedWeek(parseInt(e.target.value))}
                   >
-                    <option value={0}>Mês Inteiro</option>
+                    <option value={0} className="cursor-pointer">Mês Inteiro</option>
                     {Array.from({ length: weeksInMonth }, (_, i) => i + 1).map(w => {
                       const { from, to } = getDateRange(currentYear, selectedMonth, w);
                       const fromStr = from.split('-').slice(1).reverse().join('/');
                       const toStr = to.split('-').slice(1).reverse().join('/');
                       return (
-                        <option key={w} value={w}>Semana {w} ({fromStr} - {toStr})</option>
+                        <option key={w} value={w} className="cursor-pointer">Semana {w} ({fromStr} - {toStr})</option>
                       );
                     })}
                   </select>
@@ -192,17 +251,33 @@ export default function AdminDashboardPage() {
               <div className="h-72">
                 <ApexBarChart data={engajamento} height={280} />
               </div>
+              <div className="mt-4 pt-3 border-t border-zinc-200">
+                <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-900">
+                  <div className="bg-blue-100 p-1.5 rounded-full flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  </div>
+                  <p className="text-sm font-semibold">
+                    Nota: Engajamento significa que um material foi concluído.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
-          <footer className="text-xs text-zinc-500 mt-4">Atualizado: {kpis?.generatedAt || new Date().toLocaleString()}</footer>
+          {cursoId && cursoValido && (
+            <footer className="mt-6 flex justify-end">
+              <span className="text-sm font-medium text-zinc-600 bg-zinc-100 px-4 py-2 rounded-full shadow-md border border-zinc-200">
+                Atualizado: {kpis?.generatedAt ? new Date(kpis.generatedAt).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR')}
+              </span>
+            </footer>
+          )}
         </div>
       </div>
 
       {showInactiveModal && kpis && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-            <div className="p-6 border-b flex justify-between items-center">
+          <div className="bg-zinc-100 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col border border-zinc-200">
+            <div className="p-6 border-b border-zinc-300 flex justify-between items-center">
               <h3 className="font-bold text-2xl text-red-600">Participantes Inativos</h3>
               <button onClick={() => setShowInactiveModal(false)} className="text-zinc-400 hover:text-zinc-600 p-2">
                 <span className="text-2xl">✕</span>
@@ -210,11 +285,18 @@ export default function AdminDashboardPage() {
             </div>
             <div className="p-6 overflow-y-auto flex-1">
               {kpis.inativosLista && kpis.inativosLista.length > 0 ? (
-                <ul className="divide-y divide-zinc-100">
+                <ul className="divide-y divide-zinc-200">
                   {kpis.inativosLista.map((u, idx) => (
-                    <li key={idx} className="py-4 flex flex-col gap-1">
-                      <span className="font-semibold text-lg text-zinc-800">{u.nome}</span>
-                      <span className="text-sm text-zinc-500">{u.email}</span>
+                    <li key={idx} className="py-4 flex justify-between items-center">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-lg text-zinc-800">{u.nome}</span>
+                        <span className="text-sm text-zinc-500">{u.email}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          {u.diasInativo > 10000 ? 'Nunca acessou' : `${u.diasInativo} dias inativo`}
+                        </span>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -222,7 +304,7 @@ export default function AdminDashboardPage() {
                 <p className="text-zinc-500 text-center py-8 text-lg">Nenhum participante inativo encontrado.</p>
               )}
             </div>
-            <div className="p-6 border-t bg-zinc-50 rounded-b-xl flex justify-end">
+            <div className="p-6 border-t border-zinc-300 bg-zinc-50 rounded-b-xl flex justify-end">
               <button 
                 onClick={() => setShowInactiveModal(false)}
                 className="px-6 py-3 bg-zinc-200 hover:bg-zinc-300 rounded-lg text-base font-medium text-zinc-700 transition-colors"
@@ -237,15 +319,30 @@ export default function AdminDashboardPage() {
   );
 }
 
-function MetricCard({ title, value, textColor = "text-zinc-800", isClickable = false, onClick }) {
+function MetricCard({ title, value, secondaryValue, textColor = "text-zinc-800", isClickable = false, onClick }) {
+  const [showSecondary, setShowSecondary] = useState(false);
+
+  const handleClick = () => {
+    if (secondaryValue) {
+      setShowSecondary(!showSecondary);
+    }
+    if (onClick) {
+      onClick();
+    }
+  };
+
+  const displayValue = showSecondary ? secondaryValue : value;
+  const cursorClass = (isClickable || secondaryValue) ? 'cursor-pointer hover:bg-zinc-200 transition-colors ring-1 ring-transparent hover:ring-zinc-300' : '';
+
   return (
     <div 
-      className={`bg-white rounded-lg shadow-sm px-6 py-5 flex flex-col gap-2 border border-zinc-100 ${isClickable ? 'cursor-pointer hover:bg-zinc-50 transition-colors ring-1 ring-transparent hover:ring-zinc-200' : ''}`}
-      onClick={isClickable ? onClick : undefined}
+      className={`bg-zinc-100 rounded-lg shadow-md px-4 py-3 flex flex-col items-center justify-center text-center gap-1 border border-zinc-200 h-full ${cursorClass}`}
+      onClick={handleClick}
     >
-      <span className="text-sm uppercase tracking-wide text-zinc-500 font-semibold">{title}</span>
-      <span className={`text-4xl font-bold ${textColor}`}>{value}</span>
-      {isClickable && <span className="text-xs text-zinc-400 mt-1">Clique para ver detalhes</span>}
+      <span className="text-xs uppercase tracking-wide text-zinc-500 font-semibold">{title}</span>
+      <span className={`text-3xl font-bold ${textColor}`}>{displayValue}</span>
+      {isClickable && !secondaryValue && <span className="text-[10px] text-zinc-400 mt-1">Clique para ver detalhes</span>}
+      {secondaryValue && <span className="text-[10px] text-zinc-400 mt-1">Clique para alternar</span>}
     </div>
   );
 }

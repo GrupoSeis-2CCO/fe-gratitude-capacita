@@ -136,7 +136,7 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
   return (
     <div>
       {!isEditing ? (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-center items-center mb-8">
+        <div className="bg-slate-100 border border-slate-300 rounded-lg shadow-md p-4 flex justify-center items-center mb-8">
           <Button 
             variant="Default" 
             label="Adicionar Material" 

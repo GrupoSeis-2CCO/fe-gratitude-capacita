@@ -3,7 +3,6 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
-import BackButton from "../components/BackButton.jsx";
 import AddMaterialSection from "../components/AddMaterialSection.jsx";
 import MaterialCard from "../components/MaterialCard.jsx";
 import AddEvaluationSection from "../components/AddEvaluationSection.jsx";
@@ -207,7 +206,7 @@ export default function MaterialsListPage() {
 	}
 
 	return (
-		<div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
 			{/* Decorative rails left and right */}
 			<GradientSideRail className="left-10" />
 			<GradientSideRail className="right-10" variant="inverted" />
@@ -216,7 +215,7 @@ export default function MaterialsListPage() {
 				<div className="max-w-4xl mx-auto">
 					<div className="flex items-center justify-between mb-6">
 						<div>
-							<BackButton to={`/cursos/${idCurso}`} />
+							{/* BackButton removido - gerenciado pelo Header */}
 						</div>
 						<div className="text-center">
 							<TituloPrincipal>{courseName || '...'}</TituloPrincipal>

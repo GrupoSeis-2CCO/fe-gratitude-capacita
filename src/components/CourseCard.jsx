@@ -24,8 +24,8 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
     return null;
   }, [rawHours]);
 
-  // alternate card backgrounds for subtle contrast
-  const bgClass = index % 2 === 1 ? 'bg-[#FAFAFA]' : 'bg-white';
+  // Card background: slate-100 (sophisticated neutral)
+  const bgClass = 'bg-slate-100';
 
   return (
     <div className="mb-8 relative">
@@ -73,21 +73,21 @@ export default function CourseCard({ course, onClick, onEdit, onDelete, onToggle
       </div>
       <div
         onClick={() => onClick && onClick(course)}
-        className={`${bgClass} border border-gray-200 rounded-lg shadow-lg p-4 flex gap-6 transition transform hover:-translate-y-1 hover:shadow-2xl ${onClick ? 'cursor-pointer' : ''}`}
+        className={`${bgClass} border border-slate-300 rounded-lg shadow-md p-4 flex gap-6 transition transform hover:-translate-y-1 hover:shadow-xl ${onClick ? 'cursor-pointer' : ''}`}
         style={isHidden ? { filter: 'blur(2px)', pointerEvents: 'none', userSelect: 'none' } : undefined}
       >
         <SmartImage
           src={imageSrc}
           alt={`Imagem do ${course.title}`}
-          className="w-48 h-32 object-cover rounded-lg bg-gray-100"
+          className="w-48 h-32 object-cover rounded-lg bg-zinc-200"
         />
-        <div className="flex-1">
+        <div className="flex-1 bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
           <h3 className="font-semibold text-gray-700">Conteúdo:</h3>
           <p className="text-gray-600 text-sm mt-1">
             {course.description}
           </p>
         </div>
-        <div className="border-l border-gray-200 pl-6 w-64">
+        <div className="w-64 bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
             <div className="flex flex-col gap-4">
             <div>
               <div className="text-sm text-gray-500">Materiais</div>

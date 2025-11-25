@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
-import BackButton from "../components/BackButton.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamBuilder from "../components/ExamBuilder.jsx";
 import CreateExamPageService from "../services/CreateExamPageService.js";
@@ -46,7 +45,7 @@ export default function CreateExamPage() {
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
           <div className="mb-4">
-            <BackButton to={`/cursos/${cursoId}/material/`} />
+            {/* BackButton removido - gerenciado pelo Header */}
           </div>
           <TituloPrincipal>Criar Avaliação - Curso {cursoId}</TituloPrincipal>
         </div>

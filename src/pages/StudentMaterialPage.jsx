@@ -4,7 +4,6 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import SmartImage from "../components/SmartImage.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
-import BackButton from "../components/BackButton.jsx";
 import { FileText, Youtube, CheckCircle2, Loader2 } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
@@ -759,8 +758,6 @@ export default function StudentMaterialPage() {
         </div>
 
         <div className="mb-6 flex justify-between items-center">
-          <BackButton to={`/cursos/${idCurso}/material`} />
-
           {material?.finalizado && (
             <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
               <CheckCircle2 size={16} className="mr-1" /> Concluído

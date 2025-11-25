@@ -459,7 +459,7 @@ export default function StudentMaterialsListPage() {
   );
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -489,13 +489,13 @@ export default function StudentMaterialsListPage() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Pesquisar por título ou descrição"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-zinc-50"
               />
             </div>
             <div className="w-full md:w-56">
               <label className="block text-sm text-gray-700 mb-1">Status</label>
               <select
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-zinc-50"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -509,7 +509,7 @@ export default function StudentMaterialsListPage() {
               <button
                 type="button"
                 onClick={() => { setSearchText(""); setStatusFilter(""); }}
-                className="px-4 py-2 border border-gray-300 rounded text-sm cursor-pointer bg-white"
+                className="px-4 py-2 border border-gray-300 rounded text-sm cursor-pointer bg-zinc-50"
               >
                 Limpar filtros
               </button>

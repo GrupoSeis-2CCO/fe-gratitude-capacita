@@ -6,7 +6,6 @@ import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import Table from "../components/Table";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import Button from "../components/Button.jsx"; // still used for other buttons if any
-import BackButton from "../components/BackButton.jsx";
 
 export function ClassUsersPage() {
   const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -164,11 +163,11 @@ export function ClassUsersPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-gray-50 to-white pt-28 pb-12">
+    <div className="relative min-h-screen bg-white pt-28 pb-12">
       <GradientSideRail className="left-10" />
       <GradientSideRail variant="inverted" className="right-10" />
 
-      <BackButton to={`/cursos/${effectiveCursoId}`} />
+      {/* BackButton removido - gerenciado pelo Header */}
 
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex items-center justify-center mb-6">

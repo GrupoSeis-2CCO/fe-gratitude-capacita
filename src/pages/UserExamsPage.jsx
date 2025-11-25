@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTentativasPorMatricula, getTentativasPorUsuario } from '../services/UserExamsService.js';
 import { api } from "../services/api.js";
-import BackButton from "../components/BackButton.jsx";
 
 export function UserExamsPageComponent(props) {
   return <UserExamsPage {...props} />;
@@ -194,7 +193,6 @@ export default function UserExamsPage({ courseId = 1 }) {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-28 p-8">
-      <BackButton to={participanteAtual ? buildParticipantPath(participanteAtual) : (routeParticipantId ? buildParticipantPath(routeParticipantId) : '/participantes')} />
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Provas do Colaborador y</h1>
       </div>

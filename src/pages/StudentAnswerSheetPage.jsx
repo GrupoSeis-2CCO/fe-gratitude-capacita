@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamViewer from "../components/ExamViewer.jsx";
-import BackButton from "../components/BackButton.jsx";
 
 export default function StudentAnswerSheetPage() {
 	const { getCurrentUserType, isLoggedIn } = useAuth();
@@ -102,7 +101,7 @@ export default function StudentAnswerSheetPage() {
 								<p><strong>Aproveitamento:</strong> {((mockAnswerSheet.score / mockAnswerSheet.maxScore) * 100).toFixed(1)}%</p>
 							</div>
 							<div className="flex justify-end">
-								<BackButton to="/avaliacoes" />
+								{/* BackButton removido - gerenciado pelo Header */}
 							</div>
 						</div>
 					</div>
