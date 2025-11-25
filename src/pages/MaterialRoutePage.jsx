@@ -5,7 +5,6 @@ import MaterialPage from "./MaterialPage.jsx";
 import StudentMaterialPage from "./StudentMaterialPage.jsx";
 import Layout from "../Layout.jsx";
 import Button from "../components/Button.jsx"; // keep for other actions if needed
-import BackButton from "../components/BackButton.jsx";
 
 /**
  * Componente que redireciona para a página correta baseado no tipo do usuário
@@ -35,7 +34,7 @@ export default function MaterialRoutePage() {
 		return (
 			<Layout footerType="mini" headerType="default">
 				<div className="relative">
-					<BackButton to={`/cursos/${idCurso}/material`} />
+					{/* BackButton removido - gerenciado pelo Header */}
 				</div>
 				<MaterialPage />
 			</Layout>
@@ -45,7 +44,7 @@ export default function MaterialRoutePage() {
 	return (
 		<Layout footerType="mini" headerType="student">
 			<div className="relative">
-				<BackButton to={`/cursos/${idCurso}/material`} />
+				{/* BackButton removido - gerenciado pelo Header */}
 			</div>
 			<StudentMaterialPage />
 		</Layout>

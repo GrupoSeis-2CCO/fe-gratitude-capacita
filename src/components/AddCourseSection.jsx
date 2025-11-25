@@ -96,7 +96,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
     return (
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex justify-center items-center mb-8">
+      <div className="bg-slate-100 border border-slate-300 rounded-lg shadow-md p-4 flex justify-center items-center mb-8">
 
         <Button variant="Confirm" label="Adicionar Curso" onClick={() => { setIsHidden(true); setIsEditing(true); }} />
 

@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
-import BackButton from "../components/BackButton.jsx";
 import { getFeedbacksByCurso } from "../services/feedbackService.js";
 
 export default function FeedbackPage() {
@@ -64,16 +63,12 @@ export default function FeedbackPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-          <div className="mb-8 flex items-center justify-between">
-          <div>
-            <BackButton to={`/cursos/${idCurso}`} />
-          </div>
+          <div className="mb-8 flex items-center justify-center">
           <div className="text-center">
             <TituloPrincipal>
               Analisar Feedbacks do Curso {cursoTitulo ? `- ${cursoTitulo}` : `#${idCurso}`}
             </TituloPrincipal>
           </div>
-          <div className="w-24" />
         </div>
 
         <div className="mt-8 w-full">

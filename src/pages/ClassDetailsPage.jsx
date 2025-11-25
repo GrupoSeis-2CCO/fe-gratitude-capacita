@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
-import BackButton from '../components/BackButton.jsx';
 import Header from '../components/Header';
 import GradientSideRail from '../components/GradientSideRail';
 import SmartImage from '../components/SmartImage.jsx';
@@ -73,12 +72,12 @@ function ClassDetailsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 relative">
+      <div className="min-h-screen bg-white relative">
         <GradientSideRail className="left-10" />
         <GradientSideRail className="right-10" variant="inverted" />
         <Header />
 
-        <BackButton to={'/cursos'} />
+        {/* BackButton removido - gerenciado pelo Header */}
 
         <div className="max-w-4xl mx-auto px-4 py-8 pt-28">
           <div className="flex items-center justify-center mb-6">
@@ -88,7 +87,7 @@ function ClassDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-slate-100 border border-slate-300 rounded-2xl shadow-xl overflow-hidden">
             <div className="p-6">
               <div className="flex gap-6 items-start">
                 <div className="flex-shrink-0">
@@ -109,12 +108,11 @@ function ClassDetailsPage() {
                       <div className="mt-2 text-sm text-gray-500">{dados?.subTitulo || ''}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold">{totalHoras}</span>
                       <div className="text-gray-400">{/* placeholder for actions */}</div>
                     </div>
                   </div>
 
-                  <div className="mt-4">
+                  <div className="mt-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
                     <h4 className="text-lg font-medium text-gray-700 mb-2">Conteúdo</h4>
                     {loading ? (
                       <p className="text-gray-500">Carregando...</p>
@@ -126,8 +124,18 @@ function ClassDetailsPage() {
                   </div>
                 </div>
 
-                <div className="w-56 pl-6 border-l border-gray-100">
-                  <div className="space-y-4">
+                <div className="w-56 pl-6 border-l border-slate-200">
+                  <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                    <div>
+                      <div className="text-sm text-gray-500">Horas</div>
+                      <div className="mt-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold border border-indigo-100">
+                          {totalHoras}
+                        </span>
+                        <span className="ml-3 text-sm text-gray-600">de curso</span>
+                      </div>
+                    </div>
+
                     <div>
                       <div className="text-sm text-gray-500">Materiais</div>
                       <div className="mt-1">
@@ -152,7 +160,7 @@ function ClassDetailsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-5 bg-gradient-to-r from-white to-gray-50">
+            <div className="px-6 py-5 bg-slate-50 border-t border-slate-200">
               <div className="grid grid-cols-3 gap-4">
                 <Button
                   variant="Default"

@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/useAuth.js";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal.jsx";
 import Button from "../components/Button"; // keep for other actions
-import BackButton from "../components/BackButton.jsx";
 import { api } from "../services/api.js";
 import feedbackService from "../services/feedbackService.js";
 
@@ -157,11 +156,11 @@ export default function FeedbacksDoCursoPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
-      <BackButton to={`/cursos/${idCurso}`} />
+      {/* BackButton removido - gerenciado pelo Header */}
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">

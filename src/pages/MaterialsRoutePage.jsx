@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import BackButton from "../components/BackButton.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import { Navigate } from "react-router-dom";
 import MaterialsListPage from "./MaterialsListPage.jsx";
@@ -77,7 +76,7 @@ export default function MaterialsRoutePage() {
 		return (
 			<Layout footerType="mini" headerType="default">
 				<div className="relative">
-					<BackButton to={'/cursos'} />
+					{/* BackButton removido - gerenciado pelo Header */}
 				</div>
 				<MaterialsListPage />
 			</Layout>
@@ -88,7 +87,7 @@ export default function MaterialsRoutePage() {
 	return (
 		<Layout footerType="mini" headerType="student">
 			<div className="relative">
-				<BackButton to={'/cursos'} />
+				{/* BackButton removido - gerenciado pelo Header */}
 			</div>
 			<StudentMaterialsListPage />
 		</Layout>

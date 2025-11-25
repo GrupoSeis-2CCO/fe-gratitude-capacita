@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../components/Button"; // still used potentially elsewhere
-import BackButton from "../components/BackButton.jsx";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamTaker from "../components/ExamTaker.jsx";
@@ -77,7 +76,7 @@ export default function ExamPage({ examId = 1 }) {
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
-      <BackButton to={`/cursos/${idCurso}/material`} />
+      {/* BackButton removido - gerenciado pelo Header */}
 
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
