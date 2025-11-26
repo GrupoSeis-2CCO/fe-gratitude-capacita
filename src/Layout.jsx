@@ -8,12 +8,12 @@ import NavigationTracker from "./components/NavigationTracker.jsx";
 function Layout({ children, footerType = "full", headerType = "default" }) {
   return (
     <NavigationTracker>
-      <>
+      <div className="min-h-screen flex flex-col bg-white">
         {headerType === "student" ? <StudentHeader /> : <Header />}
-        {children}
+        <main className="flex-1 w-full">{children}</main>
         {footerType === "mini" ? <MiniFooter /> : <Footer />}
         <ToastHub />
-      </>
+      </div>
     </NavigationTracker>
   );
 }

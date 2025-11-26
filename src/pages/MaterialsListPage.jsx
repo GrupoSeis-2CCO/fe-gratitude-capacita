@@ -206,7 +206,7 @@ export default function MaterialsListPage() {
 	}
 
 	return (
-		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+		<div className="relative min-h-screen flex flex-col bg-white px-8 pt-13 pb-20">
 			{/* Decorative rails left and right */}
 			<GradientSideRail className="left-10" />
 			<GradientSideRail className="right-10" variant="inverted" />
@@ -316,3 +316,4 @@ export default function MaterialsListPage() {
 		</div>
 	);
 }
+

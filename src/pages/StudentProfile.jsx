@@ -6,7 +6,7 @@ import { Eye, EyeOff, User } from 'lucide-react';
 import { getProfile, updateProfile, changePassword, uploadAvatar, getStats } from "../services/StudentProfileService.js";
 
 export default function StudentProfile() {
-  // Acesso já é verificado pelo ProtectedRoute no router; sem redireciono interno aqui
+  // Acesso ja e verificado pelo ProtectedRoute no router; sem redireciono interno aqui
 
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -38,14 +38,14 @@ export default function StudentProfile() {
     const ddd = digits.slice(0, 2);
     const rest = digits.slice(2);
     if (!digits) return "";
-    if (digits.length <= 2) return `(${digits}`;
-    if (digits.length <= 6) return `(${ddd}) ${rest}`;
+    if (digits.length <= 2) return (;
+    if (digits.length <= 6) return () ;
     if (digits.length <= 10) {
       // Fixo: (11) 1234-5678
-      return `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`;
+      return () -;
     }
     // Celular: (11) 91234-5678
-    return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5, 9)}`;
+    return () -;
   };
 
   useEffect(() => {
@@ -80,9 +80,9 @@ export default function StudentProfile() {
 
   const handleSave = async () => {
     try {
-      // Validação básica de e-mail
+      // Validacao basica de e-mail
       if (!validateEmail(formData.email)) {
-        setEmailError("Informe um e-mail válido (ex.: nome@empresa.com)");
+        setEmailError("Informe um e-mail valido (ex.: nome@empresa.com)");
         return;
       }
       const payload = {
@@ -92,7 +92,7 @@ export default function StudentProfile() {
         telefone: formData.telefone,
         // departamento and cargo removed from profile UI
       };
-      const resp = await updateProfile(payload);
+      await updateProfile(payload);
       setIsEditing(false);
     } catch (e) { console.error('Falha ao salvar perfil:', e); }
   };
@@ -101,8 +101,8 @@ export default function StudentProfile() {
     if (!passwordForm.senhaAtual || !passwordForm.novaSenha) return;
     try {
       await changePassword({ id: formData.id, ...passwordForm });
-  setPasswordForm({ senhaAtual: "", novaSenha: "" });
-  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Senha atualizada' } }));
+      setPasswordForm({ senhaAtual: "", novaSenha: "" });
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'success', title: 'Senha atualizada' } }));
     } catch (e) {
       if (e?.response?.status === 401) {
         window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Senha atual incorreta' } }));
@@ -114,10 +114,10 @@ export default function StudentProfile() {
 
   const handleAvatarChange = async (file) => {
     if (!file) return;
-    // Validação leve de tamanho (até 5MB conforme ajuda visual)
+    // Validacao leve de tamanho (ate 5MB conforme ajuda visual)
     const maxBytes = 5 * 1024 * 1024;
     if (file.size > maxBytes) {
-  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Arquivo muito grande', message: 'Tamanho máximo: 5MB' } }));
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Arquivo muito grande', message: 'Tamanho maximo: 5MB' } }));
       return;
     }
     try {
@@ -126,19 +126,19 @@ export default function StudentProfile() {
       const url = resp.fotoUrl || resp.url;
       setFormData(prev => ({ ...prev, fotoUrl: url }));
     } catch (e) {
-  console.error('Erro ao enviar avatar:', e);
-  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao enviar imagem' } }));
+      console.error('Erro ao enviar avatar:', e);
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha ao enviar imagem' } }));
     } finally {
       setUploading(false);
-      // limpa o input para permitir reenvio do mesmo arquivo se necessário
+      // limpa o input para permitir reenvio do mesmo arquivo se necessario
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  if (loading) return <div className="min-h-screen pt-28 p-8">Carregando...</div>;
+  if (loading) return <div className="min-h-screen pt-13 p-8">Carregando...</div>;
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -150,30 +150,32 @@ export default function StudentProfile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 mb-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+                <div className="flex items-center gap-2">
                   <User size={24} className="text-orange-500" />
-                  Informações Pessoais
-                </h2>
-                {!isEditing ? (
-                  <Button variant="Default" label="Editar Perfil" onClick={() => setIsEditing(true)} />
-                ) : (
-                  <div className="flex gap-3">
-                    <Button variant="Confirm" label="Salvar" onClick={handleSave} />
-                    <Button variant="Cancel" label="Cancelar" onClick={() => setIsEditing(false)} />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-start gap-6 mb-6">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                  {formData.fotoUrl ? (
-                    <img src={formData.fotoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  <h2 className="text-2xl font-bold text-gray-800">Informacoes Pessoais</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {!isEditing ? (
+                    <Button variant="Default" label="Editar Perfil" onClick={() => setIsEditing(true)} />
                   ) : (
-                    <span className="text-gray-400">Sem foto</span>
+                    <>
+                      <Button variant="Confirm" label="Salvar" onClick={handleSave} />
+                      <Button variant="Cancel" label="Cancelar" onClick={() => setIsEditing(false)} />
+                    </>
                   )}
                 </div>
-                <div className="flex flex-col">
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-[230px,1fr]">
+                <div className="flex flex-col items-center md:items-start gap-3">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {formData.fotoUrl ? (
+                      <img src={formData.fotoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-gray-400">Sem foto</span>
+                    )}
+                  </div>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -186,66 +188,67 @@ export default function StudentProfile() {
                     label={uploading ? "Enviando..." : (formData.fotoUrl ? "Trocar foto" : "Anexar imagem")}
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
                     disabled={uploading}
+                    className="w-full md:w-auto"
                   />
-                  <div className="text-xs text-gray-500 mt-2">PNG/JPG até 5MB</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Nome Completo</label>
-                  {isEditing ? (
-                    <input type="text" value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" />
-                  ) : (
-                    <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.nome}</p>
-                  )}
+                  <div className="text-xs text-gray-500">PNG/JPG ate 5MB</div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
-                  {isEditing ? (
-                    <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nome Completo</label>
+                    {isEditing ? (
+                      <input type="text" value={formData.nome} onChange={(e) => handleInputChange('nome', e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100" />
+                    ) : (
+                      <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.nome}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                    {isEditing ? (
+                      <>
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          className={`w-full p-3 border ${emailError ? 'border-red-500' : 'border-gray-300'} rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100`}
+                        />
+                        {emailError && <div className="mt-1 text-sm text-red-600">{emailError}</div>}
+                      </>
+                    ) : (
+                      <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.email}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">CPF</label>
+                    <p className="text-gray-600 p-3 bg-gray-100 rounded-lg">{formData.cpf}</p>
+                    <span className="text-xs text-gray-500">CPF nao pode ser alterado</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Telefone</label>
+                    {isEditing ? (
                       <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className={`w-full p-3 border ${emailError ? 'border-red-500' : 'border-gray-300'} rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100`}
+                        type="tel"
+                        inputMode="numeric"
+                        value={formData.telefone}
+                        onChange={(e) => handleInputChange('telefone', e.target.value)}
+                        placeholder="(11) 91234-5678"
+                        className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                       />
-                      {emailError && <div className="mt-1 text-sm text-red-600">{emailError}</div>}
-                    </>
-                  ) : (
-                    <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.email}</p>
-                  )}
-                </div>
+                    ) : (
+                      <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.telefone || 'Nao informado'}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">CPF</label>
-                  <p className="text-gray-600 p-3 bg-gray-100 rounded-lg">{formData.cpf}</p>
-                  <span className="text-xs text-gray-500">CPF não pode ser alterado</span>
+                  {/* Cargo and Departamento fields removed from profile */}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Telefone</label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      inputMode="numeric"
-                      value={formData.telefone}
-                      onChange={(e) => handleInputChange('telefone', e.target.value)}
-                      placeholder="(11) 91234-5678"
-                      className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-                    />
-                  ) : (
-                    <p className="text-gray-600 p-3 bg-gray-50 rounded-lg">{formData.telefone || '—'}</p>
-                  )}
-                </div>
-
-                {/* Cargo and Departamento fields removed from profile */}
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">Segurança</h2>
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-6">Seguranca</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -269,7 +272,7 @@ export default function StudentProfile() {
                 </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <Button variant="Default" label="Alterar Senha" onClick={handleChangePassword} />
               </div>
             </div>
@@ -277,10 +280,10 @@ export default function StudentProfile() {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Minhas Estatísticas</h2>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Minhas Estatisticas</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Cursos Concluídos</span>
+                  <span className="text-gray-600">Cursos Concluidos</span>
                   <span className="font-bold text-green-600">{stats.cursosConcluidos}</span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -292,8 +295,8 @@ export default function StudentProfile() {
                   <span className="font-bold text-blue-600">{stats.horasEstudo}h</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Última Atividade</span>
-                  <span className="font-bold text-gray-600">{stats.ultimaAtividade ? new Date(stats.ultimaAtividade).toLocaleString('pt-BR') : '—'}</span>
+                  <span className="text-gray-600">Ultima Atividade</span>
+                  <span className="font-bold text-gray-600">{stats.ultimaAtividade ? new Date(stats.ultimaAtividade).toLocaleString('pt-BR') : 'Nao informado'}</span>
                 </div>
               </div>
             </div>
@@ -303,3 +306,4 @@ export default function StudentProfile() {
     </div>
   );
 }
+

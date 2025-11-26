@@ -71,7 +71,7 @@ export default function ExamPage({ examId = 1 }) {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
       {/* Decorative rails left and right */}
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
@@ -109,3 +109,4 @@ export default function ExamPage({ examId = 1 }) {
     </div>
   );
 }
+

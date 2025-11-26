@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { api } from '../services/api.js';
 import ApexBarChart from '../components/ApexBarChart.jsx';
 
@@ -108,8 +108,8 @@ function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex w-full h-screen bg-white overflow-hidden">
-      <div className="flex-1 relative pl-6 md:pl-12 lg:pl-16">
+    <div className="flex w-full min-h-screen bg-white overflow-hidden">
+      <div className="flex-1 relative pl-4 md:pl-12 lg:pl-16">
         <div className="px-4 pt-24 pb-4 max-w-7xl mx-auto h-full overflow-y-auto">
           {!cursoId ? (
             <div className="flex flex-col items-center justify-center h-full pb-20 animate-fade-in">
@@ -137,11 +137,11 @@ function AdminDashboardPage() {
                 <h1 className="text-xl md:text-2xl font-semibold">Dashboards Cursos</h1>
               </div>
 
-              <div className="mb-6 flex items-center gap-4 flex-wrap">
+              <div className="mb-6 flex items-start gap-4 flex-wrap">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-zinc-600">Curso</label>
                   <select
-                    className={`border rounded px-3 py-2 min-w-[240px] text-sm cursor-pointer ${cursoId && !cursoValido ? 'border-red-500 bg-red-50' : 'border-zinc-300 bg-zinc-100'}`}
+                    className={`border rounded px-3 py-2 min-w-[220px] text-sm cursor-pointer ${cursoId && !cursoValido ? 'border-red-500 bg-red-50' : 'border-zinc-300 bg-zinc-100'}`}
                     value={cursoId ?? ''}
                     onChange={e => {
                       const val = e.target.value ? parseInt(e.target.value, 10) : null;
@@ -217,12 +217,11 @@ function AdminDashboardPage() {
 
           {cursoId && cursoValido && (
             <div className="bg-zinc-100 rounded-lg shadow-md px-4 py-3 mb-4 border border-zinc-200 relative">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-2">
                 <h2 className="text-lg font-semibold text-zinc-800">Engajamento Diário</h2>
-                {/* Filtros de Mês e Semana */}
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <select 
-                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-zinc-100 min-w-[120px] cursor-pointer"
+                    className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-zinc-100 min-w-[150px] cursor-pointer"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                   >
@@ -280,7 +279,7 @@ function AdminDashboardPage() {
             <div className="p-6 border-b border-zinc-300 flex justify-between items-center">
               <h3 className="font-bold text-2xl text-red-600">Participantes Inativos</h3>
               <button onClick={() => setShowInactiveModal(false)} className="text-zinc-400 hover:text-zinc-600 p-2">
-                <span className="text-2xl">✕</span>
+                <span className="text-2xl">×</span>
               </button>
             </div>
             <div className="p-6 overflow-y-auto flex-1">

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
-import Header from '../components/Header';
 import GradientSideRail from '../components/GradientSideRail';
 import SmartImage from '../components/SmartImage.jsx';
 import ClassDetailsPageService from '../services/ClassDetailsPageService.js';
@@ -75,11 +74,10 @@ function ClassDetailsPage() {
       <div className="min-h-screen bg-white relative">
         <GradientSideRail className="left-10" />
         <GradientSideRail className="right-10" variant="inverted" />
-        <Header />
 
         {/* BackButton removido - gerenciado pelo Header */}
 
-        <div className="max-w-4xl mx-auto px-4 py-8 pt-28">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 pt-13 md:pt-13">
           <div className="flex items-center justify-center mb-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-800">Cursos de Capacitação</h2>
@@ -89,7 +87,7 @@ function ClassDetailsPage() {
 
           <div className="bg-slate-100 border border-slate-300 rounded-2xl shadow-xl overflow-hidden">
             <div className="p-6">
-              <div className="flex gap-6 items-start">
+              <div className="flex flex-col lg:flex-row gap-6 items-start">
                 <div className="flex-shrink-0">
                     <div className="w-36 h-24 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                       <SmartImage
@@ -124,7 +122,7 @@ function ClassDetailsPage() {
                   </div>
                 </div>
 
-                <div className="w-56 pl-6 border-l border-slate-200">
+                <div className="w-full lg:w-56 lg:pl-6 lg:border-l border-slate-200 flex-shrink-0 space-y-4">
                   <div className="space-y-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
                     <div>
                       <div className="text-sm text-gray-500">Horas</div>
@@ -161,7 +159,7 @@ function ClassDetailsPage() {
             </div>
 
             <div className="px-6 py-5 bg-slate-50 border-t border-slate-200">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Button
                   variant="Default"
                   label="Ver Alunos e Desempenho"
@@ -187,3 +185,4 @@ function ClassDetailsPage() {
 }
 
 export default ClassDetailsPage;
+

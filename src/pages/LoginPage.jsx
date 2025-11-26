@@ -13,38 +13,35 @@ export function LoginPage() {
     setLoading(true);
     try {
       const data = await userService.login({ email, senha: password });
-      // Exibe no console o status do login e o tipo de usuário
       console.log("Login realizado com sucesso:", data);
       const userType = parseInt(localStorage.getItem("userType"));
-  // Redireciona para /cursos para qualquer cargo
-  navigate("/cursos");
+      navigate("/cursos");
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Login inválido', message: 'Email ou senha incorretos' } }));
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Login invalido', message: 'Email ou senha incorretos' } }));
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen pt-28 px-10 bg-gradient-to-tr from-blue-50 to-blue-100 flex justify-center items-start font-sans">
-      <div className="w-full max-w-7xl mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl text-gray-800 font-bold mb-4">
+    <div className="min-h-screen bg-gradient-to-tr from-blue-50 to-blue-100 flex items-center justify-center px-4 sm:px-6 py-10 md:py-16 font-sans">
+      <div className="w-full max-w-6xl">
+        <div className="text-center mb-6 px-2">
+          <h1 className="text-3xl sm:text-4xl text-gray-800 font-bold mb-3">
             Bem-vindo de volta!
           </h1>
-          <p className="text-2xl text-gray-600 leading-relaxed">
-            Faça login com seu e-mail e senha cadastrados.
+          <p className="text-lg sm:text-2xl text-gray-600 leading-relaxed">
+            Faca login com seu e-mail e senha cadastrados.
           </p>
         </div>
 
-        <div className="flex h-150 w-200 mb-10 bg-white rounded-3xl shadow-xl overflow-hidden  max-w-6xl mx-auto">
-          {/* Lado esquerdo - Branding */}
-          <div className="flex-[0.8] bg-blue-500 flex items-center justify-center p-12">
-            <div className="text-center text-white">
+        <div className="flex flex-col md:flex-row bg-white rounded-3xl shadow-2xl overflow-hidden md:min-h-[520px] lg:min-h-[560px]">
+          <div className="w-full md:w-[42%] bg-blue-500 flex items-center justify-center p-10 sm:p-12">
+            <div className="text-center text-white max-w-sm space-y-2">
               <svg
                 width="120"
                 height="120"
                 viewBox="0 0 120 120"
-                className="mb-8 mx-auto drop-shadow-lg"
+                className="mb-6 mx-auto drop-shadow-lg"
                 aria-hidden="true"
               >
                 <circle cx="60" cy="60" r="55" fill="#FF6B35" opacity="0.2" />
@@ -55,17 +52,16 @@ export function LoginPage() {
                   fill="white"
                 />
               </svg>
-              <h2 className="text-3xl font-bold mb-4">
-                Gratitude Serviços
+              <h2 className="text-2xl sm:text-3xl font-bold">
+                Gratitude Servicos
               </h2>
-              <p className="text-xl text-white/90 leading-relaxed">
-                Gestão de Projetos Sociais
+              <p className="text-lg sm:text-xl text-white/90 leading-relaxed">
+                Gestao de Projetos Sociais
               </p>
             </div>
           </div>
 
-          {/* Lado direito - Formulário */}
-          <div className="flex-[1.2] p-12 flex items-center">
+          <div className="w-full md:w-[58%] p-8 sm:p-10 lg:p-12 flex items-center">
             <form
               className="w-full flex flex-col gap-6"
               onSubmit={async (e) => {
@@ -76,7 +72,7 @@ export function LoginPage() {
               <div className="flex flex-col">
                 <label
                   htmlFor="email"
-                  className="text-lg text-gray-700 mb-2 font-semibold"
+                  className="text-base sm:text-lg text-gray-700 mb-2 font-semibold"
                 >
                   Email
                 </label>
@@ -94,7 +90,7 @@ export function LoginPage() {
               <div className="flex flex-col">
                 <label
                   htmlFor="password"
-                  className="text-lg text-gray-700 mb-2 font-semibold"
+                  className="text-base sm:text-lg text-gray-700 mb-2 font-semibold"
                 >
                   Senha
                 </label>
@@ -103,16 +99,16 @@ export function LoginPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="********"
                   required
                   className="w-full py-3 px-4 border border-zinc-300 rounded-lg text-lg bg-zinc-50 placeholder:text-gray-500 text-gray-700 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 transition"
                 />
               </div>
 
-              <div className="flex justify-center mt-6">
+              <div className="flex justify-center mt-4">
                 <button
                   type="submit"
-                  className="min-w-80 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-60"
+                  className="w-full sm:w-72 h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-500 text-white border-none px-8 rounded-lg text-lg font-semibold cursor-pointer transition-all duration-200 disabled:opacity-60"
                   disabled={loading}
                 >
                   {loading ? "Entrando..." : "LOGIN"}

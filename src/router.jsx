@@ -33,6 +33,7 @@ const FeedbacksDoCursoPage = lazy(() => import("./pages/FeedbacksDoCursoPage.jsx
 const StudentCourseFeedbacksPage = lazy(() => import("./pages/StudentCourseFeedbacksPage.jsx"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile.jsx"));
 const MailhogTestPage = lazy(() => import("./pages/MailhogTestPage.jsx"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard.jsx"));
 
 // Wrapper component for Suspense
 const LazyLoad = ({ children }) => (
@@ -132,7 +133,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <AdminDashboardPage />
+          <LazyLoad><AdminDashboardPage /></LazyLoad>
         </Layout>
       </ProtectedRoute>
     ),

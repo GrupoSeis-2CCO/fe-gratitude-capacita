@@ -192,7 +192,7 @@ export default function UserExamsPage({ courseId = 1 }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28 p-8">
+    <div className="min-h-screen bg-gray-50 pt-13 p-8">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">Provas do Colaborador y</h1>
       </div>
@@ -267,3 +267,4 @@ export default function UserExamsPage({ courseId = 1 }) {
     </div>
   );
 }
+

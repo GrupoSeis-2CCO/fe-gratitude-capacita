@@ -163,7 +163,7 @@ export function ClassUsersPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-white pt-28 pb-12">
+    <div className="relative min-h-screen bg-white pt-13 pb-12">
       <GradientSideRail className="left-10" />
       <GradientSideRail variant="inverted" className="right-10" />
 

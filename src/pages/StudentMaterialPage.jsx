@@ -35,7 +35,7 @@ export default function StudentMaterialPage() {
   }
 
   const [material, setMaterial] = useState(null);
-  const [materialsList, setMaterialsList] = useState([]); // lista para navegação correta
+  const [materialsList, setMaterialsList] = useState([]); // lista para navegacao correta
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -43,6 +43,29 @@ export default function StudentMaterialPage() {
   const [transcricaoAtiva, setTranscricaoAtiva] = useState(false);
   const [transcricaoCarregando, setTranscricaoCarregando] = useState(false);
   const [transcricao, setTranscricao] = useState([]); // array de { start, dur, text }
+
+  // Helpers para normalizar o material e URL de video vindos do backend
+  const getVideoUrl = (m) => {
+    if (!m) return "";
+    const candidates = [
+      m.urlVideo,
+      m.url_video,
+      m.videoUrl,
+      m.video_url,
+      m.linkVideo,
+      m.link_video,
+      m.link,
+      m.url,
+    ];
+    return candidates.find((c) => c) || "";
+  };
+
+  const normalizeTipo = (data) => {
+    const raw = (data?.tipo || data?.type || parsed.tipo || "").toString().toLowerCase();
+    if (raw.includes("video")) return "video";
+    if (raw.includes("apostila") || raw.includes("pdf")) return "apostila";
+    return getVideoUrl(data) ? "video" : "apostila";
+  };
 
   // YouTube player refs
   const ytPlayerRef = useRef(null);
@@ -55,7 +78,15 @@ export default function StudentMaterialPage() {
     try {
       const targetId = Number(parsed.id);
       const res = await MaterialPageService.getMaterialDoCurso(parseInt(idCurso), targetId, parsed.tipo || (material?.tipo));
-      setMaterial(res);
+      const normalized = res ? { ...res } : null;
+      if (normalized) {
+        const tipo = normalizeTipo(res);
+        normalized.tipo = tipo;
+        if (tipo === "video" && !normalized.url) {
+          normalized.url = getVideoUrl(res);
+        }
+      }
+      setMaterial(normalized);
     } catch (err) {
       const serverData = err?.response?.data;
       if (serverData) setError(JSON.stringify(serverData, null, 2));
@@ -204,6 +235,8 @@ export default function StudentMaterialPage() {
     }
   return (material?.ordem ?? material?.order ?? Number(parsed.id)) || 1;
   }, [currentIndex, navList, material?.ordem, material?.order, parsed.id]);
+  const hasPrevious = navList.length > 0 ? currentIndex > 0 : Number(parsed.id) > 1;
+  const hasNext = navList.length > 0 ? (currentIndex >= 0 && currentIndex < navList.length - 1) : true;
   const handleNextMaterial = () => {
     if (navList.length === 0) {
       const next = Number(parsed.id) + 1; // fallback
@@ -608,7 +641,14 @@ export default function StudentMaterialPage() {
     if (!material) return null;
 
     if (material.tipo === 'video') {
-      const url = material.url || '';
+      const url = getVideoUrl(material);
+      if (!url) {
+        return (
+          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+            <div className="text-gray-700">Link do video nao disponivel para este material.</div>
+          </div>
+        );
+      }
       const ytMatch = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
 
       if (ytMatch && ytMatch[1]) {
@@ -675,18 +715,13 @@ export default function StudentMaterialPage() {
           </div>
         );
       }
-
-      // fallback
+      // fallback para video fora do YouTube
       return (
-        <div className="bg-black rounded-lg overflow-hidden aspect-video">
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="flex flex-col items-center text-white">
-              <Youtube size={64} className="text-red-600 mb-4" />
-              <p className="text-lg">Player de Vídeo</p>
-            </div>
-          </div>
+        <div className="bg-black rounded-lg overflow-hidden">
+          <video controls className="w-full aspect-video bg-black" src={url} />
         </div>
       );
+
     }
 
     if (material.tipo === 'apostila') {
@@ -754,7 +789,7 @@ export default function StudentMaterialPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -766,7 +801,7 @@ export default function StudentMaterialPage() {
         <div className="mb-6 flex justify-between items-center">
           {material?.finalizado && (
             <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              <CheckCircle2 size={16} className="mr-1" /> Concluído
+              <CheckCircle2 size={16} className="mr-1" /> Concluido
             </span>
           )}
         </div>
@@ -804,25 +839,29 @@ export default function StudentMaterialPage() {
           </div>
 
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <Button
                 variant="Cancel"
                 label="Material Anterior"
                 onClick={handlePreviousMaterial}
-                disabled={material && material.id <= 1}
+                disabled={!hasPrevious}
+                className="w-full md:w-auto"
               />
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto md:justify-end">
                 <Button
                   variant="Confirm"
-                  label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluído' : 'Concluir material')}
+                  className="w-full sm:w-auto"
+                  label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluido' : 'Concluir material')}
                   onClick={handleFinalizeClick}
                   disabled={finalizando || material?.finalizado}
                 />
                 <Button
                   variant="Confirm"
-                  label="Próximo Material"
+                  className="w-full sm:w-auto"
+                  label="Proximo Material"
                   onClick={handleNextMaterial}
+                  disabled={!hasNext}
                 />
               </div>
             </div>
@@ -833,3 +872,4 @@ export default function StudentMaterialPage() {
     </div>
   );
 }
+
