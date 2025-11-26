@@ -51,7 +51,6 @@ export default function UserActions({ expanded = false, userName }) {
 
   return (
     <div className="lg:col-span-1">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Sobre o Participante</h2>
       <div className={gapClass}>
         <ActionButton
           icon="📄"
