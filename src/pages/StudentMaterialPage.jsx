@@ -422,7 +422,7 @@ export default function StudentMaterialPage() {
   const pdfContainerRef = useRef(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
-  const [pdfScale, setPdfScale] = useState(1.1);
+  const [pdfScale, setPdfScale] = useState(1.0); 
   const pdfCurrentUrlRef = useRef('');
 
   // Build absolute backend URL for relative paths (e.g., /uploads/...) and auth headers
@@ -512,16 +512,30 @@ export default function StudentMaterialPage() {
       // Clear previous content
       while (container.firstChild) container.removeChild(container.firstChild);
 
+      // Get container width for responsive scaling
+      const containerWidth = container.parentElement?.clientWidth || container.clientWidth || 320;
+      const padding = 16; // px padding on each side
+      const availableWidth = containerWidth - padding;
+
       // Render all pages
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale });
+        
+        // Calculate scale to fit width on mobile
+        const defaultViewport = page.getViewport({ scale: 1 });
+        const fitScale = availableWidth / defaultViewport.width;
+        const finalScale = scale * fitScale;
+        
+        const viewport = page.getViewport({ scale: finalScale });
         const wrapper = document.createElement('div');
-        wrapper.style.margin = '12px 0';
+        wrapper.style.marginBottom = '0.75rem';
         wrapper.style.display = 'flex';
         wrapper.style.justifyContent = 'center';
+        wrapper.style.width = '100%';
         const canvas = document.createElement('canvas');
-        canvas.className = 'shadow rounded bg-white';
+        canvas.className = 'shadow-sm rounded bg-white';
+        canvas.style.maxWidth = '100%';
+        canvas.style.height = 'auto';
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         wrapper.appendChild(canvas);
@@ -731,48 +745,73 @@ export default function StudentMaterialPage() {
         return name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`;
       })();
       return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="border border-gray-200 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <FileText size={20} className="text-red-600" />
-                <span className="text-sm font-medium">{displayName}</span>
+        <div className="bg-white rounded-lg">
+          {/* Header com nome do arquivo e controles */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText size={18} className="text-orange-500 flex-shrink-0" />
+              <span className="text-sm font-medium truncate">{displayName}</span>
+            </div>
+            
+            {/* Controles de zoom - mobile friendly */}
+            <div className="flex items-center justify-between sm:justify-end gap-2">
+              <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 p-1">
+                <button 
+                  onClick={() => setPdfScale(s => Math.max(0.5, Number((s - 0.1).toFixed(2))))}
+                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded font-bold"
+                >
+                  -
+                </button>
+                <span className="text-xs text-gray-600 min-w-[3rem] text-center font-medium">{Math.round(pdfScale * 100)}%</span>
+                <button 
+                  onClick={() => setPdfScale(s => Math.min(2.5, Number((s + 0.1).toFixed(2))))}
+                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded font-bold"
+                >
+                  +
+                </button>
               </div>
-              <div className="flex items-center gap-2">
-                {/* Zoom controls for inline viewer */}
-                <div className="flex items-center gap-2 mr-2">
-                  <Button variant="Default" label="-" onClick={() => setPdfScale(s => Math.max(0.6, Number((s - 0.1).toFixed(2))))} />
-                  <span className="text-sm text-gray-600 min-w-[48px] text-center">{Math.round(pdfScale * 100)}%</span>
-                  <Button variant="Default" label="+" onClick={() => setPdfScale(s => Math.min(2.0, Number((s + 0.1).toFixed(2))))} />
-                </div>
-                <Button
-                  variant="Default"
-                  label="Baixar PDF"
+              
+              {/* Botões de ação */}
+              <div className="flex gap-1">
+                <button
                   onClick={handlePdfDownload}
-                />
-                <Button
-                  variant="Confirm"
-                  label="Abrir em nova aba"
+                  className="px-3 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  Baixar
+                </button>
+                <button
                   onClick={handlePdfOpenNewTab}
-                />
+                  className="px-3 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Abrir
+                </button>
               </div>
             </div>
-            <div className="relative w-full overflow-auto bg-gray-50" style={{ minHeight: 480 }}>
-              {pdfLoading && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-gray-500 bg-white/70 rounded px-3 py-2"><Loader2 className="animate-spin" size={18} /> Carregando PDF...</div>
+          </div>
+
+          {/* Área do PDF - responsiva e scrollável */}
+          <div className="relative w-full overflow-auto bg-gray-100 rounded-lg" style={{ maxHeight: '70vh', minHeight: '300px' }}>
+            {pdfLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Loader2 className="animate-spin" size={20} />
+                  <span className="text-sm">Carregando PDF...</span>
                 </div>
-              )}
-              {pdfError && (
-                <div className="p-4">
-                  <div className="text-red-600 mb-3">{pdfError}</div>
-                  <Button variant="Default" label="Tentar novamente" onClick={() => {
-                    if (pdfCurrentUrlRef.current) renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
-                  }} />
-                </div>
-              )}
-              <div ref={pdfContainerRef} className="w-full max-w-full flex flex-col items-center px-2 py-4" />
-            </div>
+              </div>
+            )}
+            {pdfError && (
+              <div className="p-4 text-center">
+                <div className="text-red-600 mb-3 text-sm">{pdfError}</div>
+                <Button variant="Default" label="Tentar novamente" onClick={() => {
+                  if (pdfCurrentUrlRef.current) renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
+                }} />
+              </div>
+            )}
+            <div 
+              ref={pdfContainerRef} 
+              className="w-full flex flex-col items-center py-4 px-2"
+              style={{ touchAction: 'pan-x pan-y' }}
+            />
           </div>
         </div>
       );
@@ -789,41 +828,41 @@ export default function StudentMaterialPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
-      <GradientSideRail className="left-10" />
-      <GradientSideRail className="right-10" variant="inverted" />
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-3 sm:px-8 pt-4 sm:pt-13 pb-20">
+      <GradientSideRail className="left-10 hidden sm:block" />
+      <GradientSideRail className="right-10 hidden sm:block" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="text-center mb-8">
+        <div className="text-center mb-4 sm:mb-8 hidden sm:block">
           <TituloPrincipal>{material ? material.titulo : 'Carregando...'}</TituloPrincipal>
         </div>
 
-        <div className="mb-6 flex justify-between items-center">
-          {material?.finalizado && (
-            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              <CheckCircle2 size={16} className="mr-1" /> Concluido
+        {material?.finalizado && (
+          <div className="mb-4 sm:mb-6 flex justify-center sm:justify-start">
+            <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium">
+              <CheckCircle2 size={14} className="mr-1" /> Concluído
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-orange-600">
-            <h2 className="text-2xl font-bold text-white">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-orange-600">
+            <h2 className="text-base sm:text-2xl font-bold text-white leading-tight">
               Material {currentOrderNumber} - {material ? material.titulo : '...'}
             </h2>
-            <div className="flex items-center mt-2 text-orange-100">
-              {material ? (material.tipo === 'video' ? <Youtube size={20} className="mr-2" /> : <FileText size={20} className="mr-2" />) : null}
-              <span className="capitalize">{material ? (material.tipo === 'video' ? 'video' : (material.tipo === 'apostila' ? 'pdf' : material.tipo)) : ''}</span>
+            <div className="flex items-center mt-1 sm:mt-2 text-orange-100 text-sm">
+              {material ? (material.tipo === 'video' ? <Youtube size={16} className="mr-1.5 flex-shrink-0" /> : <FileText size={16} className="mr-1.5 flex-shrink-0" />) : null}
+              <span className="capitalize">{material ? (material.tipo === 'video' ? 'Vídeo' : (material.tipo === 'apostila' ? 'PDF' : material.tipo)) : ''}</span>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {loading ? (
-              <div className="flex items-center gap-2 text-gray-600"><Loader2 className="animate-spin" size={18} /> Carregando...</div>
+              <div className="flex items-center justify-center gap-2 text-gray-600 py-8"><Loader2 className="animate-spin" size={18} /> Carregando...</div>
             ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded p-4 text-red-700">
-                <div className="font-semibold mb-2">Erro ao carregar material</div>
-                <pre className="text-xs whitespace-pre-wrap">{error}</pre>
+              <div className="bg-red-50 border border-red-200 rounded p-3 sm:p-4 text-red-700">
+                <div className="font-semibold mb-2 text-sm sm:text-base">Erro ao carregar material</div>
+                <pre className="text-xs whitespace-pre-wrap overflow-x-auto">{error}</pre>
                 <div className="mt-3">
                   <Button variant="Default" label="Tentar novamente" onClick={loadMaterial} />
                 </div>
@@ -833,35 +872,37 @@ export default function StudentMaterialPage() {
             )}
           </div>
 
-          <div className="px-6 pb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Sobre o material:</h3>
-            <p className="text-gray-600 leading-relaxed">{material ? material.descricao : ''}</p>
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <h3 className="text-sm sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3">Sobre o material:</h3>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">{material ? material.descricao : ''}</p>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col gap-2 sm:gap-3">
+              {/* Botão concluir em cima no mobile */}
               <Button
-                variant="Cancel"
-                label="Material Anterior"
-                onClick={handlePreviousMaterial}
-                disabled={!hasPrevious}
-                className="w-full md:w-auto"
+                variant="Confirm"
+                className="w-full"
+                label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluído ✓' : 'Concluir material')}
+                onClick={handleFinalizeClick}
+                disabled={finalizando || material?.finalizado}
               />
-
-              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto md:justify-end">
+              
+              {/* Navegação anterior/próximo */}
+              <div className="flex gap-2">
                 <Button
-                  variant="Confirm"
-                  className="w-full sm:w-auto"
-                  label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluido' : 'Concluir material')}
-                  onClick={handleFinalizeClick}
-                  disabled={finalizando || material?.finalizado}
+                  variant="Cancel"
+                  label="← Anterior"
+                  onClick={handlePreviousMaterial}
+                  disabled={!hasPrevious}
+                  className="flex-1 text-sm"
                 />
                 <Button
                   variant="Confirm"
-                  className="w-full sm:w-auto"
-                  label="Proximo Material"
+                  label="Próximo →"
                   onClick={handleNextMaterial}
                   disabled={!hasNext}
+                  className="flex-1 text-sm"
                 />
               </div>
             </div>

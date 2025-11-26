@@ -115,33 +115,33 @@ export default function TentativaDetalhePage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
-      <GradientSideRail className="left-10" />
-      <GradientSideRail className="right-10" variant="inverted" />
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-3 sm:px-8 pt-4 sm:pt-13 pb-20">
+      <GradientSideRail className="left-10 hidden sm:block" />
+      <GradientSideRail className="right-10 hidden sm:block" variant="inverted" />
 
       <div className="w-full max-w-none mx-auto flex-grow">
-        <div className="max-w-6xl mx-auto">
-          <TituloPrincipal>Detalhes da Tentativa</TituloPrincipal>
+        <div className="max-w-6xl mx-auto mb-4 sm:mb-0">
+          <TituloPrincipal className="text-xl sm:text-2xl">Detalhes da Tentativa</TituloPrincipal>
         </div>
 
-        <div className="mt-8 w-full">
-          {loading && <div>Carregando...</div>}
-          {error && <div className="text-red-500">{error}</div>}
+        <div className="mt-4 sm:mt-8 w-full">
+          {loading && <div className="text-center py-8 text-gray-500">Carregando...</div>}
+          {error && <div className="text-red-500 text-center py-4">{error}</div>}
 
           {!loading && !error && resumo && (
             <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Resumo</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-800">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 sm:mb-8 border border-gray-200">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Resumo</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-gray-800 text-sm sm:text-base">
                   <div><span className="font-semibold">Curso:</span> {resumo.nomeCurso}</div>
                   <div><span className="font-semibold">Data:</span> {formatIsoDateTime(resumo.dtTentativa)}</div>
                   <div><span className="font-semibold">Nota:</span> {notaText()}</div>
                   <div><span className="font-semibold">Avaliação:</span> {resumo.fkAvaliacao ?? '—'}</div>
                 </div>
                 {resumo.fkAvaliacao && (
-                  <div className="mt-6">
+                  <div className="mt-4 sm:mt-6">
                     <button
-                      className="px-4 py-2.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 text-sm sm:text-base font-medium"
                       onClick={() => setShowGabarito(v => !v)}
                     >
                       {showGabarito ? 'Ocultar Gabarito' : 'Ver Gabarito'}
@@ -151,9 +151,9 @@ export default function TentativaDetalhePage() {
               </div>
 
               {showGabarito && (
-                <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 border border-gray-200">
                   {questions.length === 0 ? (
-                    <div className="text-gray-600">Gabarito indisponível.</div>
+                    <div className="text-gray-600 text-center py-4">Gabarito indisponível.</div>
                   ) : (
                     <ExamViewer questions={questions} userAnswers={userAnswers} correctAnswers={correctAnswers} />
                   )}

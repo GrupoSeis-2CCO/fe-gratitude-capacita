@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Button from "../components/Button.jsx";
-import BackButton from "../components/BackButton.jsx";
 import { userService } from "../services/UserService.js";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMatcher }) {
   const navigate = useNavigate();
@@ -17,8 +17,6 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
 
   const navItems = Array.isArray(navItemsProp) && navItemsProp.length ? navItemsProp : defaultNavItems;
 
-  const isRootPage = navItems.some((item) => item.path === location.pathname);
-
   const isActive = (path) => {
     if (typeof activeMatcher === "function") {
       return activeMatcher(path, location.pathname);
@@ -32,20 +30,33 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
   return (
     <header className="sticky top-0 z-30 w-full bg-gray-800 shadow-md">
       <div className="flex items-center justify-between px-4 py-3 md:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-14 h-14">
-            {isRootPage ? (
-              <div
-                className="cursor-pointer"
-                onClick={() => navigate(homePath)}
-                aria-label="Ir para cursos">
-                <img src="/GratitudeLogo.svg" alt="Gratitude Logo" className="w-14 h-14" />
-              </div>
-            ) : (
-              <BackButton sticky={false} className="!static !m-0 !p-0" />
-            )}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14">
+            <div
+              className="cursor-pointer"
+              onClick={() => navigate(homePath)}
+              aria-label="Ir para cursos">
+              <img src="/GratitudeLogo.svg" alt="Gratitude Logo" className="w-10 h-10 md:w-14 md:h-14" />
+            </div>
           </div>
-          <div className="text-white font-semibold md:hidden">Menu</div>
+        </div>
+
+        {/* Setas de navegação mobile - centro */}
+        <div className="flex items-center gap-4 md:hidden">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-white/70 hover:text-white active:scale-95 transition-all"
+            aria-label="Voltar"
+          >
+            <ChevronLeft size={28} strokeWidth={2.5} />
+          </button>
+          <button
+            onClick={() => navigate(1)}
+            className="p-2 text-white/70 hover:text-white active:scale-95 transition-all"
+            aria-label="Avançar"
+          >
+            <ChevronRight size={28} strokeWidth={2.5} />
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
