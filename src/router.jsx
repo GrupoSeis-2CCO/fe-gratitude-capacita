@@ -25,7 +25,7 @@ import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
 // import FeedbackPage from "./pages/FeedbackPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import EditExamPage from "./pages/EditExamPage.jsx";
-import AdminDashboardPage from "./pages/AdminDashboard.jsx";
+import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 
 // Novos: páginas que criamos
 import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
