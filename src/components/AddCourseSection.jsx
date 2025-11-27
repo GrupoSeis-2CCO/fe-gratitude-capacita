@@ -112,7 +112,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
     <div className="bg-[#1D262D] rounded-lg p-6 mb-8">
 
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-4">
 
         <input
 
@@ -290,9 +290,9 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
 
 
-      <div className="bg-white rounded-lg p-6 flex items-start gap-6">
+      <div className="bg-white rounded-lg p-6 flex flex-col lg:flex-row items-start gap-6">
 
-        <div className="w-1/3">
+        <div className="w-full lg:w-1/3">
 
           <div className="rounded-lg border border-gray-200 h-40 flex items-center justify-center bg-gray-50 overflow-hidden">
 
@@ -353,7 +353,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
 
 
-        <div className="w-1/3">
+        <div className="w-full lg:w-1/3">
 
           <label className="block text-lg font-semibold mb-2">Descrição</label>
 

@@ -198,7 +198,7 @@ export default function MailhogTestPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 pt-28">
+    <div className="max-w-4xl mx-auto px-4 py-8 pt-13">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-4">Teste MailHog — Envio de Notificações</h1>
@@ -321,3 +321,4 @@ export default function MailhogTestPage() {
     </div>
   );
 }
+

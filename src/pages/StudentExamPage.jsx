@@ -162,7 +162,7 @@ export default function StudentExamPage() {
 
   return (
     <>
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-2 sm:px-8 pt-6 sm:pt-13 pb-10 sm:pb-20">
       {/* Decorative rails left and right */}
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
@@ -217,7 +217,7 @@ export default function StudentExamPage() {
               <span>Ruim</span>
               <span>Excelente</span>
             </div>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
               {[...Array(5)].map((_, i) => {
                 const active = i < feedbackStars;
                 const value = i + 1; // 1..5
@@ -327,3 +327,5 @@ function getUserIdFromJwt() {
     return null;
   }
 }
+
+

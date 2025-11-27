@@ -313,20 +313,11 @@ export default function ClassListPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-white px-4 sm:px-6 lg:px-8 pt-13 md:pt-32 pb-16">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-4xl mx-auto flex-grow">
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={() => navigate('/admin/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors shadow-md font-medium flex items-center gap-2 cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            Gerenciar
-          </button>
-        </div>
         <div className="mb-6">
           <h1 className="text-4xl font-bold text-center text-black">Cursos de Capacitação</h1>
         </div>
@@ -369,8 +360,8 @@ export default function ClassListPage() {
 
         <div className="mt-8 w-full">
           {/* Toggle reordenação */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex flex-col gap-2">
               <button
                 className={`px-4 py-2 text-base font-medium rounded transition-colors duration-150 ${isReordering ? 'bg-orange-100 border border-orange-400 text-orange-900 shadow-md' : 'bg-orange-500 text-white shadow-md hover:bg-orange-600'} cursor-pointer`}
                 onClick={async () => {
@@ -397,9 +388,9 @@ export default function ClassListPage() {
               >
                 {isReordering ? 'Salvar ordem e sair' : 'Reordenar cursos'}
               </button>
-              {isReordering && <span className="ml-3 text-sm text-gray-600">Arraste e solte para definir a nova ordem.</span>}
+              {isReordering && <span className="text-sm text-gray-600">Arraste e solte para definir a nova ordem.</span>}
             </div>
-            <div>{savingOrder && <span className="text-sm text-gray-600">Salvando ordem...</span>}</div>
+            <div className="text-sm text-gray-600">{savingOrder && <span>Salvando ordem...</span>}</div>
           </div>
           {loading ? (
             <div>Carregando...</div>

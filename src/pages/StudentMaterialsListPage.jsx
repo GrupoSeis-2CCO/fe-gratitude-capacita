@@ -460,7 +460,7 @@ export default function StudentMaterialsListPage() {
 
   const MaterialItem = ({ material, index }) => (
     <div
-      className="bg-white border border-gray-200 rounded-lg p-4 flex gap-4 mb-4 relative cursor-pointer hover:shadow-lg transition-shadow"
+      className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col sm:flex-row gap-4 mb-4 relative cursor-pointer hover:shadow-lg transition-shadow"
       onClick={() => navigate(`/cursos/${idCurso}/material/${(material.type || material.tipo)}-${material.id}`)}
     >
       <div className={`absolute top-0 right-0 w-3 h-full rounded-r-lg ${getStatusColor(material.status)}`}></div>
@@ -492,7 +492,7 @@ export default function StudentMaterialsListPage() {
   );
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-white px-8 pt-30 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-white px-4 sm:px-6 lg:px-8 pt-13 md:pt-13 pb-16">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 
@@ -569,9 +569,9 @@ export default function StudentMaterialsListPage() {
 
         {/* Pagination controls */}
         {filteredMaterials.length > 0 && (
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
             <div className="text-sm text-gray-600">Página {page + 1} de {Math.max(1, Math.ceil(filteredMaterials.length / size))} • {filteredMaterials.length} itens</div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button className={`px-3 py-1 border rounded ${page>0 ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={page<=0} onClick={()=>setPage(p=>Math.max(0,p-1))}>Anterior</button>
               <select className="px-2 py-1 border rounded" value={size} onChange={(e)=>{ setPage(0); setSize(Number(e.target.value)); }}>
                 {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
@@ -646,3 +646,5 @@ export default function StudentMaterialsListPage() {
     </div>
   );
 }
+
+

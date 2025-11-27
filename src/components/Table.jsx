@@ -10,8 +10,8 @@ export default function Table({ columns = [], data = [], headerClassName = "", r
   // When `fixedRowCount` is provided, the table will render exactly that many rows.
   // Rows beyond `data.length` will be empty placeholders (not clickable).
   return (
-    <div className="overflow-x-auto rounded-md">
-      <table className="min-w-full border-collapse">
+    <div className="rounded-md">
+      <table className="min-w-full border-collapse table-auto">
         <thead>
           <tr className={headerClassName || "bg-gray-100"}>
                 {columns.map((col, idx) => (

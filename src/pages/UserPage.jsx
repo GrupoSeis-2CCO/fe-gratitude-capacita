@@ -234,8 +234,8 @@ export function UserPage({ courseId = 1, days = 14 }) {
   } catch (e) { /* noop */ }
 
   return (
-    <div className="relative min-h-screen bg-white pt-16 px-12">
-      <div className="mt-10 mb-4 flex items-center justify-center max-w-screen-xl mx-auto">
+    <div className="relative min-h-screen bg-white pt-13 p-8">
+      <div className="mb-8 flex items-center justify-center max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>
 
@@ -416,3 +416,4 @@ function InlineApexChart({ series = [], categories = [], height = 400, yLabel = 
     </div>
   );
 }
+

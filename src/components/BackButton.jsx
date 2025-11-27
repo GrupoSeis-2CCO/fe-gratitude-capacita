@@ -6,23 +6,25 @@ import Button from "./Button.jsx";
  * BackButton padronizado.
  * Props:
  *  - to: rota de destino; se ausente usa navigate(-1)
- *  - onClick: sobrescreve comportamento padrão se fornecido
- *  - className: classes extras para o wrapper (além da posição padrão)
+ *  - onClick: sobrescreve comportamento padrao se fornecido
+ *  - className: classes extras para o wrapper
+ *  - sticky: controla se fica colado no topo (default false)
  */
-export default function BackButton({ to = null, onClick = null, className = "" }) {
+export default function BackButton({ to = null, onClick = null, className = "", sticky = false }) {
   const navigate = useNavigate();
   const handleClick = () => {
     if (typeof onClick === 'function') return onClick();
     if (to) return navigate(to);
     navigate(-1);
   };
+  const containerClasses = sticky ? "sticky top-0 left-0 z-30 mt-2 mb-4" : "";
   return (
-    <div className={`sticky top-0 left-0 z-30 mt-2 mb-4 ${className}`}> 
-      <Button 
-        variant="Ghost" 
-        label="← Voltar" 
+    <div className={`${containerClasses} ${className}`}>
+      <Button
+        variant="Ghost"
+        label="<- Voltar"
         onClick={handleClick}
-        className="px-6 py-3 text-sm shadow"
+        className="px-4 py-2 text-sm shadow"
       />
     </div>
   );

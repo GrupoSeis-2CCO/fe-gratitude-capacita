@@ -148,15 +148,20 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
           />
         </div>
       ) : (
-        <div className="bg-[#1D262D] rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-[#1D262D] rounded-lg p-4 sm:p-6 mb-8">
+          {/* Título no topo */}
+          <div className="mb-4">
             <input
               type="text"
               placeholder="Adicionar Título"
-              className="flex-1 p-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-500"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-black placeholder-gray-500"
               value={titulo}
               onChange={e => setTitulo(e.target.value)}
             />
+          </div>
+
+          {/* Botões apenas no desktop */}
+          <div className="hidden sm:flex items-center gap-4 mb-4">
             <Button 
               variant={initialMaterial ? 'Primary' : 'Confirm'}
               label={loading ? 'Salvando...' : (initialMaterial ? 'Atualizar' : 'Concluir')}
@@ -168,7 +173,26 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
             }} />
           </div>
 
-          <div className="bg-white rounded-lg p-6">
+          <div className="bg-white rounded-lg p-4 sm:p-6">
+            {/* Seletor de formato - Mobile: horizontal no topo / Desktop: lateral */}
+            <div className="mb-4 sm:hidden">
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-sm">Formato:</span>
+                <button 
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded border ${materialType === 'pdf' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
+                  onClick={() => setMaterialType('pdf')}
+                >
+                  PDF
+                </button>
+                <button 
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded border ${materialType === 'video' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
+                  onClick={() => setMaterialType('video')}
+                >
+                  Vídeo
+                </button>
+              </div>
+            </div>
+
             {materialType === 'pdf' ? (
               <div className="border border-dashed border-gray-400 rounded-lg p-4 mb-4 flex flex-col md:flex-row items-center gap-4">
                 {/* prominent PDF area: when no file selected show a big select button; when file selected show filename with X */}
@@ -257,26 +281,22 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
               </div>
             )}
 
-            <div className="flex gap-6">
-              <div className="flex-shrink-0 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">Arquivo</span>
-                  <button 
-                    className={`px-3 py-1 text-xs rounded border ${materialType === 'pdf' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
-                    onClick={() => setMaterialType('pdf')}
-                  >
-                    PDF
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm">Vídeo</span>
-                  <button 
-                      className={`px-3 py-1 text-xs rounded border ${materialType === 'video' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
-                      onClick={() => setMaterialType('video')}
-                    >
-                      URL
-                    </button>
-                </div>
+            <div className="flex flex-col sm:flex-row gap-6">
+              {/* Seletor de formato - Desktop: lateral */}
+              <div className="hidden sm:flex flex-col gap-2 flex-shrink-0 w-32">
+                <span className="font-semibold text-sm">Formato:</span>
+                <button 
+                  className={`w-full px-3 py-2 text-sm font-medium rounded border ${materialType === 'pdf' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
+                  onClick={() => setMaterialType('pdf')}
+                >
+                  PDF
+                </button>
+                <button 
+                  className={`w-full px-3 py-2 text-sm font-medium rounded border ${materialType === 'video' ? 'bg-gray-300 border-gray-500' : 'bg-white border-gray-400'}`}
+                  onClick={() => setMaterialType('video')}
+                >
+                  Vídeo
+                </button>
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-semibold mb-1">Sobre o {materialType === 'video' ? 'vídeo' : 'arquivo'}:</label>
@@ -290,6 +310,20 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
             </div>
 
             {error && <div className="text-red-600 mt-2">{String(error)}</div>}
+          </div>
+
+          {/* Botões no mobile - abaixo de tudo */}
+          <div className="flex sm:hidden flex-col gap-3 mt-4">
+            <Button 
+              variant={initialMaterial ? 'Primary' : 'Confirm'}
+              label={loading ? 'Salvando...' : (initialMaterial ? 'Atualizar' : 'Concluir')}
+              onClick={handleConcluir}
+              className="w-full"
+            />
+            <Button variant="Exit" label="Cancelar" onClick={() => {
+              setIsEditing(false);
+              if (initialMaterial && onCancelEdit) onCancelEdit();
+            }} className="w-full" />
           </div>
         </div>
       )}
