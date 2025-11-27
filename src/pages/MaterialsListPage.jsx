@@ -212,15 +212,9 @@ export default function MaterialsListPage() {
 			<GradientSideRail className="right-10" variant="inverted" />
 
 			<div className="w-full max-w-4xl mx-auto flex-grow">
-				<div className="max-w-4xl mx-auto">
-					<div className="flex items-center justify-between mb-6">
-						<div>
-							{/* BackButton removido - gerenciado pelo Header */}
-						</div>
-						<div className="text-center">
-							<TituloPrincipal>{courseName || '...'}</TituloPrincipal>
-						</div>
-						<div className="w-24" />
+				<div className="mb-6">
+					<div className="text-center">
+						<TituloPrincipal>{courseName || '...'}</TituloPrincipal>
 					</div>
 				</div>
 
@@ -230,15 +224,15 @@ export default function MaterialsListPage() {
 					{/* Reordering is handled below (persisted order) */}
 
 					{/* Reorder toggle / instructions */}
-					<div className="flex items-center justify-between mb-4">
-						<div>
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+						<div className="w-full sm:w-auto">
 							<button
-								className={`px-4 py-2 text-base font-medium rounded transition-colors duration-150 ${isReordering ? 'bg-orange-100 border border-orange-400 text-orange-900 shadow-md' : 'bg-orange-500 text-white shadow-md hover:bg-orange-600'} cursor-pointer`}
+								className={`w-full sm:w-auto px-4 py-2 text-base font-medium rounded transition-colors duration-150 ${isReordering ? 'bg-orange-100 border border-orange-400 text-orange-900 shadow-md' : 'bg-orange-500 text-white shadow-md hover:bg-orange-600'} cursor-pointer`}
 								onClick={toggleReordering}
 							>
 								{isReordering ? 'Sair de reordenação (salvar)' : 'Reordenar materiais'}
 							</button>
-							{isReordering && <span className="ml-3 text-sm text-gray-600">Arraste e solte os materiais na posição desejada. Solte para salvar.</span>}
+							{isReordering && <span className="block sm:inline sm:ml-3 mt-2 sm:mt-0 text-sm text-gray-600">Arraste e solte os materiais na posição desejada. Solte para salvar.</span>}
 						</div>
 						<div>
 							{savingOrder && <span className="text-sm text-gray-600">Salvando ordem...</span>}

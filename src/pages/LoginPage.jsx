@@ -17,7 +17,25 @@ export function LoginPage() {
       const userType = parseInt(localStorage.getItem("userType"));
       navigate("/cursos");
     } catch (error) {
-      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Login invalido', message: 'Email ou senha incorretos' } }));
+      console.error("Erro no login:", error);
+      let message = 'Email ou senha incorretos';
+      
+      if (error.response) {
+        // O servidor respondeu com um status fora de 2xx
+        if (error.response.status === 401 || error.response.status === 403) {
+           message = 'Email ou senha incorretos';
+        } else {
+           message = `Erro no servidor: ${error.response.status} - ${error.response.data?.message || ''}`;
+        }
+      } else if (error.request) {
+        // A requisição foi feita mas não houve resposta
+        message = 'Erro de conexão com o servidor. Verifique se o backend está rodando.';
+      } else {
+        // Algo aconteceu na configuração da requisição
+        message = `Erro inesperado: ${error.message}`;
+      }
+
+      window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', title: 'Falha no Login', message: message } }));
       setLoading(false);
     }
   };

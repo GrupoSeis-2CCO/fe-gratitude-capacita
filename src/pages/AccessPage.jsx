@@ -164,21 +164,21 @@ export function AccessPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+            className={`px-3 py-1 border rounded text-sm ${canPrev ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
             disabled={!canPrev}
             onClick={() => setPage(p => Math.max(0, p - 1))}
           >
             Anterior
           </button>
           <select
-            className="px-2 py-1 border rounded"
+            className="px-2 py-1 border rounded text-sm"
             value={size}
             onChange={(e) => { setPage(0); setSize(Number(e.target.value)); }}
           >
             {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
           </select>
           <button
-            className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
+            className={`px-3 py-1 border rounded text-sm ${canNext ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`}
             disabled={!canNext}
             onClick={() => setPage(p => p + 1)}
           >
@@ -195,19 +195,20 @@ export function AccessPage() {
       <GradientSideRail className="right-10" variant="inverted" />
 
       <div className="w-full max-w-none mx-auto flex-grow">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 px-2">
           <TituloPrincipal>
             {cursoSelecionadoObj ? `Participantes do ${cursoSelecionadoObj.tituloCurso || `Curso ${cursoSelecionadoObj.idCurso}`}` : 'Participantes'}
           </TituloPrincipal>
+          <span className="px-4 py-1 bg-orange-100 rounded-full text-orange-800 text-base"><span className="font-bold">{Number(totalElements) || (participantes || []).length || 0}</span> participantes encontrados</span>
         </div>
 
-        <div className="mt-8 w-full flex justify-center">
-          <div className="w-[65rem]">
+        <div className="mt-8 w-full flex justify-center px-2">
+          <div className="w-full max-w-6xl">
             {/* Search and Filter Section */}
-            <div className="bg-[#FFF3ED] rounded-lg shadow-md p-4 mb-6 flex items-center gap-4 border border-[#FFD6BC]">
+            <div className="bg-[#FFF3ED] rounded-lg shadow-md p-4 mb-6 flex flex-col lg:flex-row items-stretch lg:items-center gap-4 border border-[#FFD6BC]">
               {/* Search Input */}
               <div className="flex items-center gap-2 flex-1">
-                <div className="relative flex-1 max-w-80">
+                <div className="relative flex-1 lg:max-w-80">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -223,59 +224,54 @@ export function AccessPage() {
                 </div>
               </div>
 
-              {/* Label with total participants between name filter and course filter */}
-              <div className="text-sm text-gray-700 font-medium">
-                {`Total de participantes: `}
-                <span className="font-semibold">{Number(totalElements) || (participantes || []).length || 0}</span>
-              </div>
-
               {/* Course Filter Dropdown */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <select
                   className="border border-gray-300 rounded-lg p-2 text-sm bg-white focus:outline-none focus:border-blue-500"
                   value={cursoSelecionado}
                   onChange={(e) => setCursoSelecionado(e.target.value)}
                 >
-                  <option value="" disabled>Selecione</option>
+                  <option value="" disabled>Selecione um curso</option>
                   {cursos.map(c => (
                     <option key={c.idCurso} value={c.idCurso}>{c.tituloCurso || `Curso ${c.idCurso}`}</option>
                   ))}
                 </select>
                 {/* Status legend with hover explanations */}
-                    <div className="ml-4 flex items-center gap-3 text-sm text-gray-700">
-                    <div className="flex items-center gap-1 cursor-default" title="Ativo: participante acessou nos últimos 15 dias (baseado no Último acesso)">
-                      <span className="w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800" />
-                      <span>Ativo</span>
-                    </div>
-                    <div className="flex items-center gap-1 cursor-default" title="Inativo: participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)">
-                      <span className="w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800" />
-                      <span>Inativo</span>
-                    </div>
+                <div className="flex items-center gap-3 text-sm text-gray-700">
+                  <div className="flex items-center gap-1 cursor-default" title="Ativo: participante acessou nos últimos 15 dias (baseado no Último acesso)">
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 ring-1 ring-emerald-800" />
+                    <span>Ativo</span>
                   </div>
-
-                {/* Total count badge (compact) placed to the right of the filter controls */}
-                {/* compact badge removed — number is shown inline to the left */}
+                  <div className="flex items-center gap-1 cursor-default" title="Inativo: participante NÃO acessou nos últimos 15 dias (baseado no Último acesso)">
+                    <span className="w-3 h-3 rounded-full bg-red-600 ring-1 ring-red-800" />
+                    <span>Inativo</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-[#FFD6BC] bg-[#FFF0E6] p-4 shadow-md">
+            <div className="rounded-lg border border-[#FFD6BC] bg-[#FFF0E6] p-2 sm:p-4 shadow-md overflow-hidden">
               {loading ? (
                 <div className="text-gray-700 px-2 py-3">Carregando...</div>
               ) : error ? (
                 <div className="text-red-600 px-2 py-3">{error}</div>
               ) : (
                 <>
-                <Table
-                  columns={columns}
-                  data={dadosTabela}
-                  headerClassName="bg-[#FF6B35] text-white text-[1.125rem] font-bold"
-                  rowClassName="odd:bg-[#FFE8DA] even:bg-[#FFCDB2] hover:bg-[#ffb877] transition-colors"
-                  onClickRow={(row) => {
-                    if (row.id && row.nome !== "-") {
-                      navigate(`/cursos/${cursoSelecionado}/participante/${row.id}`);
-                    }
-                  }}
-                />
+                <div className="overflow-x-auto">
+                  <div className="min-w-[700px]">
+                    <Table
+                      columns={columns}
+                      data={dadosTabela}
+                      headerClassName="bg-[#FF6B35] text-white text-[1.125rem] font-bold"
+                      rowClassName="odd:bg-[#FFE8DA] even:bg-[#FFCDB2] hover:bg-[#ffb877] transition-colors"
+                      onClickRow={(row) => {
+                        if (row.id && row.nome !== "-") {
+                          navigate(`/cursos/${cursoSelecionado}/participante/${row.id}`);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
                 <Pagination />
                 </>
               )}

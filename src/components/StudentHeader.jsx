@@ -30,6 +30,7 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
   return (
     <header className="sticky top-0 z-30 w-full bg-gray-800 shadow-md">
       <div className="flex items-center justify-between px-4 py-3 md:px-8">
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14">
             <div
@@ -40,6 +41,23 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
             </div>
           </div>
         </div>
+
+        {/* Nav Desktop - aparece inline no centro */}
+        <nav className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => navigate(item.path)}
+              className={`text-lg font-medium px-4 py-2 rounded-lg transition-colors ${
+                isActive(item.path)
+                  ? "text-white bg-orange-600"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
         {/* Setas de navegação mobile - centro */}
         <div className="flex items-center gap-4 md:hidden">
@@ -59,6 +77,7 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
           </button>
         </div>
 
+        {/* Botões direita */}
         <div className="flex items-center gap-3">
           <button
             className="inline-flex items-center justify-center rounded-md border border-gray-700 px-2 py-2 text-gray-200 hover:text-white hover:border-gray-500 md:hidden cursor-pointer"
@@ -73,27 +92,23 @@ function StudentHeader({ navItems: navItemsProp, homePath = "/cursos", activeMat
         </div>
       </div>
 
-      <nav className={`${menuOpen ? "block" : "hidden"} md:block border-t border-gray-700 md:border-0`}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-3 md:px-8 md:py-2 gap-3">
-          <div className="flex flex-col md:flex-row gap-2 md:gap-6">
-            {navItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => { setMenuOpen(false); navigate(item.path); }}
-                className={`text-base md:text-lg font-medium px-4 py-2 rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? "text-white bg-orange-600"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="md:hidden">
-            <Button label="Sair" variant="Exit" rounded className="w-full" onClick={() => userService.logout()} />
-          </div>
+      {/* Nav Mobile - dropdown */}
+      <nav className={`${menuOpen ? "block" : "hidden"} md:hidden border-t border-gray-700`}>
+        <div className="flex flex-col px-4 py-3 gap-2">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => { setMenuOpen(false); navigate(item.path); }}
+              className={`text-base font-medium px-4 py-2 rounded-lg transition-colors ${
+                isActive(item.path)
+                  ? "text-white bg-orange-600"
+                  : "text-gray-300 hover:text-white hover:bg-gray-700"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <Button label="Sair" variant="Exit" rounded className="w-full mt-2" onClick={() => userService.logout()} />
         </div>
       </nav>
     </header>

@@ -38,14 +38,14 @@ export default function StudentProfile() {
     const ddd = digits.slice(0, 2);
     const rest = digits.slice(2);
     if (!digits) return "";
-    if (digits.length <= 2) return (;
-    if (digits.length <= 6) return () ;
+    if (digits.length <= 2) return `(${digits}`;
+    if (digits.length <= 6) return `(${ddd}) ${rest}`;
     if (digits.length <= 10) {
       // Fixo: (11) 1234-5678
-      return () -;
+      return `(${ddd}) ${rest.slice(0, 4)}-${rest.slice(4)}`;
     }
     // Celular: (11) 91234-5678
-    return () -;
+    return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5)}`;
   };
 
   useEffect(() => {

@@ -122,12 +122,12 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
         )}
       </div>
       <div className="flex-1 bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
-          <h3 className={`text-xl font-bold ${isAvaliacao ? 'text-orange-800' : 'text-gray-900'}`}>
+        <div className="flex justify-between items-start gap-5">
+          <h3 className={`text-2xl font-bold flex-1 ${isAvaliacao ? 'text-orange-800' : 'text-gray-900'}`}>
             {isAvaliacao ? `Avaliacao - ${material.title || 'Avaliacao'}` : `Material ${material?.displayOrder ?? material?.order ?? (index + 1)} - ${material.title}`}
           </h3>
           {!isAvaliacao && (
-            <div className="relative self-start md:self-auto" ref={ref}>
+            <div className="relative flex-shrink-0" ref={ref}>
               <button className="text-gray-500 hover:text-gray-800" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
                 <MoreHorizontal size={24} />
               </button>
@@ -141,7 +141,7 @@ export default function MaterialCard({ material, index, onEdit = null, onActionC
             </div>
           )}
         </div>
-        <p className={`text-sm ${isAvaliacao ? 'text-orange-800' : 'text-gray-600'}`}>
+        <p className={`text-lg ${isAvaliacao ? 'text-orange-800' : 'text-gray-600'}`}>
           {material.description}
         </p>
         {isAvaliacao && (

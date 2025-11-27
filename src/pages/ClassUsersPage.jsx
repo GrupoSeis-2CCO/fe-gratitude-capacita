@@ -152,11 +152,11 @@ export function ClassUsersPage() {
           Página {page + 1}{totalPages ? ` de ${totalPages}` : ''} • {totalElements} itens
         </div>
         <div className="flex items-center gap-2">
-          <button className={`px-3 py-1 border rounded ${canPrev ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canPrev} onClick={() => setPage(p => Math.max(0, p - 1))}>Anterior</button>
-          <select className="px-2 py-1 border rounded" value={size} onChange={(e) => { setPage(0); setSize(Number(e.target.value)); }}>
+          <button className={`px-3 py-1 border rounded text-sm ${canPrev ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canPrev} onClick={() => setPage(p => Math.max(0, p - 1))}>Anterior</button>
+          <select className="px-2 py-1 border rounded text-sm" value={size} onChange={(e) => { setPage(0); setSize(Number(e.target.value)); }}>
             {[5,10,20,50].map(s => <option key={s} value={s}>{s}/página</option>)}
           </select>
-          <button className={`px-3 py-1 border rounded ${canNext ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canNext} onClick={() => setPage(p => p + 1)}>Próxima</button>
+          <button className={`px-3 py-1 border rounded text-sm ${canNext ? 'text-gray-800 cursor-pointer' : 'text-gray-400 cursor-not-allowed'}`} disabled={!canNext} onClick={() => setPage(p => p + 1)}>Próxima</button>
         </div>
       </div>
     );
@@ -170,14 +170,14 @@ export function ClassUsersPage() {
       {/* BackButton removido - gerenciado pelo Header */}
 
       <div className="max-w-5xl mx-auto px-6">
-        <div className="flex items-center justify-center mb-6">
+        <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 mb-6">
           <h1 className="text-3xl font-extrabold text-gray-900">Participantes do Curso</h1>
-          <span className="ml-3 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">{totalElements} participantes</span>
+          <span className="px-4 py-1 bg-blue-100 rounded-full text-blue-800 text-base"><span className="font-bold">{totalElements}</span> participantes matriculados neste curso</span>
         </div>
 
         {/* Card wrapper */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-4 border-blue-300">
-          <div className="p-6 bg-blue-50">
+        <div className="bg-white rounded-2xl shadow-xl border-4 border-blue-300">
+          <div className="p-3 sm:p-6 bg-blue-50 rounded-2xl">
             {/* Exibe erro se houver */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
@@ -204,16 +204,20 @@ export function ClassUsersPage() {
 
             {/* Exibe a tabela */}
             {!loading && !error && participantes.length > 0 && (
-              <div>
-                <Table
-                  onClickRow={row => navigate(`/cursos/${idCurso}/participante/${row.id}`)}
-                  columns={columns}
-                  data={participantes}
-                  headerClassName={"bg-blue-700 text-white"}
-                  rowClassName={"odd:bg-blue-100 even:bg-blue-50 hover:bg-blue-200"}
-                  borderClassName={"border-blue-200"}
-                  fixedRowCount={size}
-                />
+              <div className="w-full overflow-hidden">
+                <div className="overflow-x-auto">
+                  <div className="min-w-[700px]">
+                    <Table
+                      onClickRow={row => navigate(`/cursos/${idCurso}/participante/${row.id}`)}
+                      columns={columns}
+                      data={participantes}
+                      headerClassName={"bg-blue-700 text-white"}
+                      rowClassName={"odd:bg-blue-100 even:bg-blue-50 hover:bg-blue-200"}
+                      borderClassName={"border-blue-200"}
+                      fixedRowCount={size}
+                    />
+                  </div>
+                </div>
                 <Pagination />
               </div>
             )}

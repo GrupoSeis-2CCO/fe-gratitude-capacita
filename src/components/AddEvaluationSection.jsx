@@ -124,21 +124,23 @@ export default function AddEvaluationSection({ onDeleted = null }) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-4 mt-8">
       <Button
         variant="Default"
         label={checking ? 'Verificando...' : 'Adicionar Avaliação'}
         onClick={handleCreate}
         disabled={checking || hasExam}
         title={hasExam ? 'Já existe uma avaliação para este curso' : 'Criar nova avaliação'}
+        className="w-full sm:w-auto"
       />
       {hasExam && (
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center w-full sm:w-auto">
           <Button
             variant="Confirm"
             label="Editar Avaliação"
             onClick={handleEdit}
             title="Editar avaliação existente"
+            className="w-full sm:w-auto"
           />
           <Button
             variant="Exit"
@@ -146,6 +148,7 @@ export default function AddEvaluationSection({ onDeleted = null }) {
             onClick={handleDelete}
             disabled={isDeleting}
             title="Excluir avaliação (se não houver respostas)"
+            className="w-full sm:w-auto"
           />
         </div>
       )}
