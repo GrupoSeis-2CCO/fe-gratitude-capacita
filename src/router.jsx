@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
 
 // Lazy imports - loaded on demand
+import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 const UserPage = lazy(() => import("./pages/UserPage.jsx").then(m => ({ default: m.UserPage })));
 const AccessPage = lazy(() => import("./pages/AccessPage.jsx").then(m => ({ default: m.AccessPage })));
 const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx").then(m => ({ default: m.RegisterPage })));
