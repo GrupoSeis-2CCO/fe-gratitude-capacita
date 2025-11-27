@@ -405,16 +405,49 @@ export default function StudentMaterialsListPage() {
 
   // modal control: show popup when we detect the transition to all materials completed
   const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalConcludedBackend, setEvalConcludedBackend] = useState(false);
   const prevCompletedRef = React.useRef(completed);
+
+  // Check backend for completed evaluation (tentativas) for this course
+  useEffect(() => {
+    let mounted = true;
+    async function checkEvalConcluded() {
+      try {
+        const fkUsuario = getUserIdFromJwtOrStorage();
+        if (!fkUsuario || !idCurso) return;
+        const resp = await api.get(`/tentativas/usuario/${encodeURIComponent(String(fkUsuario).trim())}`);
+        const tentativas = resp?.data || [];
+        // Check if any tentativa matches this course
+        const hasTentativaForCourse = (Array.isArray(tentativas) ? tentativas : []).some(t => {
+          const cursoId = t?.fkCurso ?? t?.avaliacao?.fkCurso?.idCurso ?? t?.avaliacao?.fkCurso ?? t?.matricula?.curso?.idCurso ?? null;
+          return String(cursoId) === String(idCurso);
+        });
+        if (mounted) setEvalConcludedBackend(hasTentativaForCourse);
+      } catch (e) {
+        console.debug('[StudentMaterialsList] Failed to check tentativas:', e?.message);
+        // If backend fails, don't block - keep evalConcludedBackend as false
+      }
+    }
+    checkEvalConcluded();
+    return () => { mounted = false; };
+  }, [idCurso]);
 
   useEffect(() => {
     // when completed changes from a smaller value to equal total, show modal
     const prev = prevCompletedRef.current || 0;
-    if (total > 0 && prev < total && completed === total) {
+    // do not show modal if evaluation already concluded for this user/course (check materials array + backend tentativas)
+    const evalConcludedLocal = (materials || []).some(m => {
+      const tipo = (m?.type || m?.tipo || '').toString().toLowerCase();
+      if (tipo !== 'avaliacao') return false;
+      if (m?.status && String(m.status).toLowerCase().includes('conclu')) return true;
+      try { return isConcludedBackend(m); } catch (_) { return false; }
+    });
+    const evalConcluded = evalConcludedLocal || evalConcludedBackend;
+    if (total > 0 && prev < total && completed === total && !evalConcluded) {
       setShowEvalModal(true);
     }
     prevCompletedRef.current = completed;
-  }, [completed, total]);
+  }, [completed, total, materials, evalConcludedBackend]);
 
   // Client-side pagination for student list (keeps merge correctness)
   const [page, setPage] = useState(0);

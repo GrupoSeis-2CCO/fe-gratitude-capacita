@@ -94,14 +94,14 @@ export default function FeedbackPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
+          <div className="bg-slate-100 rounded-lg shadow-md border border-slate-300 p-6">
             <div className="space-y-6">
               {loading && <div className="text-center text-sm text-gray-600">Carregando feedbacks...</div>}
               {!loading && error && <div className="text-center text-sm text-red-600">Não foi possível carregar feedbacks.</div>}
               {!loading && !error && filteredFeedbacks.length === 0 && <div className="text-center text-sm text-gray-600">Nenhum feedback encontrado.</div>}
 
               {!loading && !error && filteredFeedbacks.map((feedback, idx) => (
-                <div key={`${feedback.usuarioId ?? "anon"}-${idx}`} className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                <div key={`${feedback.usuarioId ?? "anon"}-${idx}`} className="border-b border-slate-300 pb-6 last:border-b-0 last:pb-0">
                   <div className="flex items-center gap-4 mb-3">
                     <h3 className="text-lg font-semibold text-gray-800">
                       {feedback.aluno ?? `Usuário ${feedback.usuarioId ?? "N/A"}`}
