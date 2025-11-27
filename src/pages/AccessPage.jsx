@@ -190,7 +190,7 @@ export function AccessPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-8 pt-13 pb-20">
+    <div className="relative min-h-screen flex flex-col bg-[#F2F2F2] px-2 sm:px-8 pt-6 sm:pt-13 pb-10 sm:pb-20">
       <GradientSideRail className="left-10" />
       <GradientSideRail className="right-10" variant="inverted" />
 

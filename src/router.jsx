@@ -1,46 +1,38 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
 
-// Eager imports - only for critical initial routes
+import { UserPage } from "./pages/UserPage.jsx";
 import Layout from "./Layout";
 import { LoginPage } from "./pages/LoginPage.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { AccessPage } from "./pages/AccessPage.jsx";
+import { RegisterPage } from "./pages/RegisterPage.jsx";
+import { ClassUsersPage } from "./pages/ClassUsersPage.jsx";
+import { UserClassesPage } from "./pages/UserClassesPage.jsx";
+import TestPage from "./pages/TestPage.jsx";
+import ClassDetailsPage from "./pages/ClassDetailsPage.jsx";
+import UserExamsPage from "./pages/UserExamsPage.jsx";
+import CreateExamPage from "./pages/CreateExamPage.jsx";
+import ExamPage from "./pages/ExamPage.jsx";
+import ExamRoutePage from "./pages/ExamRoutePage.jsx";
+import AnswerSheetPage from "./pages/AnswerSheetPage.jsx";
+import StudentUserExamsPage from "./pages/StudentUserExamsPage.jsx";
+import StudentAnswerSheetPage from "./pages/StudentAnswerSheetPage.jsx";
+import ClassListPage from "./pages/ClassListPage.jsx";
 import CoursesRoutePage from "./pages/CoursesRoutePage.jsx";
+import MaterialsListPage from "./pages/MaterialsListPage.jsx";
+import MaterialsRoutePage from "./pages/MaterialsRoutePage.jsx";
+import MaterialPage from "./pages/MaterialPage.jsx";
+import MaterialRoutePage from "./pages/MaterialRoutePage.jsx";
+// import FeedbackPage from "./pages/FeedbackPage.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import EditExamPage from "./pages/EditExamPage.jsx";
+import AdminDashboardPage from "./pages/AdminDashboard.jsx";
 
-// Lazy imports - loaded on demand
-const UserPage = lazy(() => import("./pages/UserPage.jsx").then(m => ({ default: m.UserPage })));
-const AccessPage = lazy(() => import("./pages/AccessPage.jsx").then(m => ({ default: m.AccessPage })));
-const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx").then(m => ({ default: m.RegisterPage })));
-const ClassUsersPage = lazy(() => import("./pages/ClassUsersPage.jsx").then(m => ({ default: m.ClassUsersPage })));
-const UserClassesPage = lazy(() => import("./pages/UserClassesPage.jsx").then(m => ({ default: m.UserClassesPage })));
-const TestPage = lazy(() => import("./pages/TestPage.jsx"));
-const ClassDetailsPage = lazy(() => import("./pages/ClassDetailsPage.jsx"));
-const UserExamsPage = lazy(() => import("./pages/UserExamsPage.jsx"));
-const CreateExamPage = lazy(() => import("./pages/CreateExamPage.jsx"));
-const ExamPage = lazy(() => import("./pages/ExamPage.jsx"));
-const ExamRoutePage = lazy(() => import("./pages/ExamRoutePage.jsx"));
-const AnswerSheetPage = lazy(() => import("./pages/AnswerSheetPage.jsx"));
-const StudentUserExamsPage = lazy(() => import("./pages/StudentUserExamsPage.jsx"));
-const StudentAnswerSheetPage = lazy(() => import("./pages/StudentAnswerSheetPage.jsx"));
-const ClassListPage = lazy(() => import("./pages/ClassListPage.jsx"));
-const MaterialsListPage = lazy(() => import("./pages/MaterialsListPage.jsx"));
-const MaterialsRoutePage = lazy(() => import("./pages/MaterialsRoutePage.jsx"));
-const MaterialPage = lazy(() => import("./pages/MaterialPage.jsx"));
-const MaterialRoutePage = lazy(() => import("./pages/MaterialRoutePage.jsx"));
-const EditExamPage = lazy(() => import("./pages/EditExamPage.jsx"));
-const TentativaDetalhePage = lazy(() => import("./pages/TentativaDetalhePage.jsx"));
-const FeedbacksDoCursoPage = lazy(() => import("./pages/FeedbacksDoCursoPage.jsx"));
-const StudentCourseFeedbacksPage = lazy(() => import("./pages/StudentCourseFeedbacksPage.jsx"));
-const StudentProfile = lazy(() => import("./pages/StudentProfile.jsx"));
-const MailhogTestPage = lazy(() => import("./pages/MailhogTestPage.jsx"));
-const AdminDashboardPage = lazy(() => import("./pages/AdminDashboard.jsx"));
-
-// Wrapper component for Suspense
-const LazyLoad = ({ children }) => (
-  <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-    {children}
-  </Suspense>
-);
+// Novos: páginas que criamos
+import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
+import FeedbacksDoCursoPage from "./pages/FeedbacksDoCursoPage.jsx";
+import StudentCourseFeedbacksPage from "./pages/StudentCourseFeedbacksPage.jsx";
+import StudentProfile from "./pages/StudentProfile.jsx";
+import MailhogTestPage from "./pages/MailhogTestPage.jsx";
 
 // 1 = funcionário
 // 2 = colaborador
@@ -63,7 +55,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><AccessPage /></LazyLoad>
+          <AccessPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -73,7 +65,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><RegisterPage /></LazyLoad>
+          <RegisterPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -83,7 +75,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><UserPage /></LazyLoad>
+          <UserPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -93,7 +85,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
-          <LazyLoad><StudentProfile /></LazyLoad>
+          <StudentProfile />
         </Layout>
       </ProtectedRoute>
     ),
@@ -103,7 +95,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><UserPage /></LazyLoad>
+          <UserPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -113,7 +105,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
         <Layout footerType="mini">
-          <LazyLoad><TestPage /></LazyLoad>
+          <TestPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -123,7 +115,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><MailhogTestPage /></LazyLoad>
+          <MailhogTestPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -133,7 +125,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><AdminDashboardPage /></LazyLoad>
+          <AdminDashboardPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -151,7 +143,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><ClassDetailsPage /></LazyLoad>
+          <ClassDetailsPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -161,7 +153,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><FeedbacksDoCursoPage /></LazyLoad>
+          <FeedbacksDoCursoPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -172,7 +164,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
-          <LazyLoad><StudentCourseFeedbacksPage /></LazyLoad>
+          <StudentCourseFeedbacksPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -181,7 +173,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <LazyLoad><MaterialsRoutePage /></LazyLoad>
+        <MaterialsRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -189,7 +181,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material/:idMaterial",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <LazyLoad><MaterialRoutePage /></LazyLoad>
+        <MaterialRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -198,7 +190,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><CreateExamPage /></LazyLoad>
+          <CreateExamPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -207,7 +199,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material/avaliacao",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <LazyLoad><ExamRoutePage /></LazyLoad>
+        <ExamRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -215,7 +207,7 @@ export const router = createBrowserRouter([
     path: "/cursos/:idCurso/material/avaliacao/:idAvaliacao",
     element: (
       <ProtectedRoute allowedUserTypes={[1,2]}>
-        <LazyLoad><ExamRoutePage /></LazyLoad>
+        <ExamRoutePage />
       </ProtectedRoute>
     ),
   },
@@ -224,7 +216,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><ClassUsersPage /></LazyLoad>
+          <ClassUsersPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -234,7 +226,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><UserClassesPage /></LazyLoad>
+          <UserClassesPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -244,7 +236,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini" headerType="default">
-          <LazyLoad><UserExamsPage /></LazyLoad>
+          <UserExamsPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -254,7 +246,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini" headerType="default">
-          <LazyLoad><AnswerSheetPage /></LazyLoad>
+          <AnswerSheetPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -264,7 +256,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
-          <LazyLoad><StudentUserExamsPage /></LazyLoad>
+          <StudentUserExamsPage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -275,7 +267,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[2]}>
         <Layout footerType="mini" headerType="student">
-          <LazyLoad><TentativaDetalhePage /></LazyLoad>
+          <TentativaDetalhePage />
         </Layout>
       </ProtectedRoute>
     ),
@@ -285,7 +277,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <LazyLoad><EditExamPage /></LazyLoad>
+          <EditExamPage />
         </Layout>
       </ProtectedRoute>
     ),

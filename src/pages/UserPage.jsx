@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import UserActions from "../components/UserActions";
 import { getEngajamentoPorCurso } from "../services/UserPageService.js";
 import { api } from "../services/api.js";
-import MonthFilter from "../components/MonthFilter.jsx";
-import YearFilter from "../components/YearFilter.jsx";
 import ApexLineChart from "../components/ApexLineChart.jsx";
 import Chart from 'react-apexcharts';
 import Button from "../components/Button"; // other actions if needed
+import CustomSelect from "../components/CustomSelect.jsx";
 
 export function UserPage({ courseId = 1, days = 14 }) {
   const routeParams = useParams();
@@ -34,7 +33,8 @@ export function UserPage({ courseId = 1, days = 14 }) {
   const [userCard, setUserCard] = useState({ name: 'Colaborador', email: "—", dataEntrada: null, ultimoAcesso: null, ultimoCurso: "—" });
   const [selectedParticipantId, setSelectedParticipantId] = useState(routeParticipantId ? Number(routeParticipantId) : null);
   const [selectedMonth, setSelectedMonth] = useState(null); // format: '01'..'12' or null
-  const [selectedYear, setSelectedYear] = useState(2025); // default to 2025
+  const [selectedYear, setSelectedYear] = useState(null); // null = não selecionado
+  const [mesesDisponiveis, setMesesDisponiveis] = useState([]); // lista de {year, month, monthName}
   const navigate = useNavigate();
   // chart state
 
@@ -64,7 +64,13 @@ export function UserPage({ courseId = 1, days = 14 }) {
 
         const resp = await getEngajamentoPorCurso(effectiveCourseId, from, to, days);
         if (!mounted) return;
-        const formatted = (resp || []).map(r => ({ date: formatDateForLabel(r.date), value: r.value }));
+        // Filtrar apenas dias do mês selecionado (remover dias do mês anterior como 31)
+        const filtered = (resp || []).filter(r => {
+          if (!selectedMonth || !selectedYear) return true;
+          const d = new Date(r.date);
+          return d.getMonth() + 1 === Number(selectedMonth) && d.getFullYear() === Number(selectedYear);
+        });
+        const formatted = filtered.map(r => ({ date: formatDateForLabel(r.date), value: r.value }));
         setChartData(formatted);
 
   // carrega dados do usuario (se houver participanteId na rota). Se não houver, tenta pegar o primeiro participante do curso e logar tudo para mapping
@@ -178,7 +184,28 @@ export function UserPage({ courseId = 1, days = 14 }) {
 
     load();
     return () => { mounted = false };
-  }, [effectiveCourseId, days, selectedMonth, routeParticipantId]);
+  }, [effectiveCourseId, days, selectedMonth, selectedYear, routeParticipantId]);
+
+  // Buscar meses disponíveis quando o participante mudar
+  useEffect(() => {
+    async function fetchMesesDisponiveis() {
+      const pid = selectedParticipantId || (routeParticipantId ? Number(routeParticipantId) : null);
+      if (!pid) return;
+      
+      try {
+        const resp = await api.get(`/relatorios/participante/${pid}/meses-disponiveis`, {
+          params: { fkCurso: effectiveCourseId }
+        });
+        if (resp.data && Array.isArray(resp.data)) {
+          setMesesDisponiveis(resp.data);
+        }
+      } catch (err) {
+        console.warn('Erro ao buscar meses disponíveis:', err);
+        setMesesDisponiveis([]);
+      }
+    }
+    fetchMesesDisponiveis();
+  }, [selectedParticipantId, routeParticipantId, effectiveCourseId]);
 
   const maxValue = chartData.length ? Math.max(...chartData.map(d => d.value)) : 0;
   const average = chartData.length ? chartData.reduce((s, d) => s + d.value, 0) / chartData.length : 0;
@@ -212,7 +239,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
         <h1 className="text-4xl font-bold text-gray-800">{userCard?.name || 'Colaborador'}</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 max-w-4xl mx-auto">
+      <div className="bg-zinc-100 rounded-lg shadow-md p-6 mb-4 max-w-screen-xl mx-auto border border-zinc-200">
         <div className="space-y-3">
           <div className="text-gray-700"><strong className="text-gray-900">Email:</strong> {userCard.email}</div>
           <div className="text-gray-700"><strong className="text-gray-900">Primeiro acesso:</strong> {userCard.dataEntrada ? formatIsoDateTime(userCard.dataEntrada) : '—'}</div>
@@ -222,19 +249,54 @@ export function UserPage({ courseId = 1, days = 14 }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-        <UserActions userName={userCard?.name} />
-
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 max-w-screen-xl mx-auto">
         <div className="lg:col-span-2">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Engajamento Diário do Participante</h2>
-          <div style={{ marginBottom: 12 }} className="flex items-center gap-4">
-            {/* Month + Year filters */}
-            <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
-            <YearFilter value={selectedYear} onChange={setSelectedYear} />
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Sobre o Colaborador</h2>
+          <div className="bg-zinc-100 rounded-lg shadow-md p-4 border border-zinc-200">
+            <UserActions userName={userCard?.name} />
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
+        </div>
+
+        <div className="lg:col-span-5">
+          <h2 className="text-2xl font-bold text-gray-800 mb-3">Engajamento Diário do Participante</h2>
+          <div className="bg-zinc-100 rounded-lg shadow-md p-6 border border-zinc-200">
+            {/* Filtros dentro do mesmo container */}
+            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-zinc-300">
+              {/* Filtro de Ano - apenas anos disponíveis */}
+              <CustomSelect
+                label="Ano:"
+                value={selectedYear}
+                onChange={(val) => {
+                  setSelectedYear(val);
+                  setSelectedMonth(null); // reset mês ao mudar ano
+                }}
+                options={[...new Set(mesesDisponiveis.map(m => m.year))]
+                  .sort((a, b) => b - a)
+                  .map(year => ({ value: year, label: String(year) }))}
+                placeholder="Selecione"
+              />
+              {/* Filtro de Mês - apenas meses disponíveis para o ano selecionado */}
+              <CustomSelect
+                label="Mês:"
+                value={selectedMonth}
+                onChange={setSelectedMonth}
+                options={mesesDisponiveis
+                  .filter(m => m.year === selectedYear)
+                  .sort((a, b) => a.month - b.month)
+                  .map(m => ({ value: String(m.month).padStart(2, '0'), label: m.monthName }))}
+                placeholder="Selecione"
+                disabled={!selectedYear}
+              />
+            </div>
+            
+            {/* Conteúdo do gráfico */}
             {loading ? (
               <div>Carregando...</div>
+            ) : !selectedYear ? (
+              <div className="text-center text-gray-600 py-12">
+                <strong className="text-gray-800">Selecione um ano para demonstrar desempenho</strong>
+                <div className="text-sm mt-2 text-gray-600">Escolha um ano no filtro acima para visualizar os meses disponíveis.</div>
+              </div>
             ) : !selectedMonth ? (
               <div className="text-center text-gray-600 py-12">
                 <strong className="text-gray-800">Selecione um mês para demonstrar desempenho</strong>
@@ -246,7 +308,7 @@ export function UserPage({ courseId = 1, days = 14 }) {
               <>
                 <div>
                   {/* Inline chart to ensure tooltip label is 'Materiais Concluídos' */}
-                  <InlineApexChart series={seriesForChart} categories={categoriesForChart} height={420} yLabel="Materiais Concluídos" />
+                  <InlineApexChart series={seriesForChart} categories={categoriesForChart} height={320} yLabel="Materiais Concluídos" />
                 </div>
 
                 {/* x-axis labels are handled by ApexCharts; removed custom labels */}
@@ -302,19 +364,36 @@ function InlineApexChart({ series = [], categories = [], height = 400, yLabel = 
     },
     xaxis: {
       categories: categories,
-      labels: { rotate: -45 }
+      labels: { 
+        rotate: -45,
+        hideOverlappingLabels: true,
+      },
+      tickAmount: Math.ceil(categories.length / 3), // 1 ponto a cada 3 dias
+      tooltip: {
+        enabled: false // desabilita tooltip do eixo X para evitar conflito
+      }
     },
     yaxis: {
       title: { text: yLabel }
     },
     stroke: { curve: 'smooth' },
-    markers: { size: 5 },
+    markers: { 
+      size: 5,
+      discrete: categories.map((_, i) => i % 3 === 0 ? {
+        seriesIndex: 0,
+        dataPointIndex: i,
+        fillColor: '#008FFB',
+        strokeColor: '#fff',
+        size: 5
+      } : null).filter(Boolean)
+    },
     tooltip: {
       shared: false,
+      intersect: true,
       x: {
-        formatter: function (val) {
-          // val is the category (date label)
-          return val;
+        formatter: function (val, { dataPointIndex }) {
+          // usa o índice do ponto para pegar a categoria correta
+          return `Dia ${categories[dataPointIndex] || val}`;
         }
       },
       y: {
