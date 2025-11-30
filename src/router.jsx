@@ -32,7 +32,7 @@ import TentativaDetalhePage from "./pages/TentativaDetalhePage.jsx";
 import FeedbacksDoCursoPage from "./pages/FeedbacksDoCursoPage.jsx";
 import StudentCourseFeedbacksPage from "./pages/StudentCourseFeedbacksPage.jsx";
 import StudentProfile from "./pages/StudentProfile.jsx";
-import MailhogTestPage from "./pages/MailhogTestPage.jsx";
+import EmailNotificationPage from "./pages/EmailNotificationPage.jsx";
 
 // 1 = funcionário
 // 2 = colaborador
@@ -111,11 +111,11 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/mailhog-test",
+    path: "/email-notifications",
     element: (
       <ProtectedRoute allowedUserTypes={[1]}>
         <Layout footerType="mini">
-          <MailhogTestPage />
+          <EmailNotificationPage />
         </Layout>
       </ProtectedRoute>
     ),
