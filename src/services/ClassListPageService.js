@@ -33,13 +33,15 @@ export async function createCourse(courseInput) {
     form.append('tituloCurso', courseInput.tituloCurso);
     if (typeof courseInput.descricao === 'string' && courseInput.descricao.trim() !== '') form.append('descricao', courseInput.descricao.trim());
     if (typeof courseInput.duracaoEstimada === 'number') form.append('duracaoEstimada', courseInput.duracaoEstimada);
+    // Envia ocultado (default: true se não especificado)
+    form.append('ocultado', courseInput.ocultado !== undefined ? String(courseInput.ocultado) : 'true');
     form.append('imagem', courseInput.file); // campo do arquivo
     try {
       const resp = await api.post("/cursos", form, { headers: { 'Content-Type': 'multipart/form-data' } });
       return resp.data;
     } catch (err) {
       const message = normalizeError(err, "Erro ao criar o curso.");
-      console.error("❌ Erro ao criar curso (multipart):", message, err);
+      console.error("Erro ao criar curso (multipart):", message, err);
       throw new Error(message);
     }
   } else {
@@ -48,12 +50,14 @@ export async function createCourse(courseInput) {
     if (typeof courseInput.descricao === 'string' && courseInput.descricao.trim() !== '') payload.descricao = courseInput.descricao.trim();
     if (typeof courseInput.imagem === 'string' && courseInput.imagem.trim() !== '') payload.imagem = courseInput.imagem.trim();
     if (typeof courseInput.duracaoEstimada === 'number') payload.duracaoEstimada = courseInput.duracaoEstimada;
+    // Envia ocultado (default: true se não especificado)
+    payload.ocultado = courseInput.ocultado !== undefined ? courseInput.ocultado : true;
     try {
       const resp = await api.post("/cursos", payload);
       return resp.data;
     } catch (err) {
       const message = normalizeError(err, "Erro ao criar o curso.");
-      console.error("❌ Erro ao criar curso:", message, err);
+      console.error("Erro ao criar curso:", message, err);
       throw new Error(message);
     }
   }
