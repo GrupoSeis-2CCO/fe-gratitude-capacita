@@ -4,11 +4,7 @@ import Button from './Button';
 
 import { createCourse, updateCourse, toggleCourseHidden } from '../services/ClassListPageService.js';
 
-import { uploadFileToS3 } from '../services/UploadService.js';
-
 import PromptModal from './PromptModal.jsx';
-
-import { api } from '../services/api.js';
 
 import SmartImage from './SmartImage.jsx';
 
@@ -160,80 +156,39 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
             try {
 
-
-              let finalImageUrl = image || null;
-
-              if (file) {
-
-
-                const uploadedUrl = await uploadFileToS3(file, 'bronze');
-
-
-                finalImageUrl = uploadedUrl;
-
-
-              }
-
-
-              // Accept any image URL scheme, only enforce backend length limit
-
-
-              if (finalImageUrl) {
-
-
-                if (finalImageUrl.length > IMAGE_MAX_BACKEND) {
-
-
-                  setError(`URL da imagem muito longa (máx. ${IMAGE_MAX_BACKEND} caracteres).`);
-
-
-                  setLoading(false);
-
-
-                  return;
-
-
-                }
-
-
-              }
-                const payload = { tituloCurso: title.trim(), ocultado: isHidden };
-
-
-
-
-              // const payload = { tituloCurso: title.trim() };
-
-
+              // Monta payload base
+              const payload = { tituloCurso: title.trim(), ocultado: isHidden };
               if (content && content.trim()) payload.descricao = content.trim();
 
-
-              if (finalImageUrl) payload.imagem = finalImageUrl;
-
-
               // valida e aplica duracaoEstimada (horas inteiras)
-
-
               if (hours !== "") {
-
                 const hoursTrim = String(hours).trim();
-
-                // Accept only non-negative integers (no decimals, no signs)
                 if (!/^[0-9]+$/.test(hoursTrim)) {
                   setError('Total de horas inválido: informe um número inteiro não-negativo.');
                   setLoading(false);
                   return;
                 }
-
-                const hNum = parseInt(hoursTrim, 10);
-                payload.duracaoEstimada = hNum;
-
+                payload.duracaoEstimada = parseInt(hoursTrim, 10);
               }
 
-
-
+              // Se tem arquivo de imagem, envia via multipart (backend faz upload para S3)
+              if (file) {
+                payload.file = file; // createCourse detecta e envia como multipart
+              } else if (image && !image.startsWith('blob:')) {
+                // Se é URL externa (não blob), passa direto
+                if (image.length > IMAGE_MAX_BACKEND) {
+                  setError(`URL da imagem muito longa (máx. ${IMAGE_MAX_BACKEND} caracteres).`);
+                  setLoading(false);
+                  return;
+                }
+                payload.imagem = image;
+              }
 
               if (isUpdate && idCurso) {
+                // Para update, se tem arquivo novo, passa o file para updateCourse (multipart)
+                if (file) {
+                  payload.file = file;
+                }
                 await updateCourse(idCurso, payload);
                 // Se mudou o estado de oculto na edição, chama o endpoint específico para alternar
                 try {
@@ -244,10 +199,8 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
                   console.error('Erro ao aplicar ocultação do curso:', errToggle);
                 }
               } else {
-
+                // Criação: usa multipart se tem arquivo
                 await createCourse(payload);
-
-
               }
 
               setIsEditing(false);

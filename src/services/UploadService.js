@@ -9,7 +9,7 @@ export async function uploadFileToS3(file, tipoBucket = 'bronze') {
     console.log('[UploadService] Enviando arquivo para S3 via /arquivos/upload:', file.name, 'tipoBucket:', tipoBucket);
     const resp = await api.post('/arquivos/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     console.log('[UploadService] Resposta recebida do backend (URL S3):', resp.data);
-    return resp.data; // retorna URL completa do S3 (ex: https://bucket.s3.region.amazonaws.com/apostilas/uuid_file.pdf)
+    return resp.data; // retorna URL completa do S3 (ex: https://bucket.s3.region.amazonaws.com/cursos/uuid_file.jpg)
   } catch (err) {
     // Mensagens mais amigáveis para 413 (payload too large)
     const status = err?.response?.status;

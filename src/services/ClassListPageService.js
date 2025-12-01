@@ -61,18 +61,43 @@ export async function createCourse(courseInput) {
 
 export async function updateCourse(idCurso, updates) {
   if (!idCurso) throw new Error("idCurso é obrigatório para atualizar.");
-  const payload = {};
-  if (typeof updates?.tituloCurso === 'string' && updates.tituloCurso.trim() !== '') payload.tituloCurso = updates.tituloCurso.trim();
-  if (typeof updates?.descricao === 'string' && updates.descricao.trim() !== '') payload.descricao = updates.descricao.trim();
-  if (typeof updates?.imagem === 'string' && updates.imagem.trim() !== '') payload.imagem = updates.imagem.trim();
-  if (typeof updates?.duracaoEstimada === 'number') payload.duracaoEstimada = updates.duracaoEstimada;
-  try {
-    const resp = await api.put(`/cursos/${idCurso}`, payload);
-    return resp.data;
-  } catch (err) {
-    const message = normalizeError(err, "Erro ao atualizar o curso.");
-    console.error("❌ Erro ao atualizar curso:", message, err);
-    throw new Error(message);
+  
+  // Se updates.file existir, envia como multipart
+  if (updates?.file instanceof File) {
+    const form = new FormData();
+    if (typeof updates.tituloCurso === 'string' && updates.tituloCurso.trim() !== '') {
+      form.append('tituloCurso', updates.tituloCurso.trim());
+    }
+    if (typeof updates.descricao === 'string' && updates.descricao.trim() !== '') {
+      form.append('descricao', updates.descricao.trim());
+    }
+    if (typeof updates.duracaoEstimada === 'number') {
+      form.append('duracaoEstimada', updates.duracaoEstimada);
+    }
+    form.append('imagem', updates.file); // campo do arquivo
+    try {
+      const resp = await api.put(`/cursos/${idCurso}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      return resp.data;
+    } catch (err) {
+      const message = normalizeError(err, "Erro ao atualizar o curso.");
+      console.error("❌ Erro ao atualizar curso (multipart):", message, err);
+      throw new Error(message);
+    }
+  } else {
+    // Fallback: sem arquivo, só JSON
+    const payload = {};
+    if (typeof updates?.tituloCurso === 'string' && updates.tituloCurso.trim() !== '') payload.tituloCurso = updates.tituloCurso.trim();
+    if (typeof updates?.descricao === 'string' && updates.descricao.trim() !== '') payload.descricao = updates.descricao.trim();
+    if (typeof updates?.imagem === 'string' && updates.imagem.trim() !== '') payload.imagem = updates.imagem.trim();
+    if (typeof updates?.duracaoEstimada === 'number') payload.duracaoEstimada = updates.duracaoEstimada;
+    try {
+      const resp = await api.put(`/cursos/${idCurso}`, payload);
+      return resp.data;
+    } catch (err) {
+      const message = normalizeError(err, "Erro ao atualizar o curso.");
+      console.error("❌ Erro ao atualizar curso:", message, err);
+      throw new Error(message);
+    }
   }
 }
 
