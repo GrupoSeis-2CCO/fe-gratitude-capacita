@@ -130,7 +130,7 @@ export default function AddCourseSection({ onCourseCreated, editCourse }) {
 
         <Button
           variant={isHidden ? 'Ghost' : 'Default'}
-          label={isHidden ? '🔒 Oculto' : '🔓 Visível'}
+          label={isHidden ? 'Oculto' : 'Visível'}
           onClick={() => setIsHidden(!isHidden)}
         />
 

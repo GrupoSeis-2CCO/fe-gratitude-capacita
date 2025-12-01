@@ -13,6 +13,7 @@ function Header() {
     { label: "Gerenciar Cursos", path: "/cursos" },
     { label: "Historico de acesso", path: "/acessos" },
     { label: "Cadastrar Usuario", path: "/cadastro" },
+    { label: "Notificações", path: "/email-notifications" },
   ];
 
   if (userType === 1) {

@@ -5,7 +5,6 @@ import {
   getCourses, 
   sendToAllCollaborators, 
   sendToUser, 
-  sendToEmail,
   healthCheck 
 } from "../services/emailNotificationService";
 
@@ -14,8 +13,6 @@ export default function EmailNotificationPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [manualEmail, setManualEmail] = useState("");
-  const [manualName, setManualName] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sentEmails, setSentEmails] = useState([]);
@@ -59,7 +56,7 @@ export default function EmailNotificationPage() {
       
       setStatus({ 
         type: "success", 
-        text: `✅ Notificações enviadas: ${resp.sent} de ${resp.totalCollaborators} colaboradores` 
+        text: `Notificações enviadas: ${resp.sent} de ${resp.totalCollaborators} colaboradores` 
       });
       
       setSentEmails(prev => [{
@@ -99,7 +96,7 @@ export default function EmailNotificationPage() {
       
       setStatus({ 
         type: "success", 
-        text: `✅ Enviado para ${resp.nome} (${resp.email})` 
+        text: `Enviado para ${resp.nome} (${resp.email})` 
       });
       
       setSentEmails(prev => [{
@@ -109,52 +106,6 @@ export default function EmailNotificationPage() {
         course: selectedCourse?.tituloCurso,
         ts: Date.now()
       }, ...prev]);
-    } catch (e) {
-      setStatus({ 
-        type: "error", 
-        text: `Falha: ${e?.response?.data?.error || e.message || e}` 
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Enviar para email manual
-  const handleSendToEmail = async () => {
-    if (!manualEmail || manualEmail.trim() === "") {
-      setStatus({ type: "error", text: "Informe um email para envio." });
-      return;
-    }
-    if (!selectedCourse) {
-      setStatus({ type: "error", text: "Selecione um curso antes de enviar." });
-      return;
-    }
-
-    setLoading(true);
-    setStatus(null);
-    try {
-      const payload = { 
-        idCurso: selectedCourse.idCurso, 
-        emailAluno: manualEmail,
-        nomeAluno: manualName || manualEmail
-      };
-      const resp = await sendToEmail(payload);
-      
-      setStatus({ 
-        type: "success", 
-        text: `✅ Enviado para ${resp.email}` 
-      });
-      
-      setSentEmails(prev => [{
-        kind: 'email',
-        to: resp.email,
-        course: selectedCourse?.tituloCurso,
-        ts: Date.now()
-      }, ...prev]);
-      
-      // Limpar campos após envio
-      setManualEmail("");
-      setManualName("");
     } catch (e) {
       setStatus({ 
         type: "error", 
@@ -221,34 +172,11 @@ export default function EmailNotificationPage() {
             </div>
           </section>
 
-          {/* Email Manual */}
-          <section className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <label className="block mb-2 font-semibold text-gray-700">
-              Enviar para e-mail específico (opcional)
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input 
-                type="email"
-                placeholder="email@exemplo.com" 
-                className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                value={manualEmail} 
-                onChange={(e) => setManualEmail(e.target.value)} 
-              />
-              <input 
-                type="text"
-                placeholder="Nome do destinatário (opcional)" 
-                className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500" 
-                value={manualName} 
-                onChange={(e) => setManualName(e.target.value)} 
-              />
-            </div>
-          </section>
-
           {/* Botões de Ação */}
           <div className="flex flex-wrap gap-3 mb-6">
             <Button 
               variant="Confirm" 
-              label={loading ? "Enviando..." : "🚀 Enviar para TODOS os Colaboradores"} 
+              label={loading ? "Enviando..." : "Enviar para TODOS os Colaboradores"} 
               onClick={handleSendToAllCollaborators}
               disabled={loading || !selectedCourse}
             />
@@ -257,12 +185,6 @@ export default function EmailNotificationPage() {
               label="Enviar para colaborador selecionado" 
               onClick={handleSendToSelected}
               disabled={loading || !selectedCourse || !selectedUser}
-            />
-            <Button 
-              variant="Default" 
-              label="Enviar para email" 
-              onClick={handleSendToEmail}
-              disabled={loading || !selectedCourse || !manualEmail}
             />
           </div>
 
