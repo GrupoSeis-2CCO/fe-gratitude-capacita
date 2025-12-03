@@ -186,27 +186,27 @@ function AdminDashboardPage() {
           {kpis && (
             <>
               <p className="text-xs text-zinc-500 mb-2 italic text-right">
-                * Clique nas métricas para ver o número de participantes
+                * Clique nas métricas para ver a relação usuários/total
               </p>
               <section className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-4">
               <MetricCard 
                 title="% Colaboradores Ativos (7 dias)" 
                 value={kpis.ativosSemanaPct.toFixed(1) + '%'} 
-                secondaryValue={kpis.ativosSemanaCount + ' usuários'}
+                secondaryValue={kpis.ativosSemanaLabel || (kpis.ativosSemanaCount + '/' + kpis.totalAlunosCurso)}
               />
               <MetricCard 
                 title="% Ativos 3x ou mais (7 dias)" 
                 value={kpis.ativos3xSemanaPct.toFixed(1) + '%'} 
-                secondaryValue={kpis.ativos3xSemanaCount + ' usuários'}
+                secondaryValue={kpis.ativos3xSemanaLabel || (kpis.ativos3xSemanaCount + '/' + kpis.totalAlunosCurso)}
               />
               <MetricCard 
                 title="% Concluindo +1 Curso (7 dias)" 
                 value={kpis.concluindoMais1CursoPct.toFixed(1) + '%'} 
-                secondaryValue={kpis.concluindoMais1CursoCount + ' usuários'}
+                secondaryValue={kpis.concluindoMais1CursoLabel || (kpis.concluindoMais1CursoCount + '/' + kpis.totalAlunosCurso)}
               />
               <MetricCard 
                 title="Participantes Inativos (>15 dias)" 
-                value={kpis.inativosCount} 
+                value={kpis.inativosLabel || kpis.inativosCount} 
                 textColor="text-red-600"
                 isClickable={true}
                 onClick={() => setShowInactiveModal(true)}
@@ -218,7 +218,7 @@ function AdminDashboardPage() {
           {cursoId && cursoValido && (
             <div className="bg-zinc-100 rounded-lg shadow-md px-4 py-3 mb-4 border border-zinc-200 relative">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-2">
-                <h2 className="text-lg font-semibold text-zinc-800">Engajamento Diário</h2>
+                <h2 className="text-lg font-semibold text-zinc-800">Materiais Concluídos</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <select 
                     className="border border-zinc-300 rounded px-3 py-1.5 text-sm bg-zinc-100 min-w-[150px] cursor-pointer"
@@ -256,7 +256,7 @@ function AdminDashboardPage() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                   </div>
                   <p className="text-sm font-semibold">
-                    Nota: Engajamento significa que um material foi concluído.
+                    Nota: O gráfico mostra materiais concluídos (barras) e usuários únicos por dia (linha).
                   </p>
                 </div>
               </div>

@@ -2,15 +2,23 @@ import React from 'react';
 import Chart from 'react-apexcharts';
 
 export default function ApexBarChart({ data = [], height = 360 }) {
-  // data: [{date: 'yyyy-mm-dd', value: number}, ...]
-  const series = [{
-    name: 'Engajamento',
-    data: data.map(d => ({ x: d.date, y: d.value ?? 0 }))
-  }];
+  // data: [{date: 'yyyy-mm-dd', value: number, usuariosUnicos: number}, ...]
+  const series = [
+    {
+      name: 'Materiais Concluídos',
+      type: 'bar',
+      data: data.map(d => ({ x: d.date, y: d.value ?? 0 }))
+    },
+    {
+      name: 'Usuários Únicos',
+      type: 'line',
+      data: data.map(d => ({ x: d.date, y: d.usuariosUnicos ?? 0 }))
+    }
+  ];
 
   const options = {
     chart: {
-      type: 'bar',
+      type: 'line',
       toolbar: { show: false },
       zoom: { enabled: false }
     },
@@ -25,8 +33,14 @@ export default function ApexBarChart({ data = [], height = 360 }) {
     },
     stroke: {
       show: true,
-      width: 2,
-      colors: ['transparent']
+      width: [0, 3],
+      colors: ['transparent', '#3B82F6'],
+      curve: 'smooth'
+    },
+    markers: {
+      size: [0, 5],
+      colors: ['#FF6B35', '#3B82F6'],
+      strokeWidth: 0
     },
     xaxis: {
       type: 'category',
@@ -34,13 +48,23 @@ export default function ApexBarChart({ data = [], height = 360 }) {
       title: { text: 'Data', style: { fontWeight: 600 } }
     },
     yaxis: {
-      title: { text: 'Engajamento', style: { fontWeight: 600 } }
+      min: 0,
+      forceNiceScale: true,
+      title: { text: 'Quantidade', style: { fontWeight: 600 } },
+      labels: { style: { colors: '#71717a' } }
     },
     fill: {
-      opacity: 1
+      opacity: [1, 1]
     },
-    colors: ['#FF6B35'],
+    colors: ['#FF6B35', '#3B82F6'],
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'right'
+    },
     tooltip: {
+      shared: true,
+      intersect: false,
       y: {
         formatter: function (val) {
           return val
@@ -51,7 +75,7 @@ export default function ApexBarChart({ data = [], height = 360 }) {
 
   return (
     <div>
-      <Chart options={options} series={series} type="bar" height={height} />
+      <Chart options={options} series={series} type="line" height={height} />
     </div>
   );
 }
