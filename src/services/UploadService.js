@@ -27,6 +27,37 @@ export async function uploadFileToS3(file, tipoBucket = 'bronze') {
   }
 }
 
+/**
+ * Upload de apostila (PDF) usando endpoint multipart que envia direto para S3
+ * e cria o registro no banco de dados em uma única chamada.
+ */
+export async function uploadApostilaToS3({ file, fkCurso, nomeApostila, descricaoApostila }) {
+  const form = new FormData();
+  form.append('fkCurso', fkCurso);
+  form.append('nomeApostila', nomeApostila || file.name);
+  if (descricaoApostila) form.append('descricaoApostila', descricaoApostila);
+  if (file) form.append('arquivo', file);
+
+  try {
+    console.log('[UploadService] Enviando apostila para S3 via /apostilas (multipart):', file?.name);
+    const resp = await api.post('/apostilas', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+    console.log('[UploadService] Apostila criada com sucesso:', resp.data);
+    return resp.data; // retorna o objeto Apostila completo com urlArquivo
+  } catch (err) {
+    const status = err?.response?.status;
+    if (status === 413) {
+      console.error('[UploadService] Arquivo muito grande:', file);
+      throw new Error('Arquivo muito grande. Tente um arquivo menor ou comprima antes de enviar.');
+    }
+    if (err?.response?.data) {
+      console.error('[UploadService] Erro do backend:', err.response.data);
+      throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload da apostila');
+    }
+    console.error('[UploadService] Erro desconhecido:', err);
+    throw new Error(err?.message || 'Falha no upload da apostila');
+  }
+}
+
 export async function createVideoCommand({ nomeVideo, descricaoVideo, urlVideo, ordemVideo = 1, fkCurso }) {
   const body = { nomeVideo, descricaoVideo, urlVideo, ordemVideo, fkCurso };
   const resp = await api.post('/videos', body);
@@ -65,4 +96,4 @@ export async function updateVideo(idVideo, { nomeVideo, descricaoVideo, urlVideo
   return resp.data;
 }
 
-export default { uploadFileToS3, createVideoCommand, createApostilaCommand, updateApostilaUrl, updateApostila, updateVideo };
+export default { uploadFileToS3, uploadApostilaToS3, createVideoCommand, createApostilaCommand, updateApostilaUrl, updateApostila, updateVideo };

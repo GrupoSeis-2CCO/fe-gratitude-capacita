@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from './Button';
-import { uploadFileToS3, createVideoCommand, createApostilaCommand, updateApostilaUrl, updateApostila, updateVideo } from '../services/UploadService.js';
+import { uploadFileToS3, uploadApostilaToS3, createVideoCommand, createApostilaCommand, updateApostilaUrl, updateApostila, updateVideo } from '../services/UploadService.js';
 import { useParams } from 'react-router-dom';
 
 export default function AddMaterialSection({ cursoId: propCursoId = null, onAdded = null, initialMaterial = null, onCancelEdit = null }) {
@@ -69,38 +69,23 @@ export default function AddMaterialSection({ cursoId: propCursoId = null, onAdde
           await createVideoCommand({ nomeVideo: titulo, descricaoVideo: descricao || null, urlVideo, ordemVideo: 1, fkCurso: cursoId });
         }
       } else {
-        // apostila
-        let arquivoUrl = null;
-        if (file) {
-          arquivoUrl = await uploadFileToS3(file, 'bronze');
-        }
+        // apostila - usar novo endpoint multipart que envia direto para S3
         if (initialMaterial && initialMaterial.type === 'pdf' && initialMaterial.id) {
           // update existing apostila
           await updateApostila(initialMaterial.id, { nomeApostila: titulo, descricaoApostila: descricao || null, tamanhoBytes: file ? file.size : (initialMaterial.tamanhoBytes || 0) });
-          if (arquivoUrl) {
+          if (file) {
+            // Se tem novo arquivo, usa o novo endpoint para fazer upload e atualizar URL
+            const arquivoUrl = await uploadFileToS3(file, 'bronze');
             await updateApostilaUrl(initialMaterial.id, arquivoUrl);
           }
         } else {
-          const created = await createApostilaCommand({
-            nomeApostilaOriginal: titulo,
-            nomeApostilaArmazenamento: file ? file.name : titulo,
-            descricaoApostila: descricao || null,
-            tamanhoBytes: file ? file.size : 0,
-            isApostilaOculto: 0,
-            ordemApostila: 1,
+          // Criar nova apostila com upload S3 integrado
+          await uploadApostilaToS3({
+            file: file,
             fkCurso: cursoId,
-            urlApostila: arquivoUrl
+            nomeApostila: titulo,
+            descricaoApostila: descricao || null
           });
-
-          // tentar atualizar a url da apostila via endpoint específico, se tivermos id
-          try {
-            const id = created && (created.id || created.idApostila || created.id_apostila || null);
-            if (arquivoUrl && id) {
-              await updateApostilaUrl(id, arquivoUrl);
-            }
-          } catch (err) {
-            console.warn('Falha ao atualizar URL da apostila via PATCH:', err);
-          }
         }
       }
 
