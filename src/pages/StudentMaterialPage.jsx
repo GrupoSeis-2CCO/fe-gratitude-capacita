@@ -4,7 +4,7 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import SmartImage from "../components/SmartImage.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
-import { FileText, Youtube, CheckCircle2, Loader2 } from 'lucide-react';
+import { FileText, Youtube, CheckCircle2, Loader2, Award } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
@@ -43,6 +43,10 @@ export default function StudentMaterialPage() {
   const [transcricaoAtiva, setTranscricaoAtiva] = useState(false);
   const [transcricaoCarregando, setTranscricaoCarregando] = useState(false);
   const [transcricao, setTranscricao] = useState([]); // array de { start, dur, text }
+  const [allMaterialsCompleted, setAllMaterialsCompleted] = useState(false);
+  const [hasExam, setHasExam] = useState(false);
+  const [isLastMaterial, setIsLastMaterial] = useState(false);
+  const materialsListRef = useRef([]);
 
   // Helpers para normalizar o material e URL de video vindos do backend
   const getVideoUrl = (m) => {
@@ -100,6 +104,79 @@ export default function StudentMaterialPage() {
   useEffect(() => { loadMaterial(); }, [idCurso, idMaterial, parsed.id]);
   useEffect(() => { setVideoLoaded(false); finalizedRef.current = false; }, [idMaterial, idCurso]);
 
+  // Check if course has an exam
+  useEffect(() => {
+    const checkExam = async () => {
+      try {
+        const response = await api.get(`/avaliacoes/curso/${idCurso}`);
+        const hasAvaliacao = response.data && (Array.isArray(response.data) ? response.data.length > 0 : true);
+        console.log('[StudentMaterialPage] Exam check:', { idCurso, hasAvaliacao });
+        setHasExam(hasAvaliacao);
+      } catch (err) {
+        console.log('[StudentMaterialPage] Exam check error:', err);
+        setHasExam(false);
+      }
+    };
+    if (idCurso) {
+      checkExam();
+    }
+  }, [idCurso]);
+
+  // Check if all materials are completed
+  useEffect(() => {
+    const checkAllCompleted = async () => {
+      try {
+        // Get user ID from localStorage or JWT
+        let fkUsuario = undefined;
+        const raw = localStorage.getItem('usuarioId');
+        fkUsuario = raw ? Number(String(raw).trim()) : undefined;
+        if (!fkUsuario) {
+          try {
+            const token = localStorage.getItem('token');
+            if (token) {
+              const parts = token.split('.');
+              if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1]));
+                const id = payload.id || payload.userId || payload.user_id || payload.usuarioId || payload.usuario_id || payload.sub;
+                fkUsuario = id ? Number(id) : undefined;
+              }
+            }
+          } catch (_) {}
+        }
+        
+        if (!fkUsuario || !idCurso || materialsList.length === 0) return;
+        
+        const resp = await api.get(`/materiais-alunos/listar-por-matricula/${fkUsuario}/${idCurso}`);
+        const materiaisAluno = resp?.data || [];
+        console.log('[StudentMaterialPage] Materiais aluno:', materiaisAluno);
+        
+        // Helper function to check if material is concluded
+        const isConcluded = (rec) => {
+          const truthy = (v) => {
+            if (v === true || v === 1) return true;
+            const s = String(v).trim().toLowerCase();
+            return s === '1' || s === 'true' || s === 't' || s === 'y' || s === 'yes' || s === 's' || s === 'sim';
+          };
+          if (truthy(rec?.finalizado) || truthy(rec?.finalizada) || truthy(rec?.concluido) || truthy(rec?.isConcluido) || truthy(rec?.isFinalizado)) return true;
+          return false;
+        };
+        
+        const completedCount = materiaisAluno.filter(m => isConcluded(m)).length;
+        const totalMaterials = materialsList.length;
+        const allCompleted = completedCount >= totalMaterials && totalMaterials > 0;
+        
+        console.log('[StudentMaterialPage] Completion check:', { completedCount, totalMaterials, allCompleted });
+        setAllMaterialsCompleted(allCompleted);
+      } catch (err) {
+        console.log('[StudentMaterialPage] Error checking completion:', err);
+      }
+    };
+    
+    if (idCurso && materialsList.length > 0) {
+      checkAllCompleted();
+    }
+  }, [idCurso, materialsList, material?.finalizado]);
+
   // Carrega a lista de materiais para permitir navegação por ordem/IDs corretos
   useEffect(() => {
     let mounted = true;
@@ -128,7 +205,15 @@ export default function StudentMaterialPage() {
         });
         // atribuir displayOrder sequencial para uso no título/numeração estável
         normalized = normalized.map((m, i) => ({ ...m, displayOrder: i + 1 }));
-        if (mounted) setMaterialsList(normalized);
+        if (mounted) {
+          setMaterialsList(normalized);
+          materialsListRef.current = normalized;
+          // Check if current material is the last one
+          const curId = Number(parsed.id);
+          const curType = parsed.tipo;
+          const idx = normalized.findIndex(m => Number(m?.id) === curId && ((m?.tipo) === curType || !curType));
+          setIsLastMaterial(idx >= 0 && idx === normalized.length - 1);
+        }
       } catch (e) {
         // mantém navegação ingênua em caso de falha
         if (mounted) setMaterialsList([]);
@@ -312,9 +397,15 @@ export default function StudentMaterialPage() {
         const tipoNormalized = (material?.tipo || '').toString().toLowerCase().includes('video') ? 'video' : 'pdf';
         const verify = await api.get(`/materiais-alunos/listar-por-matricula/${fkUsuario}/${fkCurso}`);
         const arr = Array.isArray(verify?.data) ? verify.data : [];
-        const concluded = arr.some(rec => {
+        
+        // Helper to check if concluded
+        const isConcludedCheck = (rec) => {
           const truthy = (v) => v === true || v === 1 || String(v).toLowerCase() === 'true' || String(v) === '1';
-          const isDone = truthy(rec?.finalizado) || truthy(rec?.finalizada);
+          return truthy(rec?.finalizado) || truthy(rec?.finalizada);
+        };
+        
+        const concluded = arr.some(rec => {
+          const isDone = isConcludedCheck(rec);
           if (!isDone) return false;
           // map ids strictly
           const vid = rec?.fkVideo?.idVideo ?? rec?.fk_video?.id_video ?? rec?.idVideo ?? rec?.videoId ?? rec?.video_id ?? rec?.id_video ?? rec?.fkVideo ?? rec?.fk_video;
@@ -326,6 +417,14 @@ export default function StudentMaterialPage() {
         if (concluded) {
           setMaterial(prev => prev ? ({ ...prev, finalizado: true }) : prev);
         }
+        
+        // Check if ALL materials are now completed
+        const completedCount = arr.filter(m => isConcludedCheck(m)).length;
+        const totalMaterials = materialsListRef.current.length;
+        const allCompleted = completedCount >= totalMaterials && totalMaterials > 0;
+        console.log('[StudentMaterialPage] After finalize - completion check:', { completedCount, totalMaterials, allCompleted, materialsListLength: materialsListRef.current.length });
+        setAllMaterialsCompleted(allCompleted);
+        
         // notifica listagem para refazer fetch (sem UI otimista)
         window.dispatchEvent(new CustomEvent('material:finalizado', { detail: { idCurso: fkCurso } }));
       } catch (_) {
@@ -879,14 +978,29 @@ export default function StudentMaterialPage() {
 
           <div className="px-3 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex flex-col gap-2 sm:gap-3">
-              {/* Botão concluir em cima no mobile */}
-              <Button
-                variant="Confirm"
-                className="w-full"
-                label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluído ✓' : 'Concluir material')}
-                onClick={handleFinalizeClick}
-                disabled={finalizando || material?.finalizado}
-              />
+              {/* Mensagem de conclusão quando todos os materiais foram finalizados */}
+              {allMaterialsCompleted && isLastMaterial && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="text-green-600 flex-shrink-0" size={24} />
+                    <div>
+                      <h4 className="text-base font-bold text-green-800">Parabéns! Você concluiu todos os materiais!</h4>
+                      <p className="text-sm text-green-700">{hasExam ? 'Clique em "Ir para Avaliação" para realizar a prova.' : 'Você completou todo o conteúdo do curso.'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Botão concluir - só mostra se não completou todos ou não é último material */}
+              {!(allMaterialsCompleted && isLastMaterial) && (
+                <Button
+                  variant="Confirm"
+                  className="w-full"
+                  label={finalizando ? 'Finalizando...' : (material?.finalizado ? 'Concluído ✓' : 'Concluir material')}
+                  onClick={handleFinalizeClick}
+                  disabled={finalizando || material?.finalizado}
+                />
+              )}
               
               {/* Navegação anterior/próximo */}
               <div className="flex gap-2">
@@ -897,13 +1011,22 @@ export default function StudentMaterialPage() {
                   disabled={!hasPrevious}
                   className="flex-1 text-sm"
                 />
-                <Button
-                  variant="Confirm"
-                  label="Próximo →"
-                  onClick={handleNextMaterial}
-                  disabled={!hasNext}
-                  className="flex-1 text-sm"
-                />
+                {isLastMaterial && allMaterialsCompleted && hasExam ? (
+                  <Button
+                    variant="Confirm"
+                    label="Ir para Avaliação →"
+                    onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)}
+                    className="flex-1 text-sm"
+                  />
+                ) : (
+                  <Button
+                    variant="Confirm"
+                    label="Próximo →"
+                    onClick={handleNextMaterial}
+                    disabled={!hasNext}
+                    className="flex-1 text-sm"
+                  />
+                )}
               </div>
             </div>
           </div>
