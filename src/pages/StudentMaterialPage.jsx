@@ -177,11 +177,33 @@ export default function StudentMaterialPage() {
           return false;
         };
         
-        const completedCount = materiaisAluno.filter(m => isConcluded(m)).length;
+        let completedCount = materiaisAluno.filter(m => isConcluded(m)).length;
         const totalMaterials = materialsList.length;
+        
+        // Se o material atual está marcado como finalizado localmente, 
+        // mas o backend ainda não refletiu, adiciona à contagem
+        if (material?.finalizado) {
+          const currentId = Number(material?.id);
+          const currentTipo = (material?.tipo || '').toLowerCase();
+          
+          // Verifica se o material atual já está contado no backend
+          const currentAlreadyCounted = materiaisAluno.some(rec => {
+            if (!isConcluded(rec)) return false;
+            const vid = rec?.fkVideo?.idVideo ?? rec?.idVideo ?? rec?.fkVideo;
+            const ap = rec?.fkApostila?.idApostila ?? rec?.idApostila ?? rec?.fkApostila;
+            if (currentTipo === 'video' && vid != null) return Number(vid) === currentId;
+            if ((currentTipo === 'apostila' || currentTipo === 'pdf') && ap != null) return Number(ap) === currentId;
+            return false;
+          });
+          
+          if (!currentAlreadyCounted) {
+            completedCount += 1;
+          }
+        }
+        
         const allCompleted = completedCount >= totalMaterials && totalMaterials > 0;
         
-        console.log('[StudentMaterialPage] Completion check:', { completedCount, totalMaterials, allCompleted });
+        console.log('[StudentMaterialPage] Completion check:', { completedCount, totalMaterials, allCompleted, materialFinalizado: material?.finalizado });
         setAllMaterialsCompleted(allCompleted);
       } catch (err) {
         console.log('[StudentMaterialPage] Error checking completion:', err);
@@ -434,6 +456,10 @@ export default function StudentMaterialPage() {
       try {
         const idNum = Number(material?.id ?? idMaterial);
         const tipoNormalized = (material?.tipo || '').toString().toLowerCase().includes('video') ? 'video' : 'pdf';
+        
+        // Pequeno delay para garantir que o backend processou a finalização
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const verify = await api.get(`/materiais-alunos/listar-por-matricula/${fkUsuario}/${fkCurso}`);
         const arr = Array.isArray(verify?.data) ? verify.data : [];
         
@@ -458,11 +484,51 @@ export default function StudentMaterialPage() {
         }
         
         // Check if ALL materials are now completed
-        const completedCount = arr.filter(m => isConcludedCheck(m)).length;
+        // Conta materiais concluídos do backend + considera o material atual como concluído
+        const completedFromBackend = arr.filter(m => isConcludedCheck(m)).length;
         const totalMaterials = materialsListRef.current.length;
+        
+        // Se o backend ainda não retornou este material como concluído, mas acabamos de finalizá-lo,
+        // adiciona +1 à contagem (evita problema de timing)
+        const currentMaterialAlreadyCounted = concluded;
+        const completedCount = currentMaterialAlreadyCounted ? completedFromBackend : completedFromBackend + 1;
+        
         const allCompleted = completedCount >= totalMaterials && totalMaterials > 0;
-        console.log('[StudentMaterialPage] After finalize - completion check:', { completedCount, totalMaterials, allCompleted, materialsListLength: materialsListRef.current.length });
+        console.log('[StudentMaterialPage] After finalize - completion check:', { 
+          completedFromBackend, 
+          completedCount, 
+          totalMaterials, 
+          allCompleted, 
+          currentMaterialAlreadyCounted,
+          isLastMaterial 
+        });
+        
+        // Atualiza o estado imediatamente
         setAllMaterialsCompleted(allCompleted);
+        
+        // Se todos os materiais foram concluídos, recarrega a página para garantir estado atualizado
+        if (allCompleted) {
+          console.log('[StudentMaterialPage] Todos os materiais concluídos! Recarregando página...');
+          // Pequeno delay para o usuário ver o feedback antes do reload
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+          return; // Não continua execução pois vai recarregar
+        }
+        
+        // Se é o último material e acabamos de concluir, força o estado e recarrega
+        if (isLastMaterial) {
+          // Verifica se somos o último a ser concluído
+          const remainingToComplete = totalMaterials - completedCount;
+          if (remainingToComplete <= 0) {
+            setAllMaterialsCompleted(true);
+            console.log('[StudentMaterialPage] Último material concluído! Recarregando página...');
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+            return;
+          }
+        }
         
         // notifica listagem para refazer fetch (sem UI otimista)
         window.dispatchEvent(new CustomEvent('material:finalizado', { detail: { idCurso: fkCurso } }));
