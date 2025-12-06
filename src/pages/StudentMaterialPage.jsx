@@ -4,7 +4,7 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import SmartImage from "../components/SmartImage.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
-import { FileText, Youtube, CheckCircle2, Loader2, Award } from 'lucide-react';
+import { FileText, Youtube, CheckCircle2, Loader2 } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from "../services/MaterialListPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
@@ -516,14 +516,6 @@ export default function StudentMaterialPage() {
     return textarea.value;
   }
 
-  // PDF.js via CDN (sem instalar pacotes)
-  // Inline PDF viewer (multi-page) using pdf.js
-  const pdfContainerRef = useRef(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfError, setPdfError] = useState(null);
-  const [pdfScale, setPdfScale] = useState(1.0); 
-  const pdfCurrentUrlRef = useRef('');
-
   // Build absolute backend URL for relative paths (e.g., /uploads/...) and auth headers
   function buildAbsoluteUrl(url) {
     if (!url) return '';
@@ -531,14 +523,6 @@ export default function StudentMaterialPage() {
     const base = api?.defaults?.baseURL || '';
     if (!base) return url;
     return `${String(base).replace(/\/$/, '')}/${String(url).replace(/^\//, '')}`;
-  }
-  function getAuthHeaders() {
-    try {
-      const token = localStorage.getItem('token');
-      return token ? { Authorization: `Bearer ${token}` } : {};
-    } catch (_) {
-      return {};
-    }
   }
 
   // Some backends return 'urlArquivo' (camel) or 'url_arquivo' (snake) for apostilas
@@ -563,192 +547,6 @@ export default function StudentMaterialPage() {
     }
     return '';
   }
-
-  async function ensurePdfJsLoaded() {
-    if (window.pdfjsLib) return window.pdfjsLib;
-    await injectScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-    // set worker
-    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    return window.pdfjsLib;
-  }
-
-  function injectScript(src) {
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector(`script[src="${src}"]`);
-      if (existing) { existing.addEventListener('load', () => resolve()); return resolve(); }
-      const s = document.createElement('script');
-      s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = (e) => reject(e);
-      document.head.appendChild(s);
-    });
-  }
-
-  async function renderPdf(url, attempt = 0, scale = pdfScale) {
-    setPdfLoading(true);
-    setPdfError(null);
-    try {
-      const pdfjsLib = await ensurePdfJsLoaded();
-      const absUrl = buildAbsoluteUrl(url);
-      // Fetch the PDF as a Blob (with Authorization if present) to avoid CORS/credentials issues
-      const resp = await fetch(absUrl, { headers: { ...getAuthHeaders() } });
-      if (!resp.ok) throw new Error(`Falha ao buscar PDF (${resp.status})`);
-      const arrayBuffer = await resp.arrayBuffer();
-      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-      const pdf = await loadingTask.promise;
-
-      // Ensure container exists
-      const container = pdfContainerRef.current;
-      if (!container) {
-        if (attempt < 3) {
-          setTimeout(() => renderPdf(url, attempt + 1, scale), 150);
-        } else {
-          throw new Error('Container não disponível para renderização do PDF.');
-        }
-        return;
-      }
-
-      // Clear previous content
-      while (container.firstChild) container.removeChild(container.firstChild);
-
-      // Get container width for responsive scaling
-      const containerWidth = container.parentElement?.clientWidth || container.clientWidth || 320;
-      const padding = 16; // px padding on each side
-      const availableWidth = containerWidth - padding;
-
-      // Render all pages
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        
-        // Calculate scale to fit width on mobile
-        const defaultViewport = page.getViewport({ scale: 1 });
-        const fitScale = availableWidth / defaultViewport.width;
-        const finalScale = scale * fitScale;
-        
-        const viewport = page.getViewport({ scale: finalScale });
-        const wrapper = document.createElement('div');
-        wrapper.style.marginBottom = '0.75rem';
-        wrapper.style.display = 'flex';
-        wrapper.style.justifyContent = 'center';
-        wrapper.style.width = '100%';
-        const canvas = document.createElement('canvas');
-        canvas.className = 'shadow-sm rounded bg-white';
-        canvas.style.maxWidth = '100%';
-        canvas.style.height = 'auto';
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        wrapper.appendChild(canvas);
-        container.appendChild(wrapper);
-        const ctx = canvas.getContext('2d');
-        await page.render({ canvasContext: ctx, viewport }).promise;
-      }
-    } catch (e) {
-      console.error('Erro ao renderizar PDF:', e);
-      setPdfError('Não foi possível carregar o PDF.');
-    } finally {
-      setPdfLoading(false);
-    }
-  }
-
-  // Robust PDF open/download actions
-  async function handlePdfOpenNewTab() {
-    const url = buildAbsoluteUrl(getPdfUrl(material));
-    if (!url) return;
-    // Se for mesma origem, abrir direto é mais confiável
-    try {
-      const u = new URL(url);
-      if (u.origin === window.location.origin || url.startsWith(api?.defaults?.baseURL || '')) {
-        window.open(url, '_blank', 'noopener');
-        return;
-      }
-    } catch (_) { /* ignore */ }
-
-    // Caso contrário, abre janela e redireciona via Blob para evitar CORS
-    const newWin = window.open('', '_blank');
-    if (!newWin) {
-      setPdfError('Pop-up bloqueado pelo navegador. Autorize pop-ups para abrir em nova aba.');
-      return;
-    }
-    newWin.document.write('<p style="font-family: sans-serif; color: #444;">Abrindo PDF...</p>');
-    newWin.document.close();
-    try {
-      const resp = await fetch(url, { headers: { ...getAuthHeaders() } });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const blob = await resp.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      newWin.opener = null;
-      newWin.location.href = objectUrl;
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
-    } catch (e) {
-      console.error('Falha ao abrir PDF em nova aba:', e);
-      // fallback: tentar abrir diretamente a URL
-      try { newWin.location.href = url; } catch (_) {}
-      setPdfError('Não foi possível abrir via Blob; tentando abrir diretamente.');
-    }
-  }
-
-  async function handlePdfDownload() {
-    try {
-      const url = buildAbsoluteUrl(getPdfUrl(material));
-      if (!url) return;
-      const resp = await fetch(url, { headers: { ...getAuthHeaders() } });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const blob = await resp.blob();
-      const dlUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      // Prefer original filename from backend or derive from URL
-      const originalName = material?.nomeApostilaOriginal || material?.nome_apostila_original || (() => {
-        try {
-          const u = new URL(url);
-          const last = u.pathname.split('/').pop() || '';
-          return decodeURIComponent(last);
-        } catch (_) { return ''; }
-      })();
-      const baseName = (originalName || material?.titulo || 'apostila').replace(/[^a-z0-9-_.]+/gi, '_');
-      const safeName = baseName.toLowerCase().endsWith('.pdf') ? baseName : `${baseName}.pdf`;
-      a.href = dlUrl;
-      a.download = safeName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(dlUrl), 60_000);
-    } catch (e) {
-      console.error('Falha ao baixar PDF:', e);
-      // fallback para tentativa de download direto (mesma origem)
-      try {
-        const url = buildAbsoluteUrl(getPdfUrl(material));
-        const a = document.createElement('a');
-        const originalName = material?.nomeApostilaOriginal || material?.nome_apostila_original || 'apostila.pdf';
-        a.href = url;
-        a.download = originalName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch (_) {
-        setPdfError('Não foi possível baixar o PDF.');
-      }
-    }
-  }
-
-  useEffect(() => {
-    // quando tipo for apostila, renderiza automaticamente dentro da página
-    if (material?.tipo === 'apostila') {
-      const pdfUrl = getPdfUrl(material);
-      if (pdfUrl) {
-        pdfCurrentUrlRef.current = pdfUrl;
-        renderPdf(pdfUrl, 0, pdfScale);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [material?.tipo, material?.url, material?.urlArquivo, material?.url_arquivo, material?.nomeApostilaArmazenamento, material?.nome_apostila_armazenamento]);
-
-  // Re-render on zoom changes
-  useEffect(() => {
-    if (material?.tipo === 'apostila' && pdfCurrentUrlRef.current) {
-      renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pdfScale]);
 
   function renderMaterialContent() {
     if (!material) return null;
@@ -838,78 +636,27 @@ export default function StudentMaterialPage() {
     }
 
     if (material.tipo === 'apostila') {
-      const displayName = (() => {
-        const raw = material?.nomeApostilaOriginal || material?.nome_apostila_original || material?.titulo || '';
-        const name = String(raw);
-        return name.toLowerCase().endsWith('.pdf') ? name : `${name}.pdf`;
+      const displayTitle = (() => {
+        const raw = material?.titulo || material?.nomeApostilaOriginal || material?.nome_apostila_original || '';
+        return typeof raw === 'string' && /\.pdf$/i.test(raw) ? raw.replace(/\.pdf$/i, '') : raw;
       })();
       return (
-        <div className="bg-white rounded-lg">
-          {/* Header com nome do arquivo e controles */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 min-w-0">
-              <FileText size={18} className="text-orange-500 flex-shrink-0" />
-              <span className="text-sm font-medium truncate">{displayName}</span>
-            </div>
-            
-            {/* Controles de zoom - mobile friendly */}
-            <div className="flex items-center justify-between sm:justify-end gap-2">
-              <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200 p-1">
-                <button 
-                  onClick={() => setPdfScale(s => Math.max(0.5, Number((s - 0.1).toFixed(2))))}
-                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded font-bold"
-                >
-                  -
-                </button>
-                <span className="text-xs text-gray-600 min-w-[3rem] text-center font-medium">{Math.round(pdfScale * 100)}%</span>
-                <button 
-                  onClick={() => setPdfScale(s => Math.min(2.5, Number((s + 0.1).toFixed(2))))}
-                  className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded font-bold"
-                >
-                  +
-                </button>
-              </div>
-              
-              {/* Botões de ação */}
-              <div className="flex gap-1">
-                <button
-                  onClick={handlePdfDownload}
-                  className="px-3 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-                >
-                  Baixar
-                </button>
-                <button
-                  onClick={handlePdfOpenNewTab}
-                  className="px-3 py-2 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
-                >
-                  Abrir
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Área do PDF - responsiva e scrollável */}
-          <div className="relative w-full overflow-auto bg-gray-100 rounded-lg" style={{ maxHeight: '70vh', minHeight: '300px' }}>
-            {pdfLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Loader2 className="animate-spin" size={20} />
-                  <span className="text-sm">Carregando PDF...</span>
-                </div>
-              </div>
-            )}
-            {pdfError && (
-              <div className="p-4 text-center">
-                <div className="text-red-600 mb-3 text-sm">{pdfError}</div>
-                <Button variant="Default" label="Tentar novamente" onClick={() => {
-                  if (pdfCurrentUrlRef.current) renderPdf(pdfCurrentUrlRef.current, 0, pdfScale);
-                }} />
-              </div>
-            )}
-            <div 
-              ref={pdfContainerRef} 
-              className="w-full flex flex-col items-center py-4 px-2"
-              style={{ touchAction: 'pan-x pan-y' }}
+        <div className="bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 aspect-video flex items-center justify-center">
+          <div className="flex flex-col items-center text-gray-600">
+            <FileText size={64} className="mb-4" />
+            <p className="text-lg font-medium">{displayTitle || 'Visualizador de PDF'}</p>
+            <Button
+              variant="Default"
+              label="Abrir PDF"
+              onClick={() => {
+                const url = getPdfUrl(material);
+                if (url) {
+                  const absUrl = buildAbsoluteUrl(url);
+                  window.open(absUrl, '_blank');
+                } else {
+                  window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'PDF não disponível' } }));
+                }
+              }}
             />
           </div>
         </div>
