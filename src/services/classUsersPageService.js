@@ -7,16 +7,12 @@ export async function getParticipantesByCurso(idCurso, { page = 0, size = 10 } =
   }
 
   try {
-    console.log(`🔍 Buscando participantes do curso ${idCurso}...`);
+    console.log(`Buscando participantes do curso ${idCurso}...`);
     
   const resp = await api.get(`/matriculas/curso/${idCurso}/participantes/paginated`, { params: { page, size } });
     
-    console.log("✅ Resposta recebida:", resp);
-    console.log("📊 Status:", resp.status);
-    console.log("📦 Dados:", resp.data);
-    
     if (resp.status === 204 || !resp.data) {
-      console.warn("⚠️ Nenhum dado retornado (204 ou data vazio)");
+      console.warn("Nenhum participante encontrado");
       return { content: [], page, size, totalElements: 0, totalPages: 0 };
     }
     const d = resp.data;
@@ -31,13 +27,10 @@ export async function getParticipantesByCurso(idCurso, { page = 0, size = 10 } =
       totalPages: Number(d.totalPages ?? Math.ceil((d.content?.length || 0) / (d.size || size || 10)))
     };
   } catch (err) {
-    console.error("❌ Erro na requisição:", err);
-    console.error("📄 Response:", err?.response);
-    console.error("🔢 Status:", err?.response?.status);
-    console.error("💬 Mensagem:", err?.response?.data);
+    console.error("Erro ao buscar participantes");
     
     if (err?.response?.status === 404) {
-      console.warn(`⚠️ Curso ${idCurso} não encontrado ou sem participantes`);
+      console.warn(`Curso ${idCurso} não encontrado ou sem participantes`);
       return { content: [], page, size, totalElements: 0, totalPages: 0 };
     }
     

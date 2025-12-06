@@ -37,7 +37,7 @@ export async function getProfile(userId) {
   const uid = userId || getUserIdFromJwtOrStorage();
   if (!uid) throw new Error('UserId não encontrado');
   const resp = await api.get(`/usuarios/${uid}`).catch((e) => {
-    console.error('[Profile] Falha ao buscar usuário', e?.response || e);
+    console.error('[Profile] Falha ao buscar usuário');
     throw e;
   });
   const u = resp.data || {};
@@ -96,7 +96,7 @@ export async function getStats(userId) {
   const uid = userId || getUserIdFromJwtOrStorage();
   if (!uid) throw new Error('UserId não encontrado');
   const resp = await api.get(`/usuarios/${uid}/estatisticas`).catch((e) => {
-    console.error('[Profile] Falha ao buscar estatísticas', e?.response || e);
+    console.error('[Profile] Falha ao buscar estatísticas');
     throw e;
   });
   const s = resp.data || {};

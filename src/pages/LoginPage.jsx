@@ -24,8 +24,10 @@ export function LoginPage() {
         // O servidor respondeu com um status fora de 2xx
         if (error.response.status === 401 || error.response.status === 403) {
            message = 'Email ou senha incorretos';
+        } else if (error.response.status === 500) {
+           message = 'Email ou senha incorretos';
         } else {
-           message = `Erro no servidor: ${error.response.status} - ${error.response.data?.message || ''}`;
+           message = 'Ocorreu um erro ao fazer login. Tente novamente.';
         }
       } else if (error.request) {
         // A requisição foi feita mas não houve resposta
