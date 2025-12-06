@@ -3,6 +3,7 @@ import ActionButton from "./ActionButton";
 import ConfirmModal from "./ConfirmModal";
 import userService from "../services/UserService";
 import { useState } from "react";
+import { FileText, BookOpen, Trash2 } from "lucide-react";
 
 export default function UserActions({ expanded = false, userName }) {
   const navigate = useNavigate();
@@ -53,19 +54,19 @@ export default function UserActions({ expanded = false, userName }) {
     <div className="lg:col-span-1">
       <div className={gapClass}>
         <ActionButton
-          icon="📄"
+          icon={<FileText size={18} />}
           text="Provas Realizadas"
           onClick={() => navigate(`/participantes/${idAluno}/avaliacoes`)}
           size={size}
         />
         <ActionButton
-          icon="📚"
+          icon={<BookOpen size={18} />}
           text="Cursos do Participante"
           onClick={() => navigate(`/participantes/${idAluno}/cursos`)}
           size={size}
         />
         <ActionButton
-          icon="🗑️"
+          icon={<Trash2 size={18} />}
           text="Apagar Usuário"
           variant="danger"
           onClick={onDeleteClick}
