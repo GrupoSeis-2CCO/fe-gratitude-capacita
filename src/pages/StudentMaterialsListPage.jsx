@@ -8,6 +8,7 @@ import { getMateriaisPorCursoEnsuringMatricula as getMateriaisPorCurso } from ".
 import { api } from "../services/api.js";
 import { ensureMatricula, updateUltimoAcesso, getMatriculasPorUsuario } from "../services/MatriculaService.js";
 import ConfirmModal from "../components/ConfirmModal.jsx";
+import { getExamByCourseId } from "../services/ExamPageService.js";
 
 function getStatusColor(status) {
   switch (status) {
@@ -101,6 +102,9 @@ export default function StudentMaterialsListPage() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Estado para verificar se existe avaliação cadastrada para o curso
+  const [hasEvaluation, setHasEvaluation] = useState(false);
+  const [evaluationData, setEvaluationData] = useState(null);
   // Filtros
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -432,6 +436,30 @@ export default function StudentMaterialsListPage() {
     return () => { mounted = false; };
   }, [idCurso]);
 
+  // Check if evaluation exists for this course
+  useEffect(() => {
+    let mounted = true;
+    async function checkEvaluationExists() {
+      if (!idCurso) return;
+      try {
+        const exam = await getExamByCourseId(Number(idCurso));
+        if (mounted && exam && exam.idAvaliacao) {
+          setHasEvaluation(true);
+          setEvaluationData(exam);
+        }
+      } catch (e) {
+        // No evaluation found for this course - this is expected for courses without exams
+        console.debug('[StudentMaterialsList] No evaluation found for course:', idCurso);
+        if (mounted) {
+          setHasEvaluation(false);
+          setEvaluationData(null);
+        }
+      }
+    }
+    checkEvaluationExists();
+    return () => { mounted = false; };
+  }, [idCurso]);
+
   useEffect(() => {
     // when completed changes from a smaller value to equal total, show modal
     const prev = prevCompletedRef.current || 0;
@@ -443,11 +471,12 @@ export default function StudentMaterialsListPage() {
       try { return isConcludedBackend(m); } catch (_) { return false; }
     });
     const evalConcluded = evalConcludedLocal || evalConcludedBackend;
-    if (total > 0 && prev < total && completed === total && !evalConcluded) {
+    // Only show modal if evaluation exists for this course
+    if (hasEvaluation && total > 0 && prev < total && completed === total && !evalConcluded) {
       setShowEvalModal(true);
     }
     prevCompletedRef.current = completed;
-  }, [completed, total, materials, evalConcludedBackend]);
+  }, [completed, total, materials, evalConcludedBackend, hasEvaluation]);
 
   // Client-side pagination for student list (keeps merge correctness)
   const [page, setPage] = useState(0);
@@ -583,36 +612,42 @@ export default function StudentMaterialsListPage() {
 
         {/* Ações do curso: Avaliação + Meu Feedback */}
         <div className="mt-8 flex flex-col md:flex-row gap-4">
-          <div className="flex-1 bg-orange-100 border-l-4 border-orange-500 rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-orange-200 rounded-lg flex items-center justify-center">
-                  <FileText size={32} className="text-orange-600" />
+          {hasEvaluation && (
+            <div className="flex-1 bg-orange-100 border-l-4 border-orange-500 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-orange-200 rounded-lg flex items-center justify-center">
+                    <FileText size={32} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Avaliação Final</h3>
+                    <p className="text-sm text-gray-600">
+                      {evaluationData?.questoes?.length || 10} Questões Objetivas
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Nota mínima: {evaluationData?.acertosMinimos || 6}/{evaluationData?.questoes?.length || 10}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Avaliação Final</h3>
-                  <p className="text-sm text-gray-600">10 Questões Objetivas</p>
-                  <p className="text-sm text-gray-600">Nota mínima: 6/10</p>
-                </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        if (!canStartEvaluation) {
+                          window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Avaliação bloqueada', message: 'Conclua todos os materiais antes de iniciar a avaliação.' } }));
+                          return;
+                        }
+                        navigate(`/cursos/${idCurso}/material/avaliacao`);
+                      }}
+                      disabled={!canStartEvaluation}
+                      title={canStartEvaluation ? 'Iniciar avaliação' : 'Conclua todos os materiais antes de iniciar a avaliação'}
+                      className={`px-4 py-2 rounded ${canStartEvaluation ? 'bg-black text-white cursor-pointer' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
+                    >
+                      Iniciar Avaliação
+                    </button>
+                  </div>
               </div>
-                <div>
-                  <button
-                    onClick={() => {
-                      if (!canStartEvaluation) {
-                        window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'warning', title: 'Avaliação bloqueada', message: 'Conclua todos os materiais antes de iniciar a avaliação.' } }));
-                        return;
-                      }
-                      navigate(`/cursos/${idCurso}/material/avaliacao`);
-                    }}
-                    disabled={!canStartEvaluation}
-                    title={canStartEvaluation ? 'Iniciar avaliação' : 'Conclua todos os materiais antes de iniciar a avaliação'}
-                    className={`px-4 py-2 rounded ${canStartEvaluation ? 'bg-black text-white cursor-pointer' : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
-                  >
-                    Iniciar Avaliação
-                  </button>
-                </div>
             </div>
-          </div>
+          )}
 
           <div className="w-full md:w-72 bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
             <div className="flex flex-col h-full justify-between">
