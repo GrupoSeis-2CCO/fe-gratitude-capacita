@@ -19,10 +19,10 @@ export async function uploadFileToS3(file, tipoBucket = 'bronze') {
     }
     // rethrow with server message if available
     if (err?.response?.data) {
-      console.error('[UploadService] Erro do backend:', err.response.data);
+      console.error('[UploadService] Erro no upload do arquivo');
       throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload do arquivo');
     }
-    console.error('[UploadService] Erro desconhecido:', err);
+    console.error('[UploadService] Erro no upload');
     throw new Error(err?.message || 'Falha no upload do arquivo');
   }
 }
@@ -50,10 +50,10 @@ export async function uploadApostilaToS3({ file, fkCurso, nomeApostila, descrica
       throw new Error('Arquivo muito grande. Tente um arquivo menor ou comprima antes de enviar.');
     }
     if (err?.response?.data) {
-      console.error('[UploadService] Erro do backend:', err.response.data);
+      console.error('[UploadService] Erro no upload da apostila');
       throw new Error(typeof err.response.data === 'string' ? err.response.data : 'Falha no upload da apostila');
     }
-    console.error('[UploadService] Erro desconhecido:', err);
+    console.error('[UploadService] Erro no upload');
     throw new Error(err?.message || 'Falha no upload da apostila');
   }
 }
