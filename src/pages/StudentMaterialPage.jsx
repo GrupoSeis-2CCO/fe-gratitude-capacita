@@ -102,7 +102,23 @@ export default function StudentMaterialPage() {
   }
 
   useEffect(() => { loadMaterial(); }, [idCurso, idMaterial, parsed.id]);
-  useEffect(() => { setVideoLoaded(false); finalizedRef.current = false; }, [idMaterial, idCurso]);
+  
+  // Reset video state and cleanup player when material changes
+  useEffect(() => { 
+    // Cleanup existing player before loading new material
+    if (ytPlayerRef.current) {
+      try {
+        const iframe = ytPlayerRef.current.getIframe?.();
+        ytPlayerRef.current.destroy();
+        if (iframe && iframe.parentNode) {
+          try { iframe.parentNode.removeChild(iframe); } catch (_) {}
+        }
+      } catch (_) {}
+      ytPlayerRef.current = null;
+    }
+    setVideoLoaded(false); 
+    finalizedRef.current = false; 
+  }, [idMaterial, idCurso]);
 
   // Check if course has an exam
   useEffect(() => {
@@ -267,6 +283,25 @@ export default function StudentMaterialPage() {
     });
   }
 
+  // Safe cleanup of YouTube player to avoid DOM errors
+  function safeDestroyYtPlayer() {
+    if (ytPlayerRef.current) {
+      try {
+        // Get the iframe element before destroying
+        const iframe = ytPlayerRef.current.getIframe?.();
+        ytPlayerRef.current.destroy();
+        // If iframe still exists in DOM after destroy, remove it manually
+        if (iframe && iframe.parentNode) {
+          try { iframe.parentNode.removeChild(iframe); } catch (_) {}
+        }
+      } catch (e) {
+        // If destroy fails, try to manually clean up
+        console.debug('[StudentMaterialPage] YT player destroy failed:', e?.message);
+      }
+      ytPlayerRef.current = null;
+    }
+  }
+
   // Initialize YT player when videoLoaded is true
   useEffect(() => {
     let mounted = true;
@@ -280,7 +315,12 @@ export default function StudentMaterialPage() {
       const YT = await loadYouTubeIframeAPI();
       if (!mounted) return;
 
-      if (ytPlayerRef.current) { try { ytPlayerRef.current.destroy(); } catch (e) {} ytPlayerRef.current = null; }
+      // Clean up any existing player before creating new one
+      safeDestroyYtPlayer();
+
+      // Check if container still exists in DOM
+      const container = document.getElementById(ytContainerId);
+      if (!container || !mounted) return;
 
       ytPlayerRef.current = new YT.Player(ytContainerId, {
         videoId: ytId,
@@ -293,8 +333,7 @@ export default function StudentMaterialPage() {
                 finalizedRef.current = true;
                 await finalizeMaterialSafe();
               }
-              try { ytPlayerRef.current?.destroy(); } catch (e) {}
-              ytPlayerRef.current = null;
+              safeDestroyYtPlayer();
               if (mounted) setVideoLoaded(false);
             }
           }
@@ -302,7 +341,7 @@ export default function StudentMaterialPage() {
       });
     }
     initPlayer();
-    return () => { mounted = false; if (ytPlayerRef.current) { try { ytPlayerRef.current.destroy(); } catch (e) {} ytPlayerRef.current = null; } };
+    return () => { mounted = false; safeDestroyYtPlayer(); };
   }, [videoLoaded, material]);
 
   const handleGoBack = () => navigate(`/cursos/${idCurso}/material`);

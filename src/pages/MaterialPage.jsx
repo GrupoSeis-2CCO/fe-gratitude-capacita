@@ -233,6 +233,22 @@ export default function MaterialPage() {
   const ytContainerId = `yt-player-${idCurso}-${idMaterial}`;
   const finalizedRef = useRef(false);
 
+  // Safe cleanup of YouTube player to avoid DOM errors
+  function safeDestroyYtPlayer() {
+    if (ytPlayerRef.current) {
+      try {
+        const iframe = ytPlayerRef.current.getIframe?.();
+        ytPlayerRef.current.destroy();
+        if (iframe && iframe.parentNode) {
+          try { iframe.parentNode.removeChild(iframe); } catch (_) {}
+        }
+      } catch (e) {
+        console.debug('[MaterialPage] YT player destroy failed:', e?.message);
+      }
+      ytPlayerRef.current = null;
+    }
+  }
+
   // load YouTube IFrame API once and return a promise that resolves when ready
   function loadYouTubeIframeAPI() {
     return new Promise((resolve) => {
@@ -269,17 +285,18 @@ export default function MaterialPage() {
       if (!videoLoaded || !material) return;
       const url = material.url || '';
       const ytMatch = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/);
-  if (!ytMatch || !ytMatch[1]) return;
-  const ytId = ytMatch[1];
+      if (!ytMatch || !ytMatch[1]) return;
+      const ytId = ytMatch[1];
 
-  const YT = await loadYouTubeIframeAPI();
-  if (!mounted) return;
+      const YT = await loadYouTubeIframeAPI();
+      if (!mounted) return;
 
-      // destroy existing player if any
-      if (ytPlayerRef.current) {
-        try { ytPlayerRef.current.destroy(); } catch (e) {}
-        ytPlayerRef.current = null;
-      }
+      // Clean up any existing player before creating new one
+      safeDestroyYtPlayer();
+
+      // Check if container still exists in DOM
+      const container = document.getElementById(ytContainerId);
+      if (!container || !mounted) return;
 
       ytPlayerRef.current = new YT.Player(ytContainerId, {
         videoId: ytId,
