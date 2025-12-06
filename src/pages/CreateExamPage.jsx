@@ -6,12 +6,14 @@ import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import ExamBuilder from "../components/ExamBuilder.jsx";
 import CreateExamPageService from "../services/CreateExamPageService.js";
+import { api } from "../services/api.js";
 
 export default function CreateExamPage() {
   const { idCurso } = useParams();
   const navigate = useNavigate();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cursoNome, setCursoNome] = useState("");
   const cursoId = idCurso ? Number(idCurso) : 1;
 
   const loadExams = () => {
@@ -27,14 +29,19 @@ export default function CreateExamPage() {
 
   useEffect(() => {
     loadExams();
-  }, []);
+    api.get(`/cursos/${cursoId}/detalhes`)
+      .then((resp) => {
+        const curso = resp.data;
+        setCursoNome(curso?.tituloCurso || curso?.nome || curso?.titulo || `Curso ${cursoId}`);
+      })
+      .catch(() => {
+        setCursoNome(`Curso ${cursoId}`);
+      });
+  }, [cursoId]);
 
   const handleExamCreated = (newExam) => {
     console.log('Avaliação criada:', newExam);
-    loadExams(); // Recarrega lista
-    
-    // Opcional: navegar de volta para lista de materiais
-    // navigate(`/cursos/${cursoId}/material`);
+    loadExams();
   };
 
   return (
@@ -45,9 +52,8 @@ export default function CreateExamPage() {
       <div className="w-full max-w-none mx-auto flex-grow">
         <div className="max-w-6xl mx-auto">
           <div className="mb-4">
-            {/* BackButton removido - gerenciado pelo Header */}
           </div>
-          <TituloPrincipal>Criar Avaliação - Curso {cursoId}</TituloPrincipal>
+          <TituloPrincipal>Criar Avaliação - {cursoNome}</TituloPrincipal>
         </div>
 
         <div className="mt-8 w-full flex justify-center">
@@ -68,9 +74,6 @@ export default function CreateExamPage() {
               }}
             />
         </div>
-
-        {/* Lista de avaliações existentes (opcional) */}
-        {/* Listagem de avaliações removida conforme solicitado */}
       </div>
     </div>
   );

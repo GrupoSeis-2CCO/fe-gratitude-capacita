@@ -7,9 +7,7 @@ import AddCourseSection from "../components/AddCourseSection.jsx";
 import CourseCard from "../components/CourseCard.jsx";
 import { getCourses, deleteCourse, toggleCourseHidden, reorderCourses } from "../services/ClassListPageService.js";
 import { getMateriaisPorCurso } from "../services/MaterialListPageService.js";
-// Removido fetch detalhado por curso (materiais) para evitar N chamadas adicionais na página /cursos
 import ConfirmModal from "../components/ConfirmModal.jsx";
-// (duplicate import removed)
 
 function normalizeCourses(data) {
   if (!Array.isArray(data)) return [];
@@ -25,19 +23,13 @@ function normalizeCourses(data) {
         ? `${duration}h`
         : course.stats?.hours || course.hours || course.totalHoras || "00:00h";
 
-    // Prefer explicit material list from the course payload when available so we can count
-    // only non-evaluation materials (videos/pdf) and keep the counts consistent with
-    // the MaterialsListPage which may exclude or treat evaluations specially.
     const materialsRaw = course.stats?.materials ?? course.totalMateriais ?? course.materials ?? course.qtdMateriais;
-    // If `course.materials` is an array, compute a robust count of non-evaluation materials
     let computedMaterialsCount = null;
     if (Array.isArray(course.materials)) {
       try {
         computedMaterialsCount = course.materials.filter((m) => {
           const tipoRaw = String(m.tipo || m.type || '').toLowerCase();
-          // treat anything including 'avaliacao' as evaluation
           if (tipoRaw.includes('avaliacao')) return false;
-          // otherwise count as material (video/pdf). If type missing, try to infer from url/title
           if (tipoRaw) return true;
           const maybeUrl = String(m.url || m.urlVideo || m.urlArquivo || '').toLowerCase();
           if (maybeUrl.includes('video') || maybeUrl.endsWith('.mp4') || maybeUrl.includes('youtu')) return true;
@@ -80,16 +72,14 @@ export default function ClassListPage() {
   const isMountedRef = useRef(true);
   const [editingCourse, setEditingCourse] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ open: false, course: null });
-  // Reordenação (drag & drop)
   const [isReordering, setIsReordering] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [savingOrder, setSavingOrder] = useState(false);
 
-  // Filtering / sorting UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortOption, setSortOption] = useState(''); // '' = none selected; 'recent' | 'oldest' | 'alpha'
+  const [sortOption, setSortOption] = useState('');
 
   // debounce searchTerm to avoid expensive recalculations while typing
   useEffect(() => {
@@ -97,7 +87,6 @@ export default function ClassListPage() {
     return () => clearTimeout(t);
   }, [searchTerm]);
 
-  // client-side filtered + sorted view derived from `courses`
   const filteredCourses = useMemo(() => {
     const s = debouncedSearch || '';
     const arr = (courses || []).filter((c) => {
@@ -107,7 +96,6 @@ export default function ClassListPage() {
       return title.includes(s) || desc.includes(s);
     });
 
-    // apply sorting only when an option is selected
     const copy = [...arr];
 
     const getTimestamp = (item) => {

@@ -6,7 +6,7 @@ import { createExam } from '../services/CreateExamPageService.js';
 function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, onExamSaved = null, onSaveExam = null, editMode = false }) {
   const [questions, setQuestions] = useState([]);
   const [minScore, setMinScore] = useState('');
-  // Preencher dados iniciais para edição
+  
   useEffect(() => {
     if (editMode && initialData) {
       setMinScore(initialData.notaMinima?.toString() || '');
@@ -27,7 +27,7 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
   const [loading, setLoading] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [error, setError] = useState(null);
-  const MAX_QUESTIONS = 20; // Limite máximo de questões
+  const MAX_QUESTIONS = 20;
 
   const updateQuestionText = (questionId, text) => {
     setQuestions(prev => prev.map(q => 
@@ -69,7 +69,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
       const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
       return {
         ...q,
-        // Garantir imutabilidade profunda criando novos objetos
         alternatives: [
           ...q.alternatives.map(a => ({ ...a })),
           { id: nextId, text: '', isCorrect: false }
@@ -80,13 +79,11 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
 
   const addQuestion = () => {
     if (questions.length >= MAX_QUESTIONS) return;
-    // gerar id estável único (timestamp + contador simples)
     const baseId = Date.now();
     const randomFragment = Math.floor(Math.random() * 1000);
     const newId = questions.length > 0
       ? Math.max(...questions.map(q => typeof q.id === 'number' ? q.id : 0)) + 1
       : 1;
-    // Deep clone explícito do estado anterior para evitar qualquer referência compartilhada
     setQuestions(prev => {
       const clonedPrev = prev.map(q => ({
         ...q,
@@ -95,8 +92,8 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
       return [
         ...clonedPrev,
         {
-          id: newId, // Mantém sequência simples para exibição
-          internalKey: `${baseId}-${randomFragment}-${newId}`, // chave oculta caso seja necessário debug
+          id: newId,
+          internalKey: `${baseId}-${randomFragment}-${newId}`,
           text: '',
           alternatives: [
             { id: 1, text: '', isCorrect: false },
@@ -108,7 +105,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
     });
   };
 
-  // Sanitizar: garantir que nenhuma questão fique sem alternativas (corrige problema de "ficar em branco")
   useEffect(() => {
     let needsFix = false;
     const fixed = questions.map(q => {
@@ -231,7 +227,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
 
   return (
     <div className="w-[60rem] mx-auto bg-[#1D262D] rounded-lg p-6">
-      {/* Error Message */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded shadow-sm animate-pulse">
           <div className="flex items-center gap-2 mb-1">
@@ -242,7 +237,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         </div>
       )}
       
-      {/* Header Buttons */}
       <div className="flex justify-between items-center mb-6">
         <Button 
           variant="Default"
@@ -266,16 +260,14 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         </div>
       </div>
       
-      {/* Min Score Modal */}
       {showMinScoreModal && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center z-50 transition-opacity">
           <div className="bg-white rounded-xl p-6 max-w-md w-full border-t-8 border-blue-500 shadow-xl transform transition-all">
             <h3 className="text-xl font-bold mb-4 text-gray-900">Nota Mínima para Aprovação</h3>
-            <p className="text-gray-600 mb-4">Defina a nota mínima (0-10) que o aluno precisa atingir:</p>
+            <p className="text-gray-600 mb-4">Defina a nota mínima que o aluno precisa atingir:</p>
             <input
               type="number"
               min="0"
-              // Removido max fixo 10 para permitir cursos com mais questões; validação dinâmica no salvar
               step="0.5"
               value={minScore}
               onChange={(e) => setMinScore(e.target.value)}
@@ -318,7 +310,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         tone="orange"
       />
 
-      {/* Empty State - Show when no questions */}
       {questions.length === 0 && (
         <div className="bg-white rounded-lg p-8 text-center">
           <p className="text-gray-600 mb-6 text-lg">Nenhuma questão adicionada ainda</p>
@@ -330,12 +321,10 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
         </div>
       )}
 
-      {/* Questions */}
       {questions.length > 0 && (
         <div className="space-y-8">
           {questions.map((question, questionIndex) => (
             <div key={question.id} className="bg-white rounded-lg p-6">
-              {/* Question Header */}
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-black">Questão {questionIndex + 1}</h3>
                 <button
@@ -346,7 +335,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                 </button>
               </div>
 
-              {/* Question Text Input */}
               <div className="mb-6">
                 <textarea
                   value={question.text}
@@ -356,16 +344,13 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                 />
               </div>
 
-              {/* Alternatives */}
               <div className="space-y-3 mb-4">
                 {question.alternatives.map((alternative, altIndex) => (
                   <div key={alternative.id} className="flex items-center gap-4">
-                    {/* Letter */}
                     <div className="w-8 h-8 bg-gray-200 rounded border border-gray-400 flex items-center justify-center">
                       <span className="font-bold text-black">{letters[altIndex]}</span>
                     </div>
                     
-                    {/* Alternative Text */}
                     <input
                       type="text"
                       value={alternative.text}
@@ -374,7 +359,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                       className="flex-1 p-2 border border-gray-300 rounded text-base"
                     />
                     
-                    {/* Correct Answer Checkbox */}
                     <div className="w-6 h-6">
                       <input
                         type="checkbox"
@@ -387,7 +371,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
                 ))}
               </div>
 
-              {/* Add Alternative Button */}
               {question.alternatives.length < 8 && (
                 <button
                   onClick={() => addAlternative(question.id)}
@@ -399,7 +382,6 @@ function ExamBuilder({ cursoId = 1, initialData = null, onExamCreated = null, on
             </div>
           ))}
 
-          {/* Add New Question Button */}
           {questions.length < MAX_QUESTIONS && (
             <div className="mt-6 flex justify-center">
               <Button 
