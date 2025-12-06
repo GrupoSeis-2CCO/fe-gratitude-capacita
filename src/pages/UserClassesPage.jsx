@@ -43,16 +43,25 @@ export function UserClassesPage() {
           // try common fields for materials total
           const materiaisTotais = c.materiaisTotais ?? c.materiaisTotal ?? c.totalMateriais ?? c.materialCount ?? c.qtdMateriais ?? null;
 
-          // compute a defensive display for progresso
-          let progressoDisplay = 'Incompleto';
-          if (materiaisTotais === 0) {
-            progressoDisplay = 'Sem materiais';
-          } else if (typeof c.progressoCurso === 'number') {
+          // compute a defensive display for progresso - sempre em %
+          let progressoDisplay = '0%';
+          if (typeof c.progressoCurso === 'number') {
             // if it's 0..1, transform to percent; if it's 0..100 assume percent
             if (c.progressoCurso > 0 && c.progressoCurso <= 1) progressoDisplay = `${Math.round(c.progressoCurso * 100)}%`;
             else progressoDisplay = `${Math.round(c.progressoCurso)}%`;
           } else if (typeof c.progressoCurso === 'string' && c.progressoCurso.trim() !== '') {
-            progressoDisplay = c.progressoCurso;
+            // Se já tem % no texto, usa direto; senão tenta extrair número
+            const trimmed = c.progressoCurso.trim();
+            if (trimmed.includes('%')) {
+              progressoDisplay = trimmed;
+            } else {
+              const num = parseFloat(trimmed);
+              if (!isNaN(num)) {
+                progressoDisplay = `${Math.round(num)}%`;
+              } else {
+                progressoDisplay = '0%';
+              }
+            }
           }
 
           return {
@@ -62,7 +71,7 @@ export function UserClassesPage() {
             progressoCurso: progressoDisplay,
             materiaisTotais,
             iniciado: c.iniciado ? formatIsoToPtBr(c.iniciado) : '—',
-            finalizado: c.finalizado ? formatIsoToPtBr(c.finalizado) : 'Incompleto'
+            finalizado: c.finalizado ? formatIsoToPtBr(c.finalizado) : '—'
           };
         });
 
@@ -94,11 +103,11 @@ export function UserClassesPage() {
               });
               const total = filtered.length;
               if (total === 0) {
-                // update state to show 'Sem materiais'
+                // update state to show 0% when no materials
                 setData(prev => {
                   const copy = prev.slice();
                   const found = copy.find(p => p.idCurso === entry.idCurso);
-                  if (found) found.progressoCurso = 'Sem materiais';
+                  if (found) found.progressoCurso = '0%';
                   return copy;
                 });
               } else {

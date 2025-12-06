@@ -5,6 +5,25 @@ function safeVal(v) {
   return encodeURIComponent(String(v ?? '').trim());
 }
 
+// Buscar lista de materiais do aluno com status de conclusão
+export async function listarMateriaisAluno(fkUsuario, fkCurso) {
+  if (!fkUsuario || !fkCurso) {
+    throw new Error('Parâmetros inválidos para listar materiais do aluno');
+  }
+  try {
+    const response = await api.get(`/materiais-alunos/listar-por-matricula/${safeVal(fkUsuario)}/${safeVal(fkCurso)}`);
+    return response.data || [];
+  } catch (err) {
+    if (err?.response?.status === 404) {
+      // Tenta garantir matrícula e refazer
+      try { await ensureMatricula(fkUsuario, fkCurso); } catch (_) {}
+      const response = await api.get(`/materiais-alunos/listar-por-matricula/${safeVal(fkUsuario)}/${safeVal(fkCurso)}`);
+      return response.data || [];
+    }
+    throw err;
+  }
+}
+
 function buildPathsForFinalizarById(idMaterialAluno, fkUsuario, fkCurso) {
   const a = safeVal(idMaterialAluno);
   const u = safeVal(fkUsuario);
@@ -151,7 +170,8 @@ export async function finalizarPorMaterial(tipo, idMaterial, fkUsuario, fkCurso)
 
 const MaterialAlunoService = {
   finalizarMaterialAluno,
-  finalizarPorMaterial
+  finalizarPorMaterial,
+  listarMateriaisAluno
 };
 
 export default MaterialAlunoService;

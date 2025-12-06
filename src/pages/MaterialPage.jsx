@@ -3,10 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import GradientSideRail from "../components/GradientSideRail.jsx";
 import TituloPrincipal from "../components/TituloPrincipal";
 import Button from "../components/Button";
-import { FileText, Youtube } from 'lucide-react';
+import { FileText, Youtube, Award, CheckCircle } from 'lucide-react';
 import MaterialPageService from "../services/MaterialPageService.js";
 import MaterialAlunoService from "../services/MaterialAlunoService.js";
 import SmartImage from "../components/SmartImage.jsx";
+import { api } from "../services/api.js";
 
 export default function MaterialPage() {
   const { idCurso, idMaterial } = useParams();
@@ -29,6 +30,25 @@ export default function MaterialPage() {
   const [error, setError] = useState(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [materialsList, setMaterialsList] = useState([]);
+  const [isLastMaterial, setIsLastMaterial] = useState(false);
+  const [courseCompleted, setCourseCompleted] = useState(false);
+  const [allMaterialsCompleted, setAllMaterialsCompleted] = useState(false);
+  const [hasExam, setHasExam] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  // helper to match a material record by various possible id fields
+  const matchesMaterialId = (m, num) => {
+    if (m == null || num == null) return false;
+    const n = Number(num);
+    return (
+      Number(m.id) === n ||
+      Number(m.idApostila || 0) === n ||
+      Number(m.idVideo || 0) === n ||
+      Number(m.idMaterial || 0) === n ||
+      Number(m.fkApostila?.idApostila || m.fk_apostila?.idApostila || 0) === n ||
+      Number(m.fkVideo?.idVideo || m.fk_video?.idVideo || 0) === n
+    );
+  };
 
   async function loadMaterial() {
     setLoading(true);
@@ -64,10 +84,18 @@ export default function MaterialPage() {
         const resp = await getMateriaisPorCurso(idCurso);
         let arr = [];
         if (Array.isArray(resp)) arr = resp; else if (resp?.materiais) arr = resp.materiais; else if (resp?.data && Array.isArray(resp.data)) arr = resp.data; else if (resp) arr = [resp];
-        const onlyMaterials = (arr || []).filter(m => (m?.tipo || m?.type) !== 'avaliacao');
+        
+        // Filtrar apenas materiais de conteúdo (video e apostila), excluindo avaliações
+        const onlyMaterials = (arr || []).filter(m => {
+          const tipo = (m?.tipo || m?.type || '').toLowerCase();
+          return tipo === 'video' || tipo === 'apostila';
+        });
+        
+        console.log('[MaterialPage] Materials loaded:', { total: arr.length, filtered: onlyMaterials.length, materials: onlyMaterials.map(m => ({ id: m.id, tipo: m.tipo })) });
+        
         // map to the same shape MaterialsListPage uses so ordering and ids match exactly
         const mapped = onlyMaterials.map((m, idx) => {
-          const type = m.tipo === 'video' ? 'video' : (m.tipo === 'apostila' ? 'pdf' : 'avaliacao');
+          const type = m.tipo === 'video' ? 'video' : 'pdf';
           const rawTitle = m.titulo ?? m.nomeApostila ?? m.nomeVideo ?? `Material ${m.id ?? idx}`;
           const cleanTitle = typeof rawTitle === 'string' && /\.pdf$/i.test(rawTitle) ? rawTitle.replace(/\.pdf$/i, '') : rawTitle;
           const finalTitle = type === 'pdf' ? cleanTitle : rawTitle;
@@ -107,7 +135,99 @@ export default function MaterialPage() {
   // reset videoLoaded when the material changes (so thumbnails show for new materials)
   useEffect(() => {
     setVideoLoaded(false);
+    // Não resetar allMaterialsCompleted aqui pois será recalculado pelo outro useEffect
+    setShowCompletionModal(false);
   }, [idMaterial, idCurso]);
+
+  // Check if current material is the last one
+  useEffect(() => {
+    if (materialsList.length > 0 && parsedParam.idNum) {
+      const idNum = parsedParam.idNum;
+      const currentIndex = materialsList.findIndex(m => {
+        const idMatches = matchesMaterialId(m, idNum);
+        if (!parsedParam.typePrefix) return idMatches;
+        const want = parsedParam.typePrefix.toLowerCase() === 'pdf' ? 'apostila' : parsedParam.typePrefix.toLowerCase();
+        const t = (m?.tipo || m?.type || '').toLowerCase();
+        return idMatches && t.includes(want);
+      });
+      console.log('[MaterialPage] Last material check:', { currentIndex, total: materialsList.length, isLast: currentIndex === materialsList.length - 1, parsedParam });
+      setIsLastMaterial(currentIndex >= 0 && currentIndex === materialsList.length - 1);
+    }
+  }, [materialsList, parsedParam.idNum, parsedParam.typePrefix]);
+
+  // Check if course has an exam
+  useEffect(() => {
+    const checkExam = async () => {
+      try {
+        const response = await api.get(`/avaliacoes/curso/${idCurso}`);
+        const hasAvaliacao = response.data && (Array.isArray(response.data) ? response.data.length > 0 : true);
+        console.log('[MaterialPage] Exam check:', { idCurso, response: response.data, hasAvaliacao });
+        setHasExam(hasAvaliacao);
+      } catch (err) {
+        console.log('[MaterialPage] Exam check error:', err);
+        setHasExam(false);
+      }
+    };
+    if (idCurso) {
+      checkExam();
+    }
+  }, [idCurso]);
+
+  // Check if all materials are already completed
+  useEffect(() => {
+    const checkAllCompleted = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const userId = user?.idUsuario || user?.id;
+        if (!userId || !idCurso || materialsList.length === 0) {
+          console.log('[MaterialPage] Skip completion check - missing data:', { userId, idCurso, materialsLength: materialsList.length });
+          return;
+        }
+        
+        const materiaisAluno = await MaterialAlunoService.listarMateriaisAluno(userId, idCurso);
+        console.log('[MaterialPage] Materiais aluno:', materiaisAluno);
+        
+        // Helper function to check if material is concluded (same as StudentMaterialsListPage)
+        const isConcluded = (rec) => {
+          const truthy = (v) => {
+            if (v === true || v === 1) return true;
+            const s = String(v).trim().toLowerCase();
+            return s === '1' || s === 'true' || s === 't' || s === 'y' || s === 'yes' || s === 's' || s === 'sim';
+          };
+          if (truthy(rec?.finalizado) || truthy(rec?.finalizada) || truthy(rec?.concluido) || truthy(rec?.isConcluido) || truthy(rec?.isFinalizado)) return true;
+          const s1 = String(rec?.status || '').toLowerCase();
+          const s2 = String(rec?.situacao || '').toLowerCase();
+          if (s1.includes('conclu') || s1.includes('finaliz') || s1.includes('complet')) return true;
+          if (s2.includes('conclu') || s2.includes('finaliz') || s2.includes('complet')) return true;
+          if (Number(rec?.progresso || 0) >= 100) return true;
+          return false;
+        };
+        
+        // Conta quantos materiais foram concluídos
+        const completedCount = materiaisAluno.filter(m => isConcluded(m)).length;
+        
+        const totalMaterials = materialsList.length;
+        const allCompleted = completedCount >= totalMaterials && totalMaterials > 0;
+        
+        console.log('[MaterialPage] Completion check:', { completedCount, totalMaterials, allCompleted, materiaisAluno: materiaisAluno.map(m => ({ finalizado: m.finalizado, finalizada: m.finalizada })) });
+        setAllMaterialsCompleted(allCompleted);
+        
+        if (allCompleted) {
+          setCourseCompleted(true);
+          // Se estiver no último material, mostrar o modal
+          if (isLastMaterial) {
+            setShowCompletionModal(true);
+          }
+        }
+      } catch (err) {
+        console.log('[MaterialPage] Error checking completion:', err);
+      }
+    };
+    
+    if (idCurso && materialsList.length > 0) {
+      checkAllCompleted();
+    }
+  }, [idCurso, materialsList, isLastMaterial]);
 
   const ytPlayerRef = useRef(null);
   const ytContainerId = `yt-player-${idCurso}-${idMaterial}`;
@@ -236,20 +356,6 @@ export default function MaterialPage() {
       }
     };
   }, [videoLoaded, material]);
-
-  // helper to match a material record by various possible id fields
-  const matchesMaterialId = (m, num) => {
-    if (m == null || num == null) return false;
-    const n = Number(num);
-    return (
-      Number(m.id) === n ||
-      Number(m.idApostila || 0) === n ||
-      Number(m.idVideo || 0) === n ||
-      Number(m.idMaterial || 0) === n ||
-      Number(m.fkApostila?.idApostila || m.fk_apostila?.idApostila || 0) === n ||
-      Number(m.fkVideo?.idVideo || m.fk_video?.idVideo || 0) === n
-    );
-  };
 
   const handleNextMaterial = () => {
     const idNum = parsedParam.idNum ?? Number(idMaterial);
@@ -463,19 +569,81 @@ export default function MaterialPage() {
           </div>
 
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              {(showCompletionModal || (isLastMaterial && allMaterialsCompleted)) && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-3 mb-3">
+                    <CheckCircle className="text-green-600" size={28} />
+                    <div>
+                      <h4 className="text-lg font-bold text-green-800">Parabéns! Você concluiu todos os materiais!</h4>
+                      <p className="text-green-700">{hasExam ? 'Agora você pode realizar a avaliação do curso.' : 'Você completou todo o conteúdo do curso.'}</p>
+                    </div>
+                  </div>
+                  {hasExam && (
+                    <Button
+                      variant="Confirm"
+                      label="Acessar Avaliação"
+                      onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)}
+                      className="w-full"
+                    />
+                  )}
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <Button
                   variant="Cancel"
                   label="Material Anterior"
                   onClick={handlePreviousMaterial}
-                  disabled={material && material.id <= 1}
+                  disabled={(() => {
+                    const { index } = getDisplayPosition();
+                    return index <= 0;
+                  })()}
                 />
 
-                <Button
-                  variant="Confirm"
-                  label="Próximo Material"
-                  onClick={handleNextMaterial}
-                />
+                {isLastMaterial && allMaterialsCompleted ? (
+                  hasExam ? (
+                    <Button
+                      variant="Confirm"
+                      label="Ir para Avaliação"
+                      onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)}
+                    />
+                  ) : (
+                    <Button
+                      variant="Default"
+                      label="Voltar aos Cursos"
+                      onClick={() => navigate('/cursos')}
+                    />
+                  )
+                ) : isLastMaterial && !courseCompleted ? (
+                  <Button
+                    variant="Confirm"
+                    label="Concluir Curso"
+                    onClick={async () => {
+                      setCourseCompleted(true);
+                      setAllMaterialsCompleted(true);
+                      setShowCompletionModal(true);
+                    }}
+                  />
+                ) : isLastMaterial && courseCompleted ? (
+                  hasExam ? (
+                    <Button
+                      variant="Confirm"
+                      label="Ir para Avaliação"
+                      onClick={() => navigate(`/cursos/${idCurso}/material/avaliacao`)}
+                    />
+                  ) : (
+                    <Button
+                      variant="Default"
+                      label="Voltar aos Cursos"
+                      onClick={() => navigate('/cursos')}
+                    />
+                  )
+                ) : (
+                  <Button
+                    variant="Confirm"
+                    label="Próximo Material"
+                    onClick={handleNextMaterial}
+                  />
+                )}
               </div>
           </div>
         </div>
