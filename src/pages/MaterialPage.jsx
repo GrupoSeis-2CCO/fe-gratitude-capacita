@@ -134,7 +134,10 @@ export default function MaterialPage() {
 
   // reset videoLoaded when the material changes (so thumbnails show for new materials)
   useEffect(() => {
+    // Cleanup existing player before loading new material
+    safeDestroyYtPlayer();
     setVideoLoaded(false);
+    finalizedRef.current = false;
     // Não resetar allMaterialsCompleted aqui pois será recalculado pelo outro useEffect
     setShowCompletionModal(false);
   }, [idMaterial, idCurso]);
@@ -354,8 +357,7 @@ export default function MaterialPage() {
               }
 
               // destroy player and show thumbnail again to avoid related recommendations
-              try { ytPlayerRef.current.destroy(); } catch (e) {}
-              ytPlayerRef.current = null;
+              safeDestroyYtPlayer();
               if (mounted) setVideoLoaded(false);
             }
           }
@@ -367,10 +369,7 @@ export default function MaterialPage() {
 
     return () => {
       mounted = false;
-      if (ytPlayerRef.current) {
-        try { ytPlayerRef.current.destroy(); } catch (e) {}
-        ytPlayerRef.current = null;
-      }
+      safeDestroyYtPlayer();
     };
   }, [videoLoaded, material]);
 
