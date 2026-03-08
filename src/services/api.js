@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Sempre usar /api (funciona em dev e prod com proxy NGINX)
-const BASE_URL = "/api";
+// Em dev usa /api (proxy Vite), em prod usa VITE_BASE_URL (URL do backend Railway)
+const BASE_URL = import.meta.env.VITE_BASE_URL || "/api";
 
 export const api = axios.create({
   baseURL: BASE_URL,
